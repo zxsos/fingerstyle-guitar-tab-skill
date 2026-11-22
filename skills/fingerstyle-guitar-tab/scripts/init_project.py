@@ -204,6 +204,7 @@ def _build_starter_bars_code(
 def render_score_template(
     title: str,
     composer: str,
+    artist: str,
     key_str: str,
     capo: int,
     bpm: int,
@@ -255,6 +256,7 @@ ALLOW_CHROMATIC = False
 TITLE = "{title}"
 FILE_PREFIX = "{file_prefix}"
 SUBTITLE = "指弹吉他独奏六线谱"
+ARTIST = "{artist}"
 COMPOSER = "{composer}"
 ARRANGER_INFO = "原调：{ks.name} (1={ks.relative_major_name})  |  选调：{fing_name}调指法 (Capo = {capo}品)  |  标准调弦：6E 5A 4D 3G 2B 1E"
 CHORD_LEGEND = "{chord_legend}"
@@ -386,6 +388,7 @@ def main() -> int:
     parser.add_argument("--bpm", type=int, default=80, help="Tempo BPM (default 80)")
     parser.add_argument("--tier", default="standard", choices=("beginner", "standard", "advanced"))
     parser.add_argument("--composer", default="Unknown", help="Composer / Original artist")
+    parser.add_argument("--artist", default=None, help="Performer/Artist folder name for library (defaults to composer)")
     parser.add_argument("--bars", type=int, default=4, help="Number of starter full bars (default 4)")
     parser.add_argument("--pickup", action="store_true", help="Include M00 pickup bar")
     parser.add_argument("--force", action="store_true", help="Overwrite existing src/score_data.py")
@@ -400,6 +403,7 @@ def main() -> int:
     content = render_score_template(
         title=args.title,
         composer=args.composer,
+        artist=args.artist or args.composer,
         key_str=args.key,
         capo=args.capo,
         bpm=args.bpm,

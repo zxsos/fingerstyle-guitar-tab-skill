@@ -451,6 +451,7 @@ def build_score_source_from_import(
     *,
     title: str,
     composer: str,
+    artist: str,
     tier_key: str,
     key_arg: str,
     capo_arg: str,
@@ -664,6 +665,7 @@ ALLOW_CHROMATIC = {has_chromatic}
 TITLE = "{title}"
 FILE_PREFIX = "{file_prefix}"
 SUBTITLE = "指弹吉他独奏六线谱"
+ARTIST = "{artist}"
 COMPOSER = "{composer}"
 ARRANGER_INFO = "原调：{ks.name} (1={ks.relative_major_name})  |  选调：{fing_name}调指法 (Capo = {capo}品)  |  标准调弦：6E 5A 4D 3G 2B 1E"
 CHORD_LEGEND = "和弦对照 (Capo {capo})：指法={fing_name}调  常用={'  '.join(scale_chords)}"
@@ -801,6 +803,7 @@ def main() -> int:
     parser.add_argument("--tier", default="standard", choices=("beginner", "standard", "advanced"))
     parser.add_argument("--title", default=None, help="Override song title")
     parser.add_argument("--composer", default=None, help="Override composer")
+    parser.add_argument("--artist", default=None, help="Performer/Artist folder name for library (defaults to composer)")
     parser.add_argument("--key", default="auto", help="Target key or 'auto'")
     parser.add_argument("--capo", default="auto", help="Capo fret (int) or 'auto'")
     parser.add_argument("--bpm", default="auto", help="BPM (int) or 'auto'")
@@ -823,6 +826,7 @@ def main() -> int:
 
     title = args.title or parsed.get("title_hint") or in_path.stem.replace("_", " ").strip()
     composer = args.composer or parsed.get("composer_hint") or "Unknown"
+    artist = args.artist or composer
 
     out_arg = Path(args.out).expanduser().resolve()
     if out_arg.suffix == ".py":
@@ -837,6 +841,7 @@ def main() -> int:
         parsed,
         title=str(title),
         composer=str(composer),
+        artist=str(artist),
         tier_key=args.tier,
         key_arg=args.key,
         capo_arg=args.capo,
