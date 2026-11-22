@@ -1004,7 +1004,7 @@ VALID_DURS = {1, 2, 3, 4, 6, 8, 12, 16}
 
 
 def validate_score(measures: Optional[List[Measure]] = None) -> Dict[str, int]:
-    """Validate meter, string exclusivity, fret span <= 3, key, and all fingerstyle techniques."""
+    """Validate meter, string exclusivity, fret span <= 3, key, voice-leading, and all fingerstyle techniques."""
     if measures is None:
         measures = build_measures()
 
@@ -1021,6 +1021,8 @@ def validate_score(measures: Optional[List[Measure]] = None) -> Dict[str, int]:
 
     if len(measures) != 45:
         errors.append(f"Expected 45 measures (M00..M44), got {len(measures)}")
+
+    active_melody_midi: Optional[int] = None
 
     for idx, meas in enumerate(measures):
         if meas.bar != idx:
@@ -1042,6 +1044,7 @@ def validate_score(measures: Optional[List[Measure]] = None) -> Dict[str, int]:
             dur_sum += e.dur
 
             if e.rest:
+                active_melody_midi = None
                 if e.notes:
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: rest event has notes")
                 if e.arpeggio or e.link_tech:
@@ -1062,6 +1065,21 @@ def validate_score(measures: Optional[List[Measure]] = None) -> Dict[str, int]:
                 errors.append(f"M{meas.bar:02d} slot {e.slot}: duplicate strings {strings}")
 
             pitched_notes = [nt for nt in e.notes if nt.role != "slap"]
+            mel_notes = [nt for nt in pitched_notes if nt.role == "melody"]
+            if mel_notes:
+                if any(nt.harmonic for nt in mel_notes):
+                    active_melody_midi = None
+                else:
+                    active_melody_midi = max(nt.concert_midi for nt in mel_notes)
+
+            if meas.bar < 44 and active_melody_midi is not None:
+                for nt in pitched_notes:
+                    if nt.role in ("bass", "inner") and not nt.harmonic and nt.concert_midi > active_melody_midi:
+                        errors.append(
+                            f"M{meas.bar:02d} slot {e.slot}: voice crossing — {nt.role} "
+                            f"({nt.string},{nt.fret}) {nt.pitch_name} ({nt.concert_midi}) > "
+                            f"melody ({active_melody_midi})"
+                        )
             for nt in e.notes:
                 if nt.string not in OPEN_TUNING_NO_CAPO:
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: invalid string {nt.string}")

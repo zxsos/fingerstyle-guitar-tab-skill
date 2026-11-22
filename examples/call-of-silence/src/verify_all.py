@@ -82,10 +82,32 @@ def verify_score() -> None:
     tech_counts = validate_score(measures)
     for tech, cnt in tech_counts.items():
         assert cnt >= 1, f"Missing technique {tech}"
+
+    def melody_pitches(bar_idx: int) -> List[int]:
+        return [
+            nt.concert_midi
+            for e in measures[bar_idx].events
+            for nt in e.notes
+            if nt.role == "melody" and not nt.harmonic
+        ]
+
+    landmarks = {
+        0: [66, 69],                                         # M00 Intro pickup: F#4, A4
+        1: [73, 71, 68, 69],                                 # M01 Intro motif: C#5, B4, G#4, A4
+        10: [73, 69, 73, 71, 64, 66],                        # M10 Verse hook
+        28: [71, 69, 69, 64, 69, 68, 69],                    # M28 Chorus I: "know you're reborn tonight"
+        36: [66, 64, 62, 71, 69, 68, 64],                    # M36 Chorus II: "more, oh my beloved"
+        38: [66, 64, 62, 66, 68, 68, 66, 64, 71, 69],        # M38 Chorus II climax: "be proud and fight it out"
+    }
+    for bar_idx, expected in landmarks.items():
+        actual = melody_pitches(bar_idx)
+        assert actual == expected, f"Landmark M{bar_idx:02d} melody drift: expected {expected}, got {actual}"
+
     total_notes = sum(len(e.notes) for meas in measures for e in meas.events)
     print(
         f"[PASS] Score integrity: {len(measures)} measures (M00..M44), {total_notes} notes/slaps, "
-        f"fret span <= 3, 100% A/F#m diatonic, techniques={tech_counts}."
+        f"fret span <= 3, 100% A/F#m diatonic, 0 voice crossings, {len(landmarks)} landmark bars verified, "
+        f"techniques={tech_counts}."
     )
 
 

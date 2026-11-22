@@ -217,6 +217,14 @@ def write_midi_file(measures: List[Measure], path: Path) -> List[float]:
                         if not (incoming_link is not None and s == incoming_string):
                             stop_string(s, ev_tick - 10)
 
+            # Damp ringing melody string if an incoming bass/inner note lands within <= 1 semitone
+            for nt in pitched_notes:
+                if nt.role in ("bass", "inner"):
+                    for s in list(active.keys()):
+                        old_midi, _old_on, old_role, _chs, _ma = active[s]
+                        if old_role == "melody" and abs(nt.concert_midi - old_midi) <= 1:
+                            stop_string(s, ev_tick - 10)
+
             # Pluck notes lowest string -> highest string with subtle roll (wider when arpeggio=True)
             ordered = sorted(pitched_notes, key=lambda x: -x.string)
             n_notes = len(ordered)
@@ -267,7 +275,7 @@ def write_midi_file(measures: List[Measure], path: Path) -> List[float]:
                     v_ch1 = max(24, min(80, round(48 * meas.dynamic)))
                     ch_events[2].append((on_tick, 20, bytes([0x92, midi_p, v_ch2])))
                     ch_events[1].append((on_tick, 20, bytes([0x91, midi_p, v_ch1])))
-                    active[nt.string] = (midi_p, on_tick, nt.role, (2, 1), 2400)
+                    active[nt.string] = (midi_p, on_tick, nt.role, (2, 1), 3000)
                 elif nt.palm_mute:
                     # Palm mute (P.M.): Muted Guitar (Ch 3) + short gated Steel transient (Ch 0)
                     v_ch3 = max(36, min(108, round(80 * meas.dynamic)))
@@ -275,9 +283,9 @@ def write_midi_file(measures: List[Measure], path: Path) -> List[float]:
                     ch_events[3].append((on_tick, 20, bytes([0x93, midi_p, v_ch3])))
                     ch_events[0].append((on_tick, 20, bytes([0x90, midi_p, v_ch0])))
                     ch_events[0].append((on_tick + 95, 25, bytes([0x80, midi_p, 0])))
-                    active[nt.string] = (midi_p, on_tick, nt.role, (3,), 220)
+                    active[nt.string] = (midi_p, on_tick, nt.role, (3,), 280)
                 else:
-                    base_vel = {"melody": 92, "bass": 78, "inner": 58}[nt.role]
+                    base_vel = {"melody": 98, "bass": 74, "inner": 48}[nt.role]
                     raw_vel = (base_vel + beat_acc) * meas.dynamic
                     if nt.grace_from is not None:
                         raw_vel *= 0.94
@@ -297,7 +305,8 @@ def write_midi_file(measures: List[Measure], path: Path) -> List[float]:
 
                     ch_events[0].append((on_tick, 20, bytes([0x90, midi_p, vel_ch0])))
                     ch_events[1].append((on_tick, 20, bytes([0x91, midi_p, vel_ch1])))
-                    active[nt.string] = (midi_p, on_tick, nt.role, (0, 1), 1920)
+                    max_age = 2880 if nt.role == "melody" else 1920
+                    active[nt.string] = (midi_p, on_tick, nt.role, (0, 1), max_age)
 
         bar_sixteenths = 4 if meas.is_pickup else 16
         cursor_tick += bar_sixteenths * TICKS_PER_16TH
