@@ -64,19 +64,21 @@ Track active ringing notes per string (`active[string]`):
    ```
    Encode with `-ar 44100 -codec:a libmp3lame -b:a 320k -map_metadata -1` to strip unnecessary container tags.
 
-## 4. The 4 Automated Verification Gates (`src/verify_all.py`)
+## 4. The 4 Automated Verification Gates (`scripts/tab_engine.py verify` & `src/verify_all.py`)
+
+Run all 4 gates uniformly on any project via `python3 skills/fingerstyle-guitar-tab/scripts/tab_engine.py verify <project_dir>`:
 
 | Gate | Checks & Thresholds |
 | :--- | :--- |
-| 1. Score Integrity | `validate_score()` passes (`0` voice crossings where `bass/inner <= active_melody_midi`); all techniques `>= 1`; **landmark melody pitch-sequence assertions** match the authoritative sheet/jianpu source on signature intro, verse, chorus, and climax bars |
-| 2. PDF Integrity & Sanitization | Exists, size `> 30 KB`, Ghostscript page count `2..4`, 0 `textedit://` or local workstation path leaks in raw bytes or decompressed streams |
-| 3. Audio DSP & Scale Purity | `ffprobe`: `44100 Hz`, `2ch`, `>= 310 kbps`; `astats` peak `< -1.0 dBFS`; `L/R diff < 1.5 dB`; stereo phase corr `> 0.50`; every measure RMS `> -35 dBFS`; Goertzel diatonic pitch-class energy share `> 85%` |
+| 1. Score Integrity & Tier Compliance | `validate_project_score()` passes (`0` voice crossings where `bass/inner <= active_melody_midi`, tier fret/span/rhythm/technique compliance); tier `required_techs >= 1`; **landmark melody pitch-sequence assertions (`LANDMARKS`)** match the authoritative sheet/jianpu source |
+| 2. PDF Integrity & Sanitization | Exists, size `> 15 KB` (`> 30 KB` for multi-page), Ghostscript page count `>= 1`, 0 `textedit://` or local workstation path leaks in raw bytes or decompressed streams |
+| 3. Audio DSP & Scale Purity | `ffprobe`: `44100 Hz`, `2ch`, `>= 310 kbps`; `astats` peak `< -1.0 dBFS`; `L/R diff < 1.5 dB`; stereo phase corr `> 0.50`; every non-rest measure RMS `> -35 dBFS`; Goertzel diatonic pitch-class energy share `> 85%` (`> 70%` when `ALLOW_CHROMATIC = True`) |
 | 4. Reference Chroma Alignment (Optional `--ref` / `TAB_REF_AUDIO`) | Accept a local path or URL via `--ref` or `TAB_REF_AUDIO` (never hardcode third-party URLs in committed code). Decode mono PCM (`11025 Hz`), align Bar 1 start times, compute 12-bin Goertzel chroma per 8th-note slot (`+15ms` offset, `180ms` Hann window) with harmonic leakage suppression (`-0.45*oct`, `-0.25*19st`, `-0.18*2oct`), require overall mean cosine similarity `>= 0.80`. **Note:** Chroma validates chord harmony/progression only—never rely on Gate 4 alone instead of Gate 1 landmark melody assertions |
 
 ## 5. MIDI-Exact `sync_manifest.json` Note Timeline for Interactive Playback
 
-`src/build_sync_manifest.py` bridges synthesized audio and the web practice player (`guitar-tab-player`) without heuristic sustain guesswork:
+`scripts/tab_engine.py manifest` (and `build_sync_manifest.py`) bridges synthesized audio and the web practice player (`guitar-tab-player`) without heuristic sustain guesswork:
 
-- Calls `build_audio.write_midi_file(measures, tmp_mid)` to obtain exact `(on_tick, off_tick)` MIDI lifetimes produced by all string-damping, legato, `max_age` (`2880`/`1920`/`3000`/`280`), and ritardando rules.
-- Parses Tempo (`0xFF 0x51`) changes + Ch 0 (`Steel`) / Ch 2 (`Harp`) / Ch 3 (`Muted`) note spans via `parse_midi_note_spans()`, converting ticks accurately into seconds (`t`, `dur`).
-- Emits `"notes"` entries (`t`, `dur`, `string`, `fret`, `role`, `tech`, `bar`, `slot`, `midi`) alongside system `sliceY`/`staffY` coordinates and `barBoxes`, driving exact note-hold highlights on both the 2D Fretboard and 3D Falling Highway.
+- Calls `write_midi_file()` to obtain exact `(on_tick, off_tick)` MIDI lifetimes produced by all string-damping, legato, `max_age` (`2880`/`1920`/`3000`/`280`), and ritardando rules.
+- Parses Tempo (`0xFF 0x51`) changes + Ch 0 (`Steel`) / Ch 2 (`Harp`) / Ch 3 (`Muted`) note spans via `parse_midi_note_spans()`, converting ticks accurately into seconds (`t`, `d`).
+- Emits `"notes"` entries (`t`, `d`, `s`, `f`, `r`, `b`, optional `gf`/`lt`/`to`/`h`/`pm`/`arp`) alongside system `sliceY`/`staffY` coordinates and `barBoxes`, driving exact note-hold highlights on both the 2D Fretboard and 3D Falling Highway.

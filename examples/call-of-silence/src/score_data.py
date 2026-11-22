@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 TITLE = "Call of Silence"
-SUBTITLE = "《进击的巨人》第二季插曲 · 指弹吉他独奏六线谱（技巧编配版）"
+SUBTITLE = "《进击的巨人》第二季插曲 · 指弹吉他独奏六线谱"
 COMPOSER = "泽野弘之 (Hiroyuki Sawano)"
 ARRANGER_INFO = "原调：1 = A / F#m  |  选调：G调指法 (Capo = 2品)  |  标准调弦：6E 5A 4D 3G 2B 1E"
 CHORD_LEGEND = "和弦对照 (Capo 2)：Cmaj7 = Dmaj7   D = E   Em = F#m   G = A   Am7 = Bm7   Bm7 = C#m7"

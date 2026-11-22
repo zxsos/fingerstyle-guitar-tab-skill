@@ -334,7 +334,7 @@ def build_lilypond_source(measures: List[Measure]) -> str:
   subtitle = \\markup {{ \\fontsize #0.5 "{SUBTITLE}" }}
   composer = \\markup {{ \\fontsize #-0.5 "作曲：{COMPOSER}" }}
   arranger = \\markup {{ \\fontsize #-1 "{ARRANGER_INFO}" }}
-  tagline = \\markup {{ \\fontsize #-2 "Call of Silence · 指弹吉他六线谱（技巧编配版 · 4/4 拍 · ♩ = {TEMPO_BPM} · Capo = 2 · F#m / A大调）" }}
+  tagline = \\markup {{ \\fontsize #-2 "Call of Silence · 指弹吉他六线谱（4/4 拍 · ♩ = {TEMPO_BPM} · Capo = 2 · F#m / A大调）" }}
 }}
 
 \\markup {{

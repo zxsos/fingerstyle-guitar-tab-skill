@@ -12,10 +12,10 @@
 
 ## 特性
 
-- **单一数据源** — 一份 `score_data.py` 同时生成 PDF 与音频，品格与音高不会错位
-- **简谱/乐谱优先与声部防交叉** — 以权威简谱/总谱锁定主旋律，硬性校验伴奏音高不越过主旋律，保留跨小节切分延音与力度信噪比（`98/74/48`）
-- **完整指弹技巧** — 击弦、勾弦、滑音、琶音、泛音、闷音、拍弦
-- **自动校验** — 声部交叉、关键小节主旋律音高断言、指法跨度、调内音、PDF 脱敏、音频电平逐项把关
+- **单一数据源 & 共享通用引擎** — 模型只需专注写一份 `src/score_data.py`（其余制谱、合音、切片、校验、打包全部由共享 CLI `tab_engine.py` 一行命令完成），品格与音高绝不错位
+- **信源纯净度前置分诊 & 多格式互转** — 先问用户是否有 `.mid` / MusicXML / 原版简谱等高纯净度信源；支持 `MIDI / MusicXML / .mxl` 一键直转草稿（`import_score.py`），拒绝纯混音音频盲扒
+- **三档难度硬校验** — 支持 `beginner`（新手入门）、`standard`（标准指弹）、`advanced`（进阶独奏），在品位、跨度、节奏密度与技巧上做硬性校验
+- **自愈报错 & 零心算弦位助手** — 内置 `fret_helper.py` 自动算变调夹与简谱弦位，`tab_engine.py check` 遇到声部交叉或跨度超限会直接给出可复制替换候选，弱/小模型也能一次写对
 - **一键打包 & 同步练琴** — 产出精确到 MIDI 延音时长的 `sync_manifest.json` 与 `.zip` 乐谱包，拖入[在线练习播放器](https://zxsos.github.io/guitar-tab-player/)即可同步使用 2D 指板与 3D 透视下落轨道
 
 ## 安装
@@ -33,10 +33,12 @@ git clone https://github.com/zxsos/fingerstyle-guitar-tab-skill.git
 cd fingerstyle-guitar-tab-skill
 bash skills/fingerstyle-guitar-tab/scripts/setup_tools.sh   # 免 sudo 安装 LilyPond / FluidSynth
 
-cd examples/call-of-silence
-python3 src/build_pdf.py && python3 src/build_audio.py
-python3 src/verify_all.py
-pdftoppm -png -r 150 *.pdf previews/page && python3 src/build_sync_manifest.py && python3 src/build_bundle.py
+# 方式一：一键验证官方示例 Call of Silence
+python3 skills/fingerstyle-guitar-tab/scripts/tab_engine.py verify examples/call-of-silence
+
+# 方式二：直接导入 MIDI / MusicXML 成指弹草稿并一键出谱
+python3 skills/fingerstyle-guitar-tab/scripts/import_score.py song.mid --out my_song/src/score_data.py --tier beginner
+python3 skills/fingerstyle-guitar-tab/scripts/tab_engine.py build my_song
 ```
 
 依赖：Python 3、FFmpeg、Ghostscript、poppler-utils、Noto CJK 字体。macOS：`brew install lilypond fluid-synth ffmpeg ghostscript poppler`。
@@ -56,7 +58,7 @@ pdftoppm -png -r 150 *.pdf previews/page && python3 src/build_sync_manifest.py &
 
 ## 让 AI 编配新曲
 
-> 克隆 https://github.com/zxsos/fingerstyle-guitar-tab-skill ，按 `skills/fingerstyle-guitar-tab/SKILL.md` 为《曲名》编配指弹六线谱：优先结合原版简谱/乐谱锁定主旋律（不靠纯音频频谱瞎猜）与声部防交叉规则，以 `examples/call-of-silence` 为模板，`verify_all.py` 全部通过后生成预览图、`sync_manifest.json` 与 `*_bundle.zip`。
+> 克隆 https://github.com/zxsos/fingerstyle-guitar-tab-skill ，按 `skills/fingerstyle-guitar-tab/SKILL.md` 为《曲名》编配指弹六线谱：先确认信源纯净度与难度档位（`beginner`/`standard`/`advanced`），用 `scripts/fret_helper.py` / `scripts/import_score.py` 生成 `src/score_data.py`，再通过 `scripts/tab_engine.py build` 一键出谱、校验并打包。
 
 ## License
 

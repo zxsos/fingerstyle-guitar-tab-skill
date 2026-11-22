@@ -76,40 +76,37 @@ Compact constructor helpers `n(...)` and `ev(...)` keep measure definitions conc
 - **Eliminate voice crossing (高音掩蔽效应):** Listeners hear the highest sounding pitch as the melody. During low/mid-register verses where melody sits on strings 3–4, NEVER place open strings 1–2 (`B3`/`E4`) or high chord fills as `"bass"` or `"inner"` notes above the sounding melody. All non-harmonic accompaniment notes on non-closing bars must satisfy `concert_midi <= active_melody_midi`.
 - **Syncopated cross-bar sustain ties (切分跨拍延音):** When a vocal phrase anticipates on beat 4-and (e.g., slot `14` or `12`) and ties across the barline into the next measure, do NOT re-pluck the melody note on beat 1 (`slot 0`) of the next bar—that chops one held syllable into two attacks. Instead, pluck only the new `"bass"` root and low `"inner"` accompaniment on beat 1 and let `build_audio.py`'s `2880`-tick (6-beat) melody sustain cap carry the held melody note cleanly across the barline.
 
-## 5. `validate_score()` Invariants
+## 5. Optional Module Constants (`src/score_data.py`)
 
-Run `validate_score()` before both PDF compilation and audio synthesis:
+`scripts/tab_engine.py` reads these module-level constants from `src/score_data.py` with safe defaults:
 
-1. **Sequential bars & exact rhythm coverage:** Pickup bar `0` covers `[12..16)` summing to `4`; full bars `1..N` cover `[0..16)` summing to `16`. Every event starts at `cursor` (`e.slot == cursor`) with `e.dur in {1, 2, 3, 4, 6, 8, 12, 16}`.
+| Constant | Default | Purpose |
+| :--- | :--- | :--- |
+| `TIER` | `"standard"` | Difficulty preset: `"beginner"`, `"standard"`, or `"advanced"` |
+| `FILE_PREFIX` | Derived from `TITLE` | Output filename prefix (`<FILE_PREFIX>_指弹吉他六线谱.pdf`, `.mp3`, `_bundle.zip`) |
+| `ALLOW_CHROMATIC` | `False` | Allow non-diatonic chromatic passing/borrowed tones cleanly |
+| `REQUIRED_TECHS` | Tier default | Override required technique names tuple (e.g., `()` for beginner/minimalist arrangements) |
+| `LANDMARKS` | `{}` | `Dict[bar_idx, List[int]]` enforcing exact `concert_midi` melody sequences per landmark bar |
+| `PHRASE_CUES` | `{}` | `Dict[(bar_idx, slot), str]` lyric/expression cues printed below the TAB staff |
+| `LINE_BREAKS` / `PAGE_BREAKS` | Auto (4/16 bars) | Explicit bar numbers to force `\break` or `\pageBreak` |
+| `RITARDANDO_BAR` | Auto on closing bar | Measure number to slow tempo gently (`*0.833`) at the ending chord |
+
+`chords=[(slot, label)]` accepts any standard chord root (`A..G` + optional `#`/`b`), quality (`m`, `maj7`, `m7`, `7`, `6`, `m6`, `9`, `m9`, `maj9`, `add9`, `sus2`, `sus4`, `7sus4`, `dim`, `dim7`, `m7b5`, `aug`, `5`), and slash bass (`/F#`, `/B`, `/G`, etc.) via `tab_common.chord_to_lilypond()`.
+
+## 6. `validate_project_score()` Invariants
+
+Run `python3 scripts/tab_engine.py check <project_dir>` (backed by `tab_common.validate_project_score()`) before compiling PDF or audio:
+
+1. **Sequential bars & exact rhythm coverage:** Pickup bar `0` (`is_pickup=True`, starting at slot `12`, `8`, or `4`) covers `[start..16)`; full bars `1..N` cover `[0..16)` summing to `16`. Every event starts at `cursor` (`e.slot == cursor`) with `e.dur in {1, 2, 3, 4, 6, 8, 12, 16}` (`dur == 1` disallowed when `TIER="beginner"`).
 2. **Rest hygiene:** Rest events have `notes == ()`, `arpeggio == False`, and `link_tech is None`.
-3. **String exclusivity:** Non-rest events have `>= 1` note and no duplicate `string` numbers.
-4. **Diatonic key purity:** Unless intentionally chromatic, every pitched note and `grace_from` note checks `(concert_midi % 12) in DIATONIC_PCS`.
-5. **Playability (`fret span <= 3`):** For non-harmonic fretted notes (`fret > 0 and not harmonic`) in a simultaneous event, `max(fretted) - min(fretted) <= 3`.
-6. **Technique integrity:**
+3. **String exclusivity & note count:** Non-rest events have `1 <= len(notes) <= tier.max_simultaneous` (`3` for `beginner`, `6` otherwise) and no duplicate `string` numbers.
+4. **Diatonic key purity:** Unless `ALLOW_CHROMATIC = True`, every pitched note and `grace_from` note checks `(concert_midi % 12) in DIATONIC_PCS` and prints adjacent diatonic fret fixes on failure.
+5. **Playability (`fret <= tier.max_fret`, `span <= tier.max_span`):** Non-harmonic frets stay within `0..tier.max_fret` (`7` / `12` / `15`), and simultaneous fretted notes (`fret > 0 and not harmonic`) satisfy `max(fretted) - min(fretted) <= tier.max_span` (`2` / `3` / `4`), printing alternative string positions when exceeded.
+6. **Technique integrity & tier whitelist:**
    - `arpeggio=True` requires `len(notes) >= 2`.
    - `harmonic=True` validates expected natural harmonic fret (`12`).
    - `grace_from` checks `1 <= grace_from <= 15`, `grace_from != fret`, and `abs(fret - grace_from) <= 3`.
    - `link_tech` (`"H"`, `"P"`, `"S"`) verifies a melody note exists, the next event contains the same `string`, and fret delta satisfies `1..3` for `H`, `-3..-1` for `P`, and `!= 0` for `S`.
-   - Confirm each required technique count (`H`, `P`, `S`, `arpeggio`, `harmonic`, `palm_mute`, `slap`) is `>= 1`.
-7. **Voice-crossing guard (`active_melody_midi`):** Track `active_melody_midi` across measures and reject any non-harmonic accompaniment note higher than the active melody (allowing full-chord voicings on the final closing bar if desired):
-
-   ```python
-   active_melody_midi: Optional[int] = None
-   for idx, meas in enumerate(measures):
-       for ev_idx, e in enumerate(meas.events):
-           if e.rest:
-               active_melody_midi = None
-               continue
-           pitched_notes = [nt for nt in e.notes if nt.role != "slap"]
-           mel_notes = [nt for nt in pitched_notes if nt.role == "melody"]
-           if mel_notes:
-               active_melody_midi = None if any(nt.harmonic for nt in mel_notes) else max(nt.concert_midi for nt in mel_notes)
-           if meas.bar < last_bar and active_melody_midi is not None:
-               for nt in pitched_notes:
-                   if nt.role in ("bass", "inner") and not nt.harmonic and nt.concert_midi > active_melody_midi:
-                       errors.append(
-                           f"M{meas.bar:02d} slot {e.slot}: voice crossing — {nt.role} "
-                           f"({nt.string},{nt.fret}) {nt.pitch_name} ({nt.concert_midi}) > "
-                           f"melody ({active_melody_midi})"
-                       )
-   ```
+   - Rejects techniques outside `tier.allowed_techs` (`beginner` allows only basic plucks & optional `arpeggio`).
+   - Confirm each `required_techs` entry appears `>= 1` time (`()` in `beginner`, `("arpeggio",)` in `standard`, `("H","P","S","arpeggio","harmonic")` in `advanced`, or `REQUIRED_TECHS` override).
+7. **Voice-crossing guard (`active_melody_midi`) & `LANDMARKS`:** Track `active_melody_midi` continuously across measures and reject any non-harmonic accompaniment note higher than the active melody (`meas.bar < last_bar`), printing ready-to-paste `bass`/`inner` replacements derived from the bar's chord & diatonic tones; assert `LANDMARKS` melody sequences match exact `concert_midi` targets.
