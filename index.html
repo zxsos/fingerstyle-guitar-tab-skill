@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Call of Silence — 指弹吉他六线谱在线试听与同步看谱</title>
+  <title>Call of Silence · 指弹六线谱</title>
   <style>
     :root {
-      --bg: #11100f;
-      --surface: #1b1916;
-      --surface-2: #24211d;
-      --border: #363028;
-      --text: #f3eee5;
-      --muted: #b0a493;
-      --accent: #e09f3e;
-      --accent-soft: rgba(224, 159, 62, 0.16);
-      --accent-hover: #edb55b;
-      --green: #6bc47d;
-      --radius: 12px;
-      --shadow: 0 14px 36px rgba(0, 0, 0, 0.46);
+      --bg: #f4f4f5;
+      --paper: #ffffff;
+      --text: #18181b;
+      --muted: #71717a;
+      --line: #e4e4e7;
+      --accent: #4f46e5;
+      --accent-soft: rgba(79, 70, 229, 0.10);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
     }
 
     * {
@@ -30,325 +27,237 @@
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(circle at top center, #211d17 0%, var(--bg) 52%);
+      background: var(--bg);
       color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
       line-height: 1.5;
-      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 1080px;
+    button,
+    input {
+      font-family: inherit;
+    }
+
+    svg.ico {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex: none;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .top-bar-inner {
+      max-width: 1040px;
+      height: 100%;
       margin: 0 auto;
-      padding: 14px 14px 84px;
-    }
-
-    header.hero {
-      background: linear-gradient(135deg, rgba(36, 33, 29, 0.96), rgba(24, 22, 19, 0.96));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: var(--shadow);
-      margin-bottom: 10px;
-    }
-
-    .hero-top {
+      padding: 0 16px;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
 
-    .hero h1 {
-      margin: 0 0 3px;
-      font-size: clamp(1.18rem, 2.2vw, 1.55rem);
-      letter-spacing: 0.01em;
-      color: var(--text);
-    }
-
-    .hero-sub {
-      margin: 0 0 8px;
-      color: var(--muted);
-      font-size: 0.87rem;
-    }
-
-    .badges {
+    .brand-left {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .badge {
-      display: inline-flex;
       align-items: center;
-      padding: 2px 9px;
-      border-radius: 999px;
-      font-size: 0.77rem;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
+      gap: 10px;
+      min-width: 0;
     }
 
-    .badge.highlight {
-      border-color: rgba(107, 196, 125, 0.45);
-      color: #bdebc6;
-      background: rgba(107, 196, 125, 0.12);
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      align-items: center;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 11px;
+    .brand-logo {
+      width: 28px;
+      height: 28px;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      text-decoration: none;
-      font-size: 0.83rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
-    }
-
-    .btn:hover {
-      background: #302c25;
-      border-color: #544a3d;
-    }
-
-    .btn:active {
-      transform: translateY(1px);
-    }
-
-    .btn.primary {
-      background: var(--accent);
-      color: #16130f;
-      border-color: var(--accent);
-      font-weight: 600;
-    }
-
-    .btn.primary:hover {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-
-    .btn.compact {
-      padding: 4px 9px;
-      font-size: 0.79rem;
-    }
-
-    .import-banner {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: rgba(107, 196, 125, 0.12);
-      border: 1px solid rgba(107, 196, 125, 0.38);
-      color: #d6f5dd;
-      font-size: 0.84rem;
-    }
-
-    .import-banner-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .player-dock {
-      position: sticky;
-      top: 8px;
-      z-index: 40;
-      background: rgba(25, 23, 20, 0.94);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 9px 14px;
-      box-shadow: var(--shadow);
-      margin-bottom: 12px;
-    }
-
-    .dock-row-1 {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 7px;
-    }
-
-    audio#player {
-      flex: 1 1 260px;
-      height: 36px;
-      min-width: 200px;
-      accent-color: var(--accent);
-    }
-
-    .dock-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .ctrl-btn {
-      padding: 4px 9px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .ctrl-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent-hover);
-    }
-
-    .ctrl-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #16130f;
-      font-weight: 600;
-    }
-
-    .divider {
-      width: 1px;
-      height: 16px;
-      background: var(--border);
-      margin: 0 2px;
-    }
-
-    .toggle-chip {
+      background: var(--accent-soft);
+      color: var(--accent);
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 4px 8px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
-      font-size: 0.79rem;
-      cursor: pointer;
-      user-select: none;
+      justify-content: center;
+      flex: none;
     }
 
-    .toggle-chip input {
-      accent-color: var(--accent);
-      width: 14px;
-      height: 14px;
-      margin: 0;
-      cursor: pointer;
-    }
-
-    .dock-row-2 {
+    .bar-title-wrap {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
       gap: 8px;
-      padding-top: 7px;
-      border-top: 1px solid rgba(54, 48, 40, 0.78);
+      min-width: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
-    .live-readout {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 7px;
-      font-size: 0.81rem;
-      color: var(--text);
+    .bar-title-wrap.visible {
+      opacity: 1;
     }
 
-    .bar-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 7px;
-      border-radius: 6px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(224, 159, 62, 0.55);
-      color: #ffd794;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .meta-sep {
-      color: var(--border);
-    }
-
-    .chord-readout {
-      color: #f3c879;
+    .bar-title {
+      font-size: 15px;
       font-weight: 600;
-    }
-
-    .cue-readout {
-      color: #d6cbbd;
-      font-style: italic;
-    }
-
-    .section-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .sec-btn {
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--muted);
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .sec-btn:hover {
       color: var(--text);
-      border-color: #625647;
-    }
-
-    .sec-btn.active {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: #ffd794;
-      font-weight: 600;
-    }
-
-    /* Seamless unpaginated continuous editorial sheet */
-    .sheet-paper {
-      background: #ffffff;
-      border-radius: 14px;
-      box-shadow: 0 20px 52px rgba(0, 0, 0, 0.5);
-      padding: 18px 18px 28px;
+      white-space: nowrap;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-overflow: ellipsis;
+    }
+
+    .local-chip {
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      flex: none;
+    }
+
+    .top-actions {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: none;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(24, 24, 27, 0.05);
+    }
+
+    .pill-btn {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .pill-btn:hover {
+      background: #fafafa;
+      border-color: #d4d4d8;
+    }
+
+    /* Popover Menus */
+    .popover {
+      position: absolute;
+      top: 42px;
+      right: 0;
+      min-width: 196px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 6px;
+      z-index: 60;
+      display: none;
+    }
+
+    .popover.open {
+      display: block;
+    }
+
+    .menu-item {
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text);
+      font-size: 13px;
+      text-align: left;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background: #f4f4f5;
+    }
+
+    .menu-note {
+      padding: 5px 10px 4px;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 4px;
+    }
+
+    /* Sheet Paper */
+    .sheet-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 140px;
+    }
+
+    .sheet-paper {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 28px;
     }
 
     .sheet-header-crop {
-      margin-bottom: 6px;
-      border-bottom: 1px solid #ece7df;
-      padding-bottom: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
     }
 
     .slice-viewport {
       position: relative;
       width: 100%;
       overflow: hidden;
-      background: #ffffff;
+      background: var(--paper);
+    }
+
+    .slice-viewport.loading {
+      background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 50%, #f4f4f5 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite linear;
+      border-radius: 6px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
     .slice-viewport img {
@@ -365,81 +274,20 @@
     .systems-flow {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
 
     .sys-row {
       position: relative;
-      display: flex;
-      align-items: center;
-      padding: 6px 8px 6px 6px;
-      border-radius: 10px;
-      border-left: 4px solid transparent;
-      background: #ffffff;
-      transition: opacity 0.24s ease, background-color 0.22s ease, border-color 0.22s ease;
+      transition: opacity 240ms ease;
     }
 
-    .sheet-paper.focus-enabled .sys-row:not(.is-active) {
-      opacity: 0.38;
+    .sheet-paper.started .sys-row:not(.is-active) {
+      opacity: 0.3;
     }
 
-    .sheet-paper.focus-enabled .sys-row:not(.is-active):hover {
-      opacity: 0.88;
-    }
-
-    .sys-row.is-active {
-      opacity: 1;
-    }
-
-    .sheet-paper.focus-enabled .sys-row.is-active {
-      background: #fffcf5;
-      border-left-color: var(--accent);
-      box-shadow: inset 0 0 0 1px rgba(224, 159, 62, 0.22);
-    }
-
-    .sys-gutter {
-      flex: 0 0 42px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding-right: 4px;
-      color: #9e9384;
-      font-size: 11px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      user-select: none;
-    }
-
-    .sys-row.is-active .sys-gutter {
-      color: #b46d0c;
-    }
-
-    .gutter-pill {
-      display: inline-block;
-      padding: 2px 5px;
-      border-radius: 5px;
-      background: #f3efe8;
-      border: 1px solid #e2dbd0;
-      line-height: 1.25;
-    }
-
-    .sys-row.is-active .gutter-pill {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #16130f;
-    }
-
-    .gutter-sub {
-      font-size: 10px;
-      font-weight: 500;
-      opacity: 0.85;
-    }
-
-    .sys-clip {
-      flex: 1 1 auto;
-      min-width: 0;
+    .sheet-paper.started .sys-row:not(.is-active):hover {
+      opacity: 0.7;
     }
 
     .sys-overlay {
@@ -451,7 +299,7 @@
     .karaoke-fill {
       position: absolute;
       border-radius: 4px;
-      background: linear-gradient(90deg, rgba(224, 159, 62, 0.17), rgba(235, 168, 58, 0.34));
+      background: linear-gradient(90deg, rgba(79, 70, 229, 0.08), rgba(79, 70, 229, 0.20));
       mix-blend-mode: multiply;
       opacity: 0;
       pointer-events: none;
@@ -464,9 +312,8 @@
 
     .active-bar-box {
       position: absolute;
-      border-radius: 4px;
-      border: 1.5px solid rgba(224, 159, 62, 0.88);
-      background: rgba(255, 210, 128, 0.12);
+      border-radius: 6px;
+      background: rgba(79, 70, 229, 0.07);
       mix-blend-mode: multiply;
       opacity: 0;
       transition: left 0.12s ease, width 0.12s ease, opacity 0.15s ease;
@@ -479,9 +326,8 @@
 
     .playhead {
       position: absolute;
-      width: 2.5px;
-      background: linear-gradient(180deg, #ffb947 0%, #d8830d 100%);
-      box-shadow: 0 0 8px rgba(224, 159, 62, 0.9);
+      width: 2px;
+      background: var(--accent);
       border-radius: 2px;
       transform: translateX(-50%);
       opacity: 0;
@@ -496,13 +342,12 @@
     .playhead::before {
       content: "";
       position: absolute;
-      top: -5px;
+      top: -4px;
       left: 50%;
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: #ffcb74;
-      border: 1.5px solid #16130f;
+      background: var(--accent);
       transform: translateX(-50%);
     }
 
@@ -518,32 +363,382 @@
       height: 100%;
       pointer-events: auto;
       background: transparent;
-      border: 1px solid transparent;
+      border: 0;
       border-radius: 4px;
       padding: 0;
       margin: 0;
       cursor: pointer;
-      transition: background 0.12s ease, border-color 0.12s ease;
+      transition: background 0.12s ease;
     }
 
     .bar-hotspot:hover,
     .bar-hotspot:focus-visible {
-      background: rgba(224, 159, 62, 0.10);
-      border-color: rgba(224, 159, 62, 0.65);
+      background: rgba(24, 24, 27, 0.04);
       outline: none;
     }
 
-    .sheet-footer-hint {
-      margin-top: 14px;
-      padding-top: 10px;
-      border-top: 1px solid #ede8e0;
+    /* Floating Locate Pill */
+    .locate-pill {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translateX(-50%) translateY(8px);
+      z-index: 44;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: var(--shadow);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .locate-pill.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Floating Bottom Player */
+    .player-bar {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 16px;
+      z-index: 45;
+      width: min(960px, calc(100% - 24px));
+      height: 68px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .pb-left {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .skip-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .skip-btn:hover {
+      color: var(--text);
+      background: rgba(24, 24, 27, 0.05);
+    }
+
+    .play-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--accent);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.32);
+      transition: transform 0.1s ease, filter 0.15s ease;
+    }
+
+    .play-btn:hover {
+      filter: brightness(1.06);
+    }
+
+    .play-btn:active {
+      transform: scale(0.96);
+    }
+
+    .pb-center {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .pb-meta {
+      display: flex;
+      align-items: baseline;
       justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .pb-info {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 13px;
+    }
+
+    .pb-section {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .pb-dot {
+      color: var(--muted);
+    }
+
+    .pb-chord {
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pb-time {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      flex: none;
+    }
+
+    /* Custom Scrubber */
+    .scrubber {
+      position: relative;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      touch-action: none;
+      outline: none;
+    }
+
+    .scrub-track {
+      position: relative;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      transition: height 0.12s ease;
+    }
+
+    .scrubber:hover .scrub-track,
+    .scrubber.dragging .scrub-track,
+    .scrubber:focus-visible .scrub-track {
+      height: 6px;
+    }
+
+    .scrub-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--accent);
+      pointer-events: none;
+    }
+
+    .scrub-markers {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .scrub-tick {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--paper);
+      transform: translateX(-50%);
+      opacity: 0.92;
+    }
+
+    .scrub-thumb {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.12s ease;
+      pointer-events: none;
+    }
+
+    .scrubber:hover .scrub-thumb,
+    .scrubber.dragging .scrub-thumb,
+    .scrubber:focus-visible .scrub-thumb {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .scrub-tip {
+      position: absolute;
+      bottom: 24px;
+      left: 0%;
+      transform: translateX(-50%);
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--text);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.1s ease;
+    }
+
+    .scrub-tip.visible {
+      opacity: 1;
+    }
+
+    .speed-btn {
+      height: 30px;
+      min-width: 48px;
+      padding: 0 8px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .speed-btn:hover {
+      background: #f4f4f5;
+    }
+
+    /* Fullscreen Drop Overlay */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .drop-overlay.open {
+      display: flex;
+    }
+
+    .drop-box {
+      width: min(420px, 100%);
+      padding: 44px 24px;
+      border: 2px dashed var(--accent);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
+    /* Toasts */
+    .toasts {
+      position: fixed;
+      left: 50%;
+      bottom: 100px;
+      transform: translateX(-50%);
+      z-index: 95;
+      display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 8px;
-      font-size: 0.79rem;
-      color: #7d7365;
+      pointer-events: none;
+      width: min(440px, calc(100% - 24px));
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--text);
+      color: #ffffff;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .toast.error {
+      background: #b91c1c;
+    }
+
+    .toast-spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .toast-act {
+      padding: 3px 9px;
+      border-radius: 7px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: none;
+    }
+
+    .toast-act:hover {
+      background: rgba(255, 255, 255, 0.28);
     }
 
     /* Modals */
@@ -551,8 +746,9 @@
       position: fixed;
       inset: 0;
       z-index: 90;
-      background: rgba(8, 7, 6, 0.8);
-      backdrop-filter: blur(5px);
+      background: rgba(24, 24, 27, 0.48);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       display: none;
       align-items: center;
       justify-content: center;
@@ -564,366 +760,337 @@
     }
 
     .modal-card {
-      width: min(740px, 100%);
-      max-height: 92vh;
-      overflow-y: auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
-      padding: 20px 22px;
-      color: var(--text);
+      width: min(380px, 100%);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
     }
 
     .modal-card.wide {
-      width: min(1040px, 100%);
+      width: min(1020px, 100%);
       padding: 14px 16px;
     }
 
     .modal-head {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .modal-head h2 {
-      margin: 0;
-      font-size: 1.15rem;
-    }
-
-    .dropzone {
-      border: 2px dashed #554b3e;
-      border-radius: 12px;
-      background: rgba(36, 33, 29, 0.65);
-      padding: 22px 18px;
-      text-align: center;
-      transition: border-color 0.16s ease, background-color 0.16s ease;
-      margin-bottom: 14px;
-    }
-
-    .dropzone.dragover {
-      border-color: var(--accent);
-      background: rgba(224, 159, 62, 0.12);
-    }
-
-    .dropzone p {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .dropzone strong {
-      color: var(--text);
-    }
-
-    .drop-btns {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      justify-content: space-between;
       gap: 10px;
-    }
-
-    .hidden-input {
-      display: none;
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 8px;
       margin-bottom: 14px;
     }
 
-    .status-tile {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 9px 11px;
-      font-size: 0.82rem;
-    }
-
-    .status-tile .label {
-      color: var(--muted);
-      font-size: 0.76rem;
-      margin-bottom: 2px;
-    }
-
-    .status-tile .val {
+    .modal-title {
+      font-size: 14px;
       font-weight: 600;
       color: var(--text);
-      word-break: break-word;
+      margin: 0;
     }
 
-    .status-tile .val.ok {
-      color: #9ae1a9;
+    .modal-filename {
+      font-size: 13px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .status-tile .val.warn {
-      color: #f3c879;
-    }
-
-    .import-opts {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-      padding: 12px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-    }
-
-    .field {
+    .modal-actions {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 4px;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .field input[type="number"],
-    .field input[type="text"] {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 8px;
-      color: var(--text);
-      font-size: 0.86rem;
-    }
-
-    .import-msg {
-      min-height: 20px;
-      margin-bottom: 12px;
-      font-size: 0.84rem;
-      color: var(--muted);
-    }
-
-    .import-msg.error {
-      color: #ff9f96;
-    }
-
-    .import-msg.ok {
-      color: #9ae1a9;
-    }
-
-    .modal-footer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
+      flex: none;
     }
 
     .pdf-frame {
       width: 100%;
-      height: 78vh;
-      min-height: 520px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #2b2926;
+      height: min(80vh, 900px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f4f4f5;
+      display: block;
     }
 
+    .cal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .cal-field input[type="number"] {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--text);
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cal-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .cal-check input {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+    }
+
+    .cal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn-primary {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 9px;
+      border: 0;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-ghost {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .hidden-input,
     .hidden {
       display: none !important;
     }
 
-    @media (max-width: 720px) {
-      .container {
-        padding: 8px 6px 64px;
-      }
-      header.hero {
-        padding: 12px;
-      }
-      .player-dock {
-        padding: 8px 10px;
-        top: 4px;
+    @media (max-width: 640px) {
+      .sheet-wrap {
+        padding: 12px 8px 128px;
       }
       .sheet-paper {
-        padding: 10px 6px 18px;
-        border-radius: 10px;
+        padding: 12px 6px;
+        border-radius: 12px;
       }
-      .sys-row {
-        padding: 4px 4px 4px 2px;
+      .player-bar {
+        padding: 0 12px;
+        gap: 12px;
       }
-      .sys-gutter {
-        flex: 0 0 32px;
-        font-size: 10px;
-      }
-      .gutter-sub {
+    }
+
+    @media (max-width: 480px) {
+      .skip-btn {
         display: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="hero">
-      <div class="hero-top">
-        <div>
-          <h1 id="hero-title">Call of Silence — 指弹吉他六线谱在线试听与同步看谱</h1>
-          <p class="hero-sub" id="hero-sub">《进击的巨人》第二季插曲 · 无分页连续滚动、逐拍染色聚焦与本地 Skill 产物直读播放器</p>
-          <div class="badges" id="hero-badges">
-            <span class="badge">原调 1 = A / F#m</span>
-            <span class="badge">Capo 2（G / Em 指法）</span>
-            <span class="badge">4/4 拍 · 72 BPM</span>
-            <span class="badge">45 小节 · 14 行连续铺排</span>
-            <span class="badge highlight">95.2% 调内纯净度</span>
-          </div>
-        </div>
-        <div class="hero-actions">
-          <button type="button" class="btn primary" id="open-import-btn">📂 导入 Skill 产物</button>
-          <button type="button" class="btn" id="open-pdf-btn">📄 原版 PDF</button>
-          <a class="btn" id="download-mp3-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" download>🎵 下载 MP3</a>
-          <a class="btn" href="https://github.com/zxsos/fingerstyle-guitar-tab-skill" target="_blank" rel="noopener">GitHub</a>
+  <header class="top-bar">
+    <div class="top-bar-inner">
+      <div class="brand-left">
+        <span class="brand-logo" aria-hidden="true">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </span>
+        <div class="bar-title-wrap" id="bar-title-wrap">
+          <span class="bar-title" id="bar-title">Call of Silence</span>
+          <span class="local-chip hidden" id="bar-local-chip">本地</span>
         </div>
       </div>
-    </header>
 
-    <div class="import-banner hidden" id="import-banner">
-      <span id="import-banner-text">本地导入模式</span>
-      <div class="import-banner-actions">
-        <button type="button" class="btn compact" id="export-manifest-btn">💾 导出 sync_manifest.json</button>
-        <button type="button" class="btn compact" id="reset-builtin-btn">↩ 返回内置作品</button>
+      <div class="top-actions">
+        <button type="button" class="pill-btn" id="import-btn" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          导入
+        </button>
+
+        <button type="button" class="icon-btn" id="open-pdf-btn" title="原版 PDF" aria-label="原版 PDF">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+
+        <button type="button" class="icon-btn" id="more-btn" title="更多" aria-label="更多" aria-haspopup="true" aria-expanded="false">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+
+        <a class="icon-btn" href="https://github.com/zxsos/fingerstyle-guitar-tab-skill" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+        </a>
+
+        <!-- Import Popover -->
+        <div class="popover" id="import-menu" role="menu">
+          <button type="button" class="menu-item" id="pick-dir-btn" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            选择文件夹…
+          </button>
+          <button type="button" class="menu-item" id="pick-files-btn" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            选择文件…
+          </button>
+          <div class="menu-note">或直接拖入页面</div>
+        </div>
+
+        <!-- More Popover -->
+        <div class="popover" id="more-menu" role="menu">
+          <a class="menu-item" id="menu-dl-mp3" download role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            下载 MP3
+          </a>
+          <a class="menu-item" id="menu-dl-pdf" download role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            下载 PDF
+          </a>
+          <button type="button" class="menu-item" id="menu-export-json" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            导出 sync_manifest.json
+          </button>
+          <button type="button" class="menu-item hidden" id="menu-calibrate" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            校准时间轴…
+          </button>
+          <button type="button" class="menu-item hidden" id="menu-reset-builtin" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            恢复示例曲目
+          </button>
+        </div>
       </div>
     </div>
+  </header>
 
-    <section class="player-dock" id="player-dock" aria-label="试听播放器与同步控制">
-      <div class="dock-row-1">
-        <audio id="player" controls preload="metadata">
-          <source src="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" type="audio/mpeg" />
-          当前浏览器不支持 HTML5 音频播放。
-        </audio>
-        <div class="dock-controls">
-          <button type="button" class="ctrl-btn" id="seek-back">-5s</button>
-          <button type="button" class="ctrl-btn" id="seek-fwd">+5s</button>
-          <span class="divider" aria-hidden="true"></span>
-          <button type="button" class="ctrl-btn speed-btn" data-rate="0.5">0.5x</button>
-          <button type="button" class="ctrl-btn speed-btn" data-rate="0.75">0.75x</button>
-          <button type="button" class="ctrl-btn speed-btn active" data-rate="1">1.0x</button>
-          <span class="divider" aria-hidden="true"></span>
-          <label class="toggle-chip" title="柔和淡化非当前行，突出当前小节与进度游标">
-            <input type="checkbox" id="focus-dye" checked />
-            聚焦染色
-          </label>
-          <label class="toggle-chip" title="跨行演奏时自动居中滚动到下一行">
-            <input type="checkbox" id="auto-follow" checked />
-            自动滚动
-          </label>
-          <button type="button" class="ctrl-btn" id="focus-now-btn" title="定位到当前演奏行">🎯 定位</button>
-        </div>
-      </div>
+  <input type="file" id="dir-input" class="hidden-input" webkitdirectory directory multiple />
+  <input type="file" id="files-input" class="hidden-input" multiple accept=".mp3,.wav,.m4a,.ogg,.png,.json,.py,.pdf" />
 
-      <div class="dock-row-2">
-        <div class="live-readout">
-          <span class="bar-pill" id="live-bar">M00 / 44</span>
-          <span id="live-section">Intro</span>
-          <span class="meta-sep">·</span>
-          <span class="chord-readout" id="live-chords">弱起 Pick-up</span>
-          <span class="meta-sep">·</span>
-          <span id="live-loc">第 1 / 14 行</span>
-          <span class="cue-readout" id="live-cue"></span>
-        </div>
-        <div class="section-pills" id="section-pills" role="group" aria-label="段落快速跳转"></div>
-      </div>
+  <main class="sheet-wrap">
+    <section class="sheet-paper" id="sheet-paper" aria-label="六线谱">
+      <div class="sheet-header-crop" id="sheet-header-crop"></div>
+      <div class="systems-flow" id="systems-flow"></div>
     </section>
+  </main>
 
-    <main>
-      <section class="sheet-paper focus-enabled" id="sheet-paper" aria-label="连续无分页六线谱">
-        <div class="sheet-header-crop" id="sheet-header-crop"></div>
-        <div class="systems-flow" id="systems-flow"></div>
-        <div class="sheet-footer-hint">
-          <span>提示：直接点击乐谱上的任意小节即可跳转播放；空格键控制播放/暂停。</span>
-          <span>支持导入任意遵循本 Skill 产出的项目文件夹（MP3 + previews/page-*.png + 可选 sync_manifest.json / score_data.py）</span>
+  <button type="button" class="locate-pill" id="locate-pill">
+    <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>
+    回到当前位置
+  </button>
+
+  <div class="player-bar" id="player-bar" role="region" aria-label="音频播放器">
+    <div class="pb-left">
+      <button type="button" class="skip-btn" id="seek-back" title="后退 5 秒" aria-label="后退 5 秒">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button type="button" class="play-btn" id="play-btn" title="播放 / 暂停" aria-label="播放 / 暂停">
+        <svg class="ico" id="play-icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none;margin-left:2px;"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        <svg class="ico hidden" id="pause-icon" viewBox="0 0 24 24" style="fill:currentColor;stroke:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <button type="button" class="skip-btn" id="seek-fwd" title="前进 5 秒" aria-label="前进 5 秒">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+    </div>
+
+    <div class="pb-center">
+      <div class="pb-meta">
+        <div class="pb-info">
+          <span class="pb-section" id="pb-section">Intro</span>
+          <span class="pb-dot" id="pb-dot">·</span>
+          <span class="pb-chord" id="pb-chord">M00</span>
         </div>
-      </section>
-    </main>
+        <span class="pb-time" id="pb-time">0:00 / 0:00</span>
+      </div>
+      <div class="scrubber" id="scrubber" tabindex="0" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="scrub-track">
+          <div class="scrub-fill" id="scrub-fill"></div>
+          <div class="scrub-markers" id="scrub-markers"></div>
+          <div class="scrub-thumb" id="scrub-thumb"></div>
+        </div>
+        <div class="scrub-tip" id="scrub-tip">M00 · 0:00</div>
+      </div>
+    </div>
+
+    <button type="button" class="speed-btn" id="speed-btn" title="切换播放速度" aria-label="切换播放速度">1×</button>
   </div>
 
-  <!-- Local Skill Artifact Importer Modal -->
-  <div class="modal-backdrop" id="import-modal" role="dialog" aria-modal="true" aria-label="导入 Skill 运行产物">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2>📂 导入本 Skill 生成的本地产物</h2>
-        <button type="button" class="btn compact" id="close-import-btn">关闭 (Esc)</button>
-      </div>
+  <audio id="player" preload="metadata" class="hidden"></audio>
 
-      <div class="dropzone" id="dropzone">
-        <p>
-          将 <strong>Skill 输出文件夹</strong> 或文件直接拖拽到此处<br />
-          支持 <code>*.mp3</code> + <code>previews/page-*.png</code> + 可选 <code>sync_manifest.json</code> / <code>src/score_data.py</code> / <code>*.pdf</code>（纯浏览器本地解析，不上传服务器）
-        </p>
-        <div class="drop-btns">
-          <button type="button" class="btn primary" id="pick-dir-btn">📁 选择作品文件夹</button>
-          <button type="button" class="btn" id="pick-files-btn">📄 多选产物文件</button>
-        </div>
-        <input type="file" id="dir-input" class="hidden-input" webkitdirectory directory multiple />
-        <input type="file" id="files-input" class="hidden-input" multiple accept=".mp3,.wav,.m4a,.ogg,.png,.json,.py,.pdf" />
-      </div>
-
-      <div class="status-grid">
-        <div class="status-tile">
-          <div class="label">音频文件</div>
-          <div class="val" id="imp-audio-val">未选择</div>
-        </div>
-        <div class="status-tile">
-          <div class="label">乐谱 PNG 页面</div>
-          <div class="val" id="imp-pages-val">0 页</div>
-        </div>
-        <div class="status-tile">
-          <div class="label">同步配置 / 源码</div>
-          <div class="val" id="imp-meta-val">自动识谱模式</div>
-        </div>
-        <div class="status-tile">
-          <div class="label">识别结果</div>
-          <div class="val" id="imp-detect-val">等待文件</div>
-        </div>
-      </div>
-
-      <div class="import-opts" id="import-opts">
-        <label class="field">
-          曲名（可选覆盖）
-          <input type="text" id="imp-title-input" placeholder="自动识别" />
-        </label>
-        <label class="field">
-          速度 BPM
-          <input type="number" id="imp-bpm-input" value="72" min="30" max="240" step="1" />
-        </label>
-        <label class="field">
-          起音延迟 Lead-in (秒)
-          <input type="number" id="imp-leadin-input" value="0.2083" min="0" max="10" step="0.01" />
-        </label>
-        <label class="field">
-          首小节为 1 拍弱起
-          <select id="imp-pickup-select" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:0.86rem;">
-            <option value="auto">自动识别</option>
-            <option value="yes">是（1 拍弱起）</option>
-            <option value="no">否（完整 4 拍）</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="import-msg" id="import-msg">请先选择或拖入本 Skill 生成的乐谱文件夹（例如包含 MP3 与 previews/page-*.png 的目录）。</div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn" id="modal-export-btn" disabled>💾 导出 sync_manifest.json</button>
-        <button type="button" class="btn primary" id="modal-load-btn" disabled>▶ 载入并开始同步播放</button>
-      </div>
+  <!-- Drag & Drop Overlay -->
+  <div class="drop-overlay" id="drop-overlay" aria-hidden="true">
+    <div class="drop-box">
+      <svg class="ico" style="width:32px;height:32px;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>松开以导入</span>
     </div>
   </div>
 
-  <!-- Original PDF Viewer Modal -->
-  <div class="modal-backdrop" id="pdf-modal" role="dialog" aria-modal="true" aria-label="原版矢量 PDF 预览">
+  <!-- Toast Stack -->
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- PDF Modal -->
+  <div class="modal-backdrop" id="pdf-modal" role="dialog" aria-modal="true" aria-label="PDF 预览">
     <div class="modal-card wide">
       <div class="modal-head">
-        <h2>📄 原版矢量六线谱 PDF</h2>
-        <div class="hero-actions">
-          <a class="btn compact" id="pdf-newtab-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">新标签页打开</a>
-          <a class="btn compact primary" id="pdf-download-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" download>下载 PDF</a>
-          <button type="button" class="btn compact" id="close-pdf-btn">关闭 (Esc)</button>
+        <span class="modal-filename" id="pdf-filename">Call_of_Silence_指弹吉他六线谱.pdf</span>
+        <div class="modal-actions">
+          <a class="icon-btn" id="pdf-newtab-link" target="_blank" rel="noopener" title="新标签页打开" aria-label="新标签页打开">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a class="icon-btn" id="pdf-download-link" download title="下载" aria-label="下载">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </a>
+          <button type="button" class="icon-btn" id="close-pdf-btn" title="关闭" aria-label="关闭">
+            <svg class="ico" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
-      <iframe class="pdf-frame" id="pdf-iframe" title="矢量六线谱 PDF" src="about:blank"></iframe>
+      <iframe class="pdf-frame" id="pdf-iframe" title="PDF 预览" src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <!-- Calibration Modal -->
+  <div class="modal-backdrop" id="cal-modal" role="dialog" aria-modal="true" aria-label="校准时间轴">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="modal-title">校准时间轴</h2>
+        <button type="button" class="icon-btn" id="close-cal-btn" title="关闭" aria-label="关闭">
+          <svg class="ico" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form class="cal-form" id="cal-form">
+        <label class="cal-field">
+          BPM
+          <input type="number" id="cal-bpm" min="20" max="260" step="0.1" required />
+        </label>
+        <label class="cal-field">
+          起始偏移 (秒)
+          <input type="number" id="cal-leadin" min="0" max="30" step="0.01" required />
+        </label>
+        <label class="cal-check">
+          <input type="checkbox" id="cal-pickup" />
+          首小节弱起
+        </label>
+        <div class="cal-footer">
+          <button type="button" class="btn-ghost" id="cal-cancel-btn">取消</button>
+          <button type="submit" class="btn-primary">应用</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -2376,38 +2543,76 @@
 };
 
       const player = document.getElementById("player");
-      const playerDock = document.getElementById("player-dock");
+      const topBar = document.querySelector(".top-bar");
+      const barTitleWrap = document.getElementById("bar-title-wrap");
+      const barTitle = document.getElementById("bar-title");
+      const barLocalChip = document.getElementById("bar-local-chip");
+
+      const importBtn = document.getElementById("import-btn");
+      const importMenu = document.getElementById("import-menu");
+      const moreBtn = document.getElementById("more-btn");
+      const moreMenu = document.getElementById("more-menu");
+      const openPdfBtn = document.getElementById("open-pdf-btn");
+      const menuDlMp3 = document.getElementById("menu-dl-mp3");
+      const menuDlPdf = document.getElementById("menu-dl-pdf");
+      const menuCalibrate = document.getElementById("menu-calibrate");
+      const menuResetBuiltin = document.getElementById("menu-reset-builtin");
+
       const sheetPaper = document.getElementById("sheet-paper");
       const headerCropEl = document.getElementById("sheet-header-crop");
       const systemsFlowEl = document.getElementById("systems-flow");
+      const locatePill = document.getElementById("locate-pill");
 
-      const heroTitleEl = document.getElementById("hero-title");
-      const heroSubEl = document.getElementById("hero-sub");
-      const heroBadgesEl = document.getElementById("hero-badges");
-      const openPdfBtn = document.getElementById("open-pdf-btn");
-      const downloadMp3Link = document.getElementById("download-mp3-link");
+      const playerBar = document.getElementById("player-bar");
+      const playBtn = document.getElementById("play-btn");
+      const playIcon = document.getElementById("play-icon");
+      const pauseIcon = document.getElementById("pause-icon");
+      const pbSection = document.getElementById("pb-section");
+      const pbDot = document.getElementById("pb-dot");
+      const pbChord = document.getElementById("pb-chord");
+      const pbTime = document.getElementById("pb-time");
+      const speedBtn = document.getElementById("speed-btn");
 
-      const importBanner = document.getElementById("import-banner");
-      const importBannerText = document.getElementById("import-banner-text");
+      const scrubber = document.getElementById("scrubber");
+      const scrubFill = document.getElementById("scrub-fill");
+      const scrubMarkers = document.getElementById("scrub-markers");
+      const scrubThumb = document.getElementById("scrub-thumb");
+      const scrubTip = document.getElementById("scrub-tip");
 
-      const autoFollowEl = document.getElementById("auto-follow");
-      const focusDyeEl = document.getElementById("focus-dye");
-      const liveBarEl = document.getElementById("live-bar");
-      const liveSectionEl = document.getElementById("live-section");
-      const liveChordsEl = document.getElementById("live-chords");
-      const liveLocEl = document.getElementById("live-loc");
-      const liveCueEl = document.getElementById("live-cue");
-      const sectionPillsEl = document.getElementById("section-pills");
-      const speedBtns = Array.from(document.querySelectorAll(".speed-btn"));
+      const dropOverlay = document.getElementById("drop-overlay");
+      const toastsEl = document.getElementById("toasts");
+      const pdfModal = document.getElementById("pdf-modal");
+      const pdfIframe = document.getElementById("pdf-iframe");
+      const pdfFilename = document.getElementById("pdf-filename");
+      const pdfNewtabLink = document.getElementById("pdf-newtab-link");
+      const pdfDownloadLink = document.getElementById("pdf-download-link");
+
+      const calModal = document.getElementById("cal-modal");
+      const calForm = document.getElementById("cal-form");
+      const calBpmInput = document.getElementById("cal-bpm");
+      const calLeadInInput = document.getElementById("cal-leadin");
+      const calPickupInput = document.getElementById("cal-pickup");
+
+      const dirInput = document.getElementById("dir-input");
+      const filesInput = document.getElementById("files-input");
+
+      const SPEEDS = [1, 0.75, 0.5];
+      let speedIdx = 0;
 
       let activeManifest = null;
       let activePageUrls = [];
       let activeObjectUrls = [];
-      let isBuiltin = true;
+      let activeDetection = null;
+      let activeTitle = "";
+      let isImported = false;
+      let hasStarted = false;
+      let followPaused = false;
+      let programmaticScrollUntil = 0;
       let rowRefs = [];
-      let secBtnRefs = [];
       let lastSysIdx = -1;
       let rafId = null;
+      let headerObserver = null;
+      let draggingScrub = false;
 
       function fmtTime(sec) {
         const s = Math.max(0, Math.floor(sec));
@@ -2416,98 +2621,165 @@
         return m + ":" + (r < 10 ? "0" : "") + r;
       }
 
+      function getDuration() {
+        if (Number.isFinite(player.duration) && player.duration > 0) return player.duration;
+        return activeManifest && activeManifest.duration ? activeManifest.duration : 0;
+      }
+
       function revokeImportedUrls() {
         activeObjectUrls.forEach((u) => URL.revokeObjectURL(u));
         activeObjectUrls = [];
       }
 
+      function closePopovers() {
+        importMenu.classList.remove("open");
+        moreMenu.classList.remove("open");
+        importBtn.setAttribute("aria-expanded", "false");
+        moreBtn.setAttribute("aria-expanded", "false");
+      }
+
+      function togglePopover(pop, btn) {
+        const wasOpen = pop.classList.contains("open");
+        closePopovers();
+        if (!wasOpen) {
+          pop.classList.add("open");
+          btn.setAttribute("aria-expanded", "true");
+        }
+      }
+
+      function showToast(msg, opts) {
+        const o = opts || {};
+        const el = document.createElement("div");
+        el.className = "toast" + (o.type === "error" ? " error" : "");
+
+        if (o.loading) {
+          const sp = document.createElement("span");
+          sp.className = "toast-spinner";
+          el.appendChild(sp);
+        }
+
+        const txt = document.createElement("span");
+        txt.textContent = msg;
+        el.appendChild(txt);
+
+        if (o.actionLabel && o.onAction) {
+          const act = document.createElement("button");
+          act.type = "button";
+          act.className = "toast-act";
+          act.textContent = o.actionLabel;
+          act.addEventListener("click", () => {
+            o.onAction();
+            el.remove();
+          });
+          el.appendChild(act);
+        }
+
+        toastsEl.appendChild(el);
+        if (o.duration > 0) {
+          setTimeout(() => el.remove(), o.duration);
+        }
+        return el;
+      }
+
       function createSliceViewport(imgUrl, natW, sliceY0, sliceY1) {
         const sliceH = Math.max(1, sliceY1 - sliceY0);
         const vp = document.createElement("div");
-        vp.className = "slice-viewport";
+        vp.className = "slice-viewport loading";
         vp.style.paddingTop = ((sliceH / natW) * 100).toFixed(4) + "%";
 
         const img = document.createElement("img");
-        img.src = imgUrl;
-        img.alt = "六线谱乐句切片";
+        img.alt = "六线谱";
         img.draggable = false;
         img.style.top = (-(sliceY0 / sliceH) * 100).toFixed(4) + "%";
+        img.addEventListener("load", () => vp.classList.remove("loading"), { once: true });
+        img.addEventListener("error", () => vp.classList.remove("loading"), { once: true });
+        img.src = imgUrl;
+        if (img.complete) vp.classList.remove("loading");
 
         vp.appendChild(img);
         return vp;
       }
 
-      function buildHero(manifest, importedMode) {
-        heroTitleEl.textContent = (manifest.title || "未命名作品") + " — 指弹吉他六线谱在线试听与同步看谱";
-        heroSubEl.textContent = manifest.subtitle || "无分页连续滚动 · 逐拍染色聚焦 · 点谱任意小节即播";
-
-        const badges = [];
-        if (manifest.arrangerInfo) {
-          badges.push(manifest.arrangerInfo);
-        } else if (manifest.capo !== undefined) {
-          badges.push("Capo = " + manifest.capo);
+      function markStarted() {
+        if (!hasStarted) {
+          hasStarted = true;
+          sheetPaper.classList.add("started");
         }
-        if (manifest.bpm) badges.push(manifest.bpm + " BPM");
-        badges.push(manifest.bars.length + " 小节 · " + manifest.systems.length + " 行连续铺排");
-        if (importedMode) {
-          badges.push({ text: "本地 Skill 产物已载入", highlight: true });
-        } else {
-          badges.push({ text: "95.2% 调内纯净度 · 0 泄漏", highlight: true });
-        }
-
-        heroBadgesEl.innerHTML = "";
-        badges.forEach((b) => {
-          const span = document.createElement("span");
-          if (typeof b === "string") {
-            span.className = "badge";
-            span.textContent = b;
-          } else {
-            span.className = "badge" + (b.highlight ? " highlight" : "");
-            span.textContent = b.text;
-          }
-          heroBadgesEl.appendChild(span);
-        });
       }
 
-      function loadProject(manifest, pageUrls, audioUrl, pdfUrl, importedMode, objectUrlsToOwn) {
+      function updatePlayIcon() {
+        const playing = !player.paused && !player.ended;
+        playIcon.classList.toggle("hidden", playing);
+        pauseIcon.classList.toggle("hidden", !playing);
+      }
+
+      function setMedia(audioUrl, pdfUrl, pdfName) {
         player.pause();
         stopRaf();
-        if (objectUrlsToOwn !== activeObjectUrls) {
-          revokeImportedUrls();
-          activeObjectUrls = objectUrlsToOwn || [];
-        }
-
-        activeManifest = manifest;
-        activePageUrls = pageUrls;
-        isBuiltin = !importedMode;
-        lastSysIdx = -1;
-
+        locatePill.classList.remove("visible");
         player.src = audioUrl;
         player.load();
-        downloadMp3Link.href = audioUrl;
+        player.playbackRate = SPEEDS[speedIdx];
+        updatePlayIcon();
+
+        menuDlMp3.href = audioUrl;
+        menuDlMp3.download = (activeManifest && activeManifest.audio) ? activeManifest.audio : "audio.mp3";
 
         if (pdfUrl) {
           openPdfBtn.classList.remove("hidden");
-          document.getElementById("pdf-newtab-link").href = pdfUrl;
-          document.getElementById("pdf-download-link").href = pdfUrl;
-          document.getElementById("pdf-iframe").dataset.src = pdfUrl;
+          menuDlPdf.classList.remove("hidden");
+          menuDlPdf.href = pdfUrl;
+          menuDlPdf.download = pdfName || "score.pdf";
+          pdfFilename.textContent = pdfName || "score.pdf";
+          pdfNewtabLink.href = pdfUrl;
+          pdfDownloadLink.href = pdfUrl;
+          pdfDownloadLink.download = pdfName || "score.pdf";
+          pdfIframe.dataset.src = pdfUrl;
+          pdfIframe.setAttribute("src", "about:blank");
         } else {
           openPdfBtn.classList.add("hidden");
+          menuDlPdf.classList.add("hidden");
+          delete pdfIframe.dataset.src;
+          pdfIframe.setAttribute("src", "about:blank");
         }
+      }
 
-        if (importedMode) {
-          importBanner.classList.remove("hidden");
-          importBannerText.textContent =
-            "本地导入 · " + (manifest.title || "Skill 作品") + "（" + manifest.systems.length + " 行 / " + manifest.bars.length + " 小节）";
-        } else {
-          importBanner.classList.add("hidden");
+      function setupHeaderObserver(hasHeader) {
+        if (headerObserver) {
+          headerObserver.disconnect();
+          headerObserver = null;
         }
+        if (!hasHeader) {
+          barTitleWrap.classList.add("visible");
+          return;
+        }
+        barTitleWrap.classList.remove("visible");
+        headerObserver = new IntersectionObserver(
+          (entries) => {
+            const visible = entries[0] && entries[0].isIntersecting;
+            barTitleWrap.classList.toggle("visible", !visible);
+          },
+          { rootMargin: "-56px 0px 0px 0px", threshold: 0.05 }
+        );
+        headerObserver.observe(headerCropEl);
+      }
 
-        buildHero(manifest, importedMode);
+      function renderManifest(manifest, pageUrls) {
+        activeManifest = manifest;
+        activePageUrls = pageUrls;
+        const title = manifest.title || "未命名作品";
+        activeTitle = title;
+        barTitle.textContent = title;
+        document.title = title + " · 指弹六线谱";
+        if (manifest.audio) menuDlMp3.download = manifest.audio;
+        barLocalChip.classList.toggle("hidden", !isImported);
+        menuResetBuiltin.classList.toggle("hidden", !isImported);
+        menuCalibrate.classList.toggle("hidden", !activeDetection);
 
-        // Render Header Banner Slice (if present)
+        // Header crop
         headerCropEl.innerHTML = "";
-        if (manifest.header && pageUrls[manifest.header.page - 1]) {
+        const hasHeader = Boolean(manifest.header && pageUrls[manifest.header.page - 1]);
+        if (hasHeader) {
           headerCropEl.classList.remove("hidden");
           const h = manifest.header;
           headerCropEl.appendChild(
@@ -2516,48 +2788,29 @@
         } else {
           headerCropEl.classList.add("hidden");
         }
+        setupHeaderObserver(hasHeader);
 
-        // Render Section Pills
-        sectionPillsEl.innerHTML = "";
-        secBtnRefs = [];
-        const secs = (manifest.sections && manifest.sections.length)
-          ? manifest.sections
-          : [{ name: "全曲开始", bar: 0, start: 0 }];
-        secs.forEach((sec, idx) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "sec-btn" + (idx === 0 ? " active" : "");
-          btn.textContent = sec.name;
-          btn.addEventListener("click", () => {
-            const targetBar = manifest.bars.find((b) => b.bar === sec.bar) || manifest.bars[0];
-            seekAndPlayBar(targetBar);
+        // Scrubber section markers
+        scrubMarkers.innerHTML = "";
+        const dur = getDuration();
+        if (dur > 0 && manifest.sections) {
+          manifest.sections.forEach((sec) => {
+            if (sec.start <= 0.5) return;
+            const pct = Math.min(99.5, Math.max(0.5, (sec.start / dur) * 100));
+            const tick = document.createElement("span");
+            tick.className = "scrub-tick";
+            tick.style.left = pct.toFixed(3) + "%";
+            scrubMarkers.appendChild(tick);
           });
-          sectionPillsEl.appendChild(btn);
-          secBtnRefs.push({ btn, start: sec.start });
-        });
+        }
 
-        // Render Seamless Continuous System Rows
+        // System rows
         systemsFlowEl.innerHTML = "";
         rowRefs = [];
         manifest.systems.forEach((sys) => {
           const row = document.createElement("article");
           row.className = "sys-row";
           row.dataset.sysIdx = String(sys.sysIdx);
-
-          const firstBar = sys.bars[0].bar;
-          const lastBar = sys.bars[sys.bars.length - 1].bar;
-          const gutter = document.createElement("div");
-          gutter.className = "sys-gutter";
-          const pill = document.createElement("span");
-          pill.className = "gutter-pill";
-          pill.textContent = "M" + String(firstBar).padStart(2, "0");
-          const sub = document.createElement("span");
-          sub.className = "gutter-sub";
-          sub.textContent = firstBar === lastBar ? "L" + (sys.sysIdx + 1) : "–" + String(lastBar).padStart(2, "0");
-          gutter.append(pill, sub);
-
-          const clip = document.createElement("div");
-          clip.className = "sys-clip";
 
           const imgUrl = pageUrls[sys.page - 1];
           const [sy0, sy1] = sys.sliceY;
@@ -2567,34 +2820,29 @@
           const overlay = document.createElement("div");
           overlay.className = "sys-overlay";
 
-          const staffTopPct = (Math.max(0, sys.staffY[0] - 8 - sy0) / sliceH * 100).toFixed(4) + "%";
-          const staffH = Math.min(sliceH, sys.staffY[1] + 8 - sy0) - Math.max(0, sys.staffY[0] - 8 - sy0);
-          const staffHPct = (Math.max(1, staffH) / sliceH * 100).toFixed(4) + "%";
-
-          const boxTopPct = (Math.max(0, sys.staffY[0] - 10 - sy0) / sliceH * 100).toFixed(4) + "%";
-          const boxH = Math.min(sliceH, sys.staffY[1] + 10 - sy0) - Math.max(0, sys.staffY[0] - 10 - sy0);
-          const boxHPct = (Math.max(1, boxH) / sliceH * 100).toFixed(4) + "%";
-
-          const needleTopPct = (Math.max(0, sys.staffY[0] - 14 - sy0) / sliceH * 100).toFixed(4) + "%";
-          const needleH = Math.min(sliceH, sys.staffY[1] + 14 - sy0) - Math.max(0, sys.staffY[0] - 14 - sy0);
-          const needleHPct = (Math.max(1, needleH) / sliceH * 100).toFixed(4) + "%";
+          const fillTop = Math.max(0, sys.staffY[0] - 8 - sy0);
+          const fillH = Math.max(1, Math.min(sliceH, sys.staffY[1] + 8 - sy0) - fillTop);
+          const boxTop = Math.max(0, sys.staffY[0] - 10 - sy0);
+          const boxH = Math.max(1, Math.min(sliceH, sys.staffY[1] + 10 - sy0) - boxTop);
+          const needleTop = Math.max(0, sys.staffY[0] - 14 - sy0);
+          const needleH = Math.max(1, Math.min(sliceH, sys.staffY[1] + 14 - sy0) - needleTop);
 
           const karaokeFill = document.createElement("div");
           karaokeFill.className = "karaoke-fill";
-          karaokeFill.style.top = staffTopPct;
-          karaokeFill.style.height = staffHPct;
+          karaokeFill.style.top = (fillTop / sliceH * 100).toFixed(4) + "%";
+          karaokeFill.style.height = (fillH / sliceH * 100).toFixed(4) + "%";
           karaokeFill.style.left = ((sys.x0 / sys.width) * 100).toFixed(4) + "%";
           karaokeFill.style.width = "0%";
 
           const activeBarBox = document.createElement("div");
           activeBarBox.className = "active-bar-box";
-          activeBarBox.style.top = boxTopPct;
-          activeBarBox.style.height = boxHPct;
+          activeBarBox.style.top = (boxTop / sliceH * 100).toFixed(4) + "%";
+          activeBarBox.style.height = (boxH / sliceH * 100).toFixed(4) + "%";
 
           const playhead = document.createElement("div");
           playhead.className = "playhead";
-          playhead.style.top = needleTopPct;
-          playhead.style.height = needleHPct;
+          playhead.style.top = (needleTop / sliceH * 100).toFixed(4) + "%";
+          playhead.style.height = (needleH / sliceH * 100).toFixed(4) + "%";
 
           const hotspotsLayer = document.createElement("div");
           hotspotsLayer.className = "hotspots-layer";
@@ -2604,9 +2852,9 @@
             btn.className = "bar-hotspot";
             btn.style.left = ((b.x0 / sys.width) * 100).toFixed(4) + "%";
             btn.style.width = (((b.x1 - b.x0) / sys.width) * 100).toFixed(4) + "%";
-            const tag = "M" + String(b.bar).padStart(2, "0");
-            btn.title = "点击跳转到 " + tag + (b.chords ? " · " + b.chords : "") + " · " + fmtTime(b.start);
-            btn.setAttribute("aria-label", btn.title);
+            const label = "M" + b.bar + " · " + fmtTime(b.start);
+            btn.title = label;
+            btn.setAttribute("aria-label", label);
             btn.addEventListener("click", (e) => {
               e.stopPropagation();
               seekAndPlayBar(b);
@@ -2616,22 +2864,14 @@
 
           overlay.append(karaokeFill, activeBarBox, playhead, hotspotsLayer);
           vp.appendChild(overlay);
-          clip.appendChild(vp);
-          row.append(gutter, clip);
+          row.appendChild(vp);
           systemsFlowEl.appendChild(row);
 
-          rowRefs.push({
-            sys,
-            row,
-            karaokeFill,
-            activeBarBox,
-            playhead
-          });
+          rowRefs.push({ sys, row, karaokeFill, activeBarBox, playhead });
         });
 
-        sheetPaper.classList.toggle("focus-enabled", focusDyeEl.checked);
         lastSysIdx = 0;
-        renderSync(0);
+        renderSync(player.currentTime || 0);
       }
 
       function findPlaybackState(t) {
@@ -2654,23 +2894,30 @@
         return { bar: activeBar, sys, cursorX };
       }
 
+      function setFollowPaused(paused) {
+        followPaused = paused;
+        locatePill.classList.toggle("visible", paused && !player.paused);
+      }
+
       function scrollToSystem(sysIdx, force) {
-        if (!force && !autoFollowEl.checked) return;
+        if (!force && followPaused) return;
         const ref = rowRefs[sysIdx];
         if (!ref) return;
         const rect = ref.row.getBoundingClientRect();
         if (rect.height <= 0) return;
 
-        const dockH = playerDock.getBoundingClientRect().height + 14;
-        const viewportRem = Math.max(180, window.innerHeight - dockH);
-        const targetY = Math.max(
-          0,
-          rect.top + window.scrollY - dockH - Math.max(18, (viewportRem - rect.height) * 0.32)
-        );
+        const topBarH = topBar.getBoundingClientRect().height;
+        const playerBarH = playerBar.getBoundingClientRect().height;
+        const avail = Math.max(120, window.innerHeight - topBarH - playerBarH - 32 - rect.height);
+        const targetY = Math.max(0, rect.top + window.scrollY - topBarH - Math.max(16, avail * 0.35));
+
+        programmaticScrollUntil = performance.now() + 900;
         window.scrollTo({ top: targetY, behavior: "smooth" });
       }
 
       function seekAndPlayBar(bar) {
+        markStarted();
+        setFollowPaused(false);
         const targetTime = bar.bar === 0 ? 0.0 : bar.start;
         const sysChanged = bar.sysIdx !== lastSysIdx;
         player.currentTime = targetTime;
@@ -2682,33 +2929,41 @@
         player.play().catch(() => {});
       }
 
+      function seekToTime(targetSec, resumeFollow) {
+        markStarted();
+        const dur = getDuration();
+        const clamped = Math.max(0, Math.min(dur, targetSec));
+        if (resumeFollow) setFollowPaused(false);
+        player.currentTime = clamped;
+        const state = findPlaybackState(clamped);
+        lastSysIdx = state.sys.sysIdx;
+        renderSync(clamped);
+        if (resumeFollow) scrollToSystem(state.sys.sysIdx, true);
+      }
+
       function renderSync(t) {
         if (!activeManifest) return;
         const { bar, sys, cursorX } = findPlaybackState(t);
-        const dyeEnabled = focusDyeEl.checked;
-        const totalBar = activeManifest.bars[activeManifest.bars.length - 1].bar;
+        const dur = getDuration();
+        const pct = dur > 0 ? Math.max(0, Math.min(100, (t / dur) * 100)) : 0;
 
-        let activeSecIdx = 0;
-        for (let i = secBtnRefs.length - 1; i >= 0; i--) {
-          if (t >= secBtnRefs[i].start - 0.15) {
-            activeSecIdx = i;
-            break;
-          }
+        pbSection.textContent = bar.sec || activeTitle;
+        const chordTxt = bar.chords || ("M" + String(bar.bar).padStart(2, "0"));
+        pbChord.textContent = chordTxt;
+        pbDot.classList.toggle("hidden", !chordTxt);
+        pbTime.textContent = fmtTime(t) + " / " + fmtTime(dur);
+
+        if (!draggingScrub) {
+          scrubFill.style.width = pct.toFixed(3) + "%";
+          scrubThumb.style.left = pct.toFixed(3) + "%";
+          scrubber.setAttribute("aria-valuenow", String(Math.round(pct)));
         }
-        secBtnRefs.forEach((s, i) => s.btn.classList.toggle("active", i === activeSecIdx));
-
-        const tag = "M" + String(bar.bar).padStart(2, "0");
-        liveBarEl.textContent = tag + " / " + totalBar;
-        liveSectionEl.textContent = bar.sec || "演奏中";
-        liveChordsEl.textContent = bar.chords || "指弹编配";
-        liveLocEl.textContent = "第 " + (sys.sysIdx + 1) + " / " + activeManifest.systems.length + " 行";
-        liveCueEl.textContent = bar.cue ? "♪ “" + bar.cue + "”" : "";
 
         rowRefs.forEach((ref, idx) => {
           const isCur = idx === sys.sysIdx;
           ref.row.classList.toggle("is-active", isCur);
 
-          if (!isCur || !dyeEnabled) {
+          if (!isCur || !hasStarted) {
             ref.karaokeFill.classList.remove("visible");
             ref.activeBarBox.classList.remove("visible");
             ref.playhead.classList.remove("visible");
@@ -2729,7 +2984,7 @@
         if (sys.sysIdx !== lastSysIdx) {
           const prev = lastSysIdx;
           lastSysIdx = sys.sysIdx;
-          if (prev !== -1 && !player.paused && autoFollowEl.checked) {
+          if (prev !== -1 && !player.paused && !followPaused) {
             scrollToSystem(sys.sysIdx, false);
           }
         }
@@ -2755,71 +3010,187 @@
         }
       }
 
-      // Player & Dock Events
-      document.getElementById("seek-back").addEventListener("click", () => {
-        player.currentTime = Math.max(0, (player.currentTime || 0) - 5);
-        renderSync(player.currentTime);
-      });
-
-      document.getElementById("seek-fwd").addEventListener("click", () => {
-        const dur = Number.isFinite(player.duration) ? player.duration : (activeManifest ? activeManifest.duration : 151.8);
-        player.currentTime = Math.min(dur, (player.currentTime || 0) + 5);
-        renderSync(player.currentTime);
-      });
-
-      speedBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          player.playbackRate = Number(btn.dataset.rate);
-          speedBtns.forEach((b) => b.classList.toggle("active", b === btn));
-        });
-      });
-
-      focusDyeEl.addEventListener("change", () => {
-        sheetPaper.classList.toggle("focus-enabled", focusDyeEl.checked);
-        renderSync(player.currentTime || 0);
-      });
-
-      autoFollowEl.addEventListener("change", () => {
-        if (autoFollowEl.checked) {
+      // Player Controls
+      playBtn.addEventListener("click", () => {
+        markStarted();
+        if (player.paused || player.ended) {
+          setFollowPaused(false);
           const state = findPlaybackState(player.currentTime || 0);
           scrollToSystem(state.sys.sysIdx, true);
+          player.play().catch(() => {});
+        } else {
+          player.pause();
         }
       });
 
-      document.getElementById("focus-now-btn").addEventListener("click", () => {
+      document.getElementById("seek-back").addEventListener("click", () => {
+        seekToTime((player.currentTime || 0) - 5, true);
+      });
+
+      document.getElementById("seek-fwd").addEventListener("click", () => {
+        seekToTime((player.currentTime || 0) + 5, true);
+      });
+
+      speedBtn.addEventListener("click", () => {
+        speedIdx = (speedIdx + 1) % SPEEDS.length;
+        const rate = SPEEDS[speedIdx];
+        player.playbackRate = rate;
+        speedBtn.textContent = rate + "×";
+      });
+
+      locatePill.addEventListener("click", () => {
+        setFollowPaused(false);
         const state = findPlaybackState(player.currentTime || 0);
-        renderSync(player.currentTime || 0);
         scrollToSystem(state.sys.sysIdx, true);
       });
 
-      player.addEventListener("play", startRaf);
-      player.addEventListener("playing", startRaf);
+      // Scrubber Pointer Events
+      function scrubFraction(clientX) {
+        const rect = scrubber.getBoundingClientRect();
+        if (rect.width <= 0) return 0;
+        return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      }
+
+      function showScrubTip(frac) {
+        const dur = getDuration();
+        const t = frac * dur;
+        const st = activeManifest ? findPlaybackState(t) : null;
+        scrubTip.textContent = (st ? "M" + st.bar.bar + " · " : "") + fmtTime(t);
+        scrubTip.style.left = (frac * 100).toFixed(2) + "%";
+        scrubTip.classList.add("visible");
+      }
+
+      scrubber.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        scrubber.setPointerCapture(e.pointerId);
+        draggingScrub = true;
+        scrubber.classList.add("dragging");
+        const frac = scrubFraction(e.clientX);
+        scrubFill.style.width = (frac * 100).toFixed(3) + "%";
+        scrubThumb.style.left = (frac * 100).toFixed(3) + "%";
+        showScrubTip(frac);
+      });
+
+      scrubber.addEventListener("pointermove", (e) => {
+        const frac = scrubFraction(e.clientX);
+        showScrubTip(frac);
+        if (draggingScrub) {
+          scrubFill.style.width = (frac * 100).toFixed(3) + "%";
+          scrubThumb.style.left = (frac * 100).toFixed(3) + "%";
+        }
+      });
+
+      scrubber.addEventListener("pointerup", (e) => {
+        if (!draggingScrub) return;
+        draggingScrub = false;
+        scrubber.classList.remove("dragging");
+        scrubTip.classList.remove("visible");
+        const frac = scrubFraction(e.clientX);
+        seekToTime(frac * getDuration(), true);
+      });
+
+      scrubber.addEventListener("pointerleave", () => {
+        if (!draggingScrub) scrubTip.classList.remove("visible");
+      });
+
+      scrubber.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          seekToTime((player.currentTime || 0) - 5, true);
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          seekToTime((player.currentTime || 0) + 5, true);
+        }
+      });
+
+      // Audio Events
+      player.addEventListener("play", () => {
+        markStarted();
+        updatePlayIcon();
+        locatePill.classList.toggle("visible", followPaused);
+        startRaf();
+      });
+      player.addEventListener("playing", () => {
+        updatePlayIcon();
+        startRaf();
+      });
       player.addEventListener("pause", () => {
         stopRaf();
+        updatePlayIcon();
+        locatePill.classList.remove("visible");
         renderSync(player.currentTime || 0);
       });
       player.addEventListener("ended", () => {
         stopRaf();
+        updatePlayIcon();
+        locatePill.classList.remove("visible");
         renderSync(player.currentTime || 0);
+      });
+      player.addEventListener("loadedmetadata", () => {
+        if (activeManifest) {
+          renderManifest(activeManifest, activePageUrls);
+        }
       });
       player.addEventListener("timeupdate", () => {
         if (rafId === null) renderSync(player.currentTime || 0);
       });
-      player.addEventListener("seeked", () => {
-        const state = findPlaybackState(player.currentTime || 0);
-        lastSysIdx = state.sys.sysIdx;
-        renderSync(player.currentTime || 0);
-        if (autoFollowEl.checked) {
-          scrollToSystem(state.sys.sysIdx, false);
+
+      // Detect Manual Scrolling While Playing
+      function onUserScrollIntent() {
+        if (!player.paused && !player.ended && performance.now() > programmaticScrollUntil) {
+          setFollowPaused(true);
+        }
+      }
+
+      window.addEventListener("wheel", onUserScrollIntent, { passive: true });
+      window.addEventListener("touchmove", onUserScrollIntent, { passive: true });
+      window.addEventListener("scroll", onUserScrollIntent, { passive: true });
+
+      // Popovers & Modals
+      importBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        togglePopover(importMenu, importBtn);
+      });
+
+      moreBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        togglePopover(moreMenu, moreBtn);
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!importMenu.contains(e.target) && e.target !== importBtn && !moreMenu.contains(e.target) && e.target !== moreBtn) {
+          closePopovers();
         }
       });
 
-      // PDF Modal
-      const pdfModal = document.getElementById("pdf-modal");
-      const pdfIframe = document.getElementById("pdf-iframe");
+      document.getElementById("pick-dir-btn").addEventListener("click", () => {
+        closePopovers();
+        dirInput.value = "";
+        dirInput.click();
+      });
+
+      document.getElementById("pick-files-btn").addEventListener("click", () => {
+        closePopovers();
+        filesInput.value = "";
+        filesInput.click();
+      });
+
+      dirInput.addEventListener("change", () => {
+        if (dirInput.files && dirInput.files.length) {
+          handleImportedFiles(Array.from(dirInput.files));
+        }
+      });
+
+      filesInput.addEventListener("change", () => {
+        if (filesInput.files && filesInput.files.length) {
+          handleImportedFiles(Array.from(filesInput.files));
+        }
+      });
 
       openPdfBtn.addEventListener("click", () => {
-        const src = pdfIframe.dataset.src || "./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf";
+        closePopovers();
+        const src = pdfIframe.dataset.src;
+        if (!src) return;
         if (pdfIframe.getAttribute("src") !== src) {
           pdfIframe.setAttribute("src", src);
         }
@@ -2833,67 +3204,128 @@
         if (e.target === pdfModal) pdfModal.classList.remove("open");
       });
 
-      // =========================================================================
-      // Local Skill Artifact Importer (zero server upload)
-      // =========================================================================
-      const importModal = document.getElementById("import-modal");
-      const dropzone = document.getElementById("dropzone");
-      const dirInput = document.getElementById("dir-input");
-      const filesInput = document.getElementById("files-input");
-      const impAudioVal = document.getElementById("imp-audio-val");
-      const impPagesVal = document.getElementById("imp-pages-val");
-      const impMetaVal = document.getElementById("imp-meta-val");
-      const impDetectVal = document.getElementById("imp-detect-val");
-      const impTitleInput = document.getElementById("imp-title-input");
-      const impBpmInput = document.getElementById("imp-bpm-input");
-      const impLeadInInput = document.getElementById("imp-leadin-input");
-      const impPickupSelect = document.getElementById("imp-pickup-select");
-      const importMsg = document.getElementById("import-msg");
-      const modalLoadBtn = document.getElementById("modal-load-btn");
-      const modalExportBtn = document.getElementById("modal-export-btn");
-
-      let stagedImport = null;
-
-      function openImportModal() {
-        importModal.classList.add("open");
+      function openCalibrationModal() {
+        if (!activeDetection || !activeManifest) return;
+        closePopovers();
+        calBpmInput.value = activeDetection.lastParams.bpm;
+        calLeadInInput.value = activeDetection.lastParams.leadIn;
+        calPickupInput.checked = activeDetection.lastParams.pickup;
+        calModal.classList.add("open");
       }
 
-      function closeImportModal() {
-        importModal.classList.remove("open");
+      menuCalibrate.addEventListener("click", openCalibrationModal);
+      document.getElementById("close-cal-btn").addEventListener("click", () => calModal.classList.remove("open"));
+      document.getElementById("cal-cancel-btn").addEventListener("click", () => calModal.classList.remove("open"));
+      calModal.addEventListener("click", (e) => {
+        if (e.target === calModal) calModal.classList.remove("open");
+      });
+
+      calForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!activeDetection) return;
+        const bpm = Math.max(20, Math.min(260, Number(calBpmInput.value) || 72));
+        const leadIn = Math.max(0, Number(calLeadInInput.value) || 0);
+        const pickup = calPickupInput.checked;
+        activeDetection.lastParams = { bpm, leadIn, pickup, title: activeTitle };
+        const updated = buildManifestFromDetection(activeDetection, activeDetection.lastParams);
+        renderManifest(updated, activePageUrls);
+        calModal.classList.remove("open");
+        showToast("已更新同步时间轴", { duration: 2500 });
+      });
+
+      document.getElementById("menu-export-json").addEventListener("click", () => {
+        closePopovers();
+        if (activeManifest) triggerDownloadJson(activeManifest);
+      });
+
+      menuResetBuiltin.addEventListener("click", () => {
+        closePopovers();
+        loadBuiltinProject();
+        showToast("已恢复内置示例曲目", { duration: 2500 });
+      });
+
+      // Global Drag & Drop
+      let dragDepth = 0;
+
+      function hasFilesTransfer(e) {
+        const types = e.dataTransfer && e.dataTransfer.types;
+        return types && Array.from(types).includes("Files");
       }
 
-      document.getElementById("open-import-btn").addEventListener("click", openImportModal);
-      document.getElementById("close-import-btn").addEventListener("click", closeImportModal);
-      importModal.addEventListener("click", (e) => {
-        if (e.target === importModal) closeImportModal();
+      window.addEventListener("dragenter", (e) => {
+        if (!hasFilesTransfer(e)) return;
+        e.preventDefault();
+        dragDepth++;
+        dropOverlay.classList.add("open");
       });
 
-      document.getElementById("pick-dir-btn").addEventListener("click", () => dirInput.click());
-      document.getElementById("pick-files-btn").addEventListener("click", () => filesInput.click());
-      dirInput.addEventListener("change", () => {
-        if (dirInput.files && dirInput.files.length) {
-          handleImportedFiles(Array.from(dirInput.files));
+      window.addEventListener("dragover", (e) => {
+        if (!hasFilesTransfer(e)) return;
+        e.preventDefault();
+      });
+
+      window.addEventListener("dragleave", (e) => {
+        if (!hasFilesTransfer(e)) return;
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) dropOverlay.classList.remove("open");
+      });
+
+      window.addEventListener("drop", async (e) => {
+        if (!hasFilesTransfer(e)) return;
+        e.preventDefault();
+        dragDepth = 0;
+        dropOverlay.classList.remove("open");
+
+        const dt = e.dataTransfer;
+        const items = dt.items ? Array.from(dt.items) : [];
+        const entries = items.map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
+        if (entries.length) {
+          const collected = [];
+          for (const ent of entries) {
+            collected.push(...(await collectEntryFiles(ent, "")));
+          }
+          await handleImportedFiles(collected);
+        } else if (dt.files && dt.files.length) {
+          await handleImportedFiles(Array.from(dt.files));
         }
       });
-      filesInput.addEventListener("change", () => {
-        if (filesInput.files && filesInput.files.length) {
-          handleImportedFiles(Array.from(filesInput.files));
+
+      // Keyboard Shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closePopovers();
+          pdfModal.classList.remove("open");
+          calModal.classList.remove("open");
+          return;
+        }
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
+        const inModalOrInput =
+          ["INPUT", "TEXTAREA", "SELECT"].includes(tag) ||
+          (e.target && e.target.isContentEditable) ||
+          pdfModal.classList.contains("open") ||
+          calModal.classList.contains("open") ||
+          importMenu.classList.contains("open") ||
+          moreMenu.classList.contains("open");
+
+        if (inModalOrInput) return;
+
+        if (e.code === "Space" && tag !== "BUTTON" && tag !== "A") {
+          e.preventDefault();
+          playBtn.click();
+        } else if (e.key === "ArrowLeft" && e.target !== scrubber) {
+          e.preventDefault();
+          seekToTime((player.currentTime || 0) - 5, true);
+        } else if (e.key === "ArrowRight" && e.target !== scrubber) {
+          e.preventDefault();
+          seekToTime((player.currentTime || 0) + 5, true);
+        } else if (["PageUp", "PageDown", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) {
+          onUserScrollIntent();
         }
       });
 
-      ["dragenter", "dragover"].forEach((ev) => {
-        dropzone.addEventListener(ev, (e) => {
-          e.preventDefault();
-          dropzone.classList.add("dragover");
-        });
-      });
-      ["dragleave", "drop"].forEach((ev) => {
-        dropzone.addEventListener(ev, (e) => {
-          e.preventDefault();
-          dropzone.classList.remove("dragover");
-        });
-      });
-
+      // =========================================================================
+      // File Parsing & Canvas Auto-Detection Helpers (reused)
+      // =========================================================================
       const IGNORED_DIRS = new Set([".tools", "build", ".git", "__pycache__", "node_modules"]);
 
       async function collectEntryFiles(entry, relPrefix) {
@@ -2919,22 +3351,6 @@
         }
         return [];
       }
-
-      dropzone.addEventListener("drop", async (e) => {
-        const dt = e.dataTransfer;
-        if (!dt) return;
-        const items = dt.items ? Array.from(dt.items) : [];
-        const entries = items.map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
-        if (entries.length) {
-          const collected = [];
-          for (const ent of entries) {
-            collected.push(...(await collectEntryFiles(ent, "")));
-          }
-          await handleImportedFiles(collected);
-        } else if (dt.files && dt.files.length) {
-          await handleImportedFiles(Array.from(dt.files));
-        }
-      });
 
       function fileRel(f) {
         return f._relPath || f.webkitRelativePath || f.name;
@@ -3245,160 +3661,14 @@
         }
       }
 
-      async function handleImportedFiles(rawFiles) {
-        const files = rawFiles.filter((f) => !isIgnoredPath(fileRel(f)) && !f.name.startsWith("."));
-
-        const audioFiles = files.filter((f) => /\.(mp3|wav|m4a|ogg|flac)$/i.test(f.name));
-        audioFiles.sort((a, b) => {
-          const am = a.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
-          const bm = b.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
-          return am - bm || b.size - a.size;
-        });
-        const audioFile = audioFiles[0] || null;
-
-        const pngFiles = files
-          .filter((f) => /\.png$/i.test(f.name) && (fileRel(f).includes("previews/") || /^page[-_]?\d+/i.test(f.name) || audioFile))
-          .sort((a, b) => parsePageNum(a.name) - parsePageNum(b.name) || a.name.localeCompare(b.name));
-
-        const manifestFile = files.find((f) => f.name === "sync_manifest.json") || null;
-        const scoreDataFile = files.find((f) => f.name === "score_data.py") || null;
-        const buildPdfFile = files.find((f) => f.name === "build_pdf.py") || null;
-        const pdfFile = files.find((f) => /\.pdf$/i.test(f.name)) || null;
-
-        impAudioVal.textContent = audioFile ? audioFile.name : "缺少音频文件 (.mp3)";
-        impAudioVal.className = "val " + (audioFile ? "ok" : "warn");
-
-        impPagesVal.textContent = pngFiles.length ? pngFiles.length + " 页 PNG" : "缺少预览 PNG";
-        impPagesVal.className = "val " + (pngFiles.length ? "ok" : "warn");
-
-        if (manifestFile) {
-          impMetaVal.textContent = "sync_manifest.json";
-          impMetaVal.className = "val ok";
-        } else if (scoreDataFile) {
-          impMetaVal.textContent = "score_data.py + 自动识谱";
-          impMetaVal.className = "val ok";
-        } else {
-          impMetaVal.textContent = "纯图片/音频自动识谱";
-          impMetaVal.className = "val";
-        }
-
-        stagedImport = null;
-        modalLoadBtn.disabled = true;
-        modalExportBtn.disabled = true;
-
-        if (!audioFile || !pngFiles.length) {
-          impDetectVal.textContent = "文件不完整";
-          impDetectVal.className = "val warn";
-          importMsg.className = "import-msg error";
-          importMsg.textContent = !pngFiles.length
-            ? "未找到预览图 (previews/page-*.png)。请先运行 `pdftoppm -png -r 150 <乐谱>.pdf previews/page` 或导入完整作品文件夹。"
-            : "未找到音频文件（*.mp3）。请确保选择了包含 MP3 与预览 PNG 的文件夹。";
-          return;
-        }
-
-        importMsg.className = "import-msg";
-        importMsg.textContent = "正在本地解析音频与乐谱图像，请稍候...";
-
-        try {
-          const duration = await probeAudioFileDuration(audioFile);
-
-          if (manifestFile) {
-            const mText = await manifestFile.text();
-            const parsedManifest = JSON.parse(mText);
-            if (!parsedManifest.systems || !parsedManifest.bars) {
-              throw new Error("sync_manifest.json 格式不完整");
-            }
-            impTitleInput.value = parsedManifest.title || "";
-            impBpmInput.value = parsedManifest.bpm || 72;
-            impDetectVal.textContent = parsedManifest.systems.length + " 行 / " + parsedManifest.bars.length + " 小节";
-            impDetectVal.className = "val ok";
-            importMsg.className = "import-msg ok";
-            importMsg.textContent = "已直接载入 sync_manifest.json 精确坐标，点击下方按钮即可同步播放！";
-
-            stagedImport = {
-              mode: "manifest",
-              manifest: parsedManifest,
-              audioFile,
-              pngFiles,
-              pdfFile,
-              duration
-            };
-            modalLoadBtn.disabled = false;
-            modalExportBtn.disabled = false;
-            return;
-          }
-
-          let scoreMeta = null;
-          if (scoreDataFile) {
-            scoreMeta = parseScoreDataPy(await scoreDataFile.text());
-            if (scoreMeta.title) impTitleInput.value = scoreMeta.title;
-            if (scoreMeta.bpm) impBpmInput.value = scoreMeta.bpm;
-            const b0 = scoreMeta.parsedBars[0];
-            if (b0 && b0.isPickup) {
-              impPickupSelect.value = "yes";
-            }
-          }
-          const phraseCues = buildPdfFile ? parsePhraseCuesPy(await buildPdfFile.text()) : {};
-
-          const pageLayouts = [];
-          for (let i = 0; i < pngFiles.length; i++) {
-            pageLayouts.push(await detectPageLayoutCanvas(pngFiles[i], i + 1));
-          }
-
-          const totalBars = pageLayouts.reduce(
-            (acc, pg) => acc + pg.sysEntries.reduce((s, sys) => s + sys.barBoxes.length, 0),
-            0
-          );
-          const totalSystems = pageLayouts.reduce((acc, pg) => acc + pg.sysEntries.length, 0);
-
-          if (!impTitleInput.value.trim()) {
-            impTitleInput.value = audioFile.name.replace(/\.[^.]+$/, "");
-          }
-
-          impDetectVal.textContent = totalSystems + " 行 / " + totalBars + " 小节";
-          impDetectVal.className = "val ok";
-          importMsg.className = "import-msg ok";
-          importMsg.textContent = "自动识谱完成！已定位 " + totalSystems + " 行六线谱与 " + totalBars + " 个小节热区。";
-
-          stagedImport = {
-            mode: "detected",
-            audioFile,
-            pngFiles,
-            pdfFile,
-            duration,
-            pageLayouts,
-            scoreMeta,
-            phraseCues
-          };
-          modalLoadBtn.disabled = false;
-          modalExportBtn.disabled = false;
-        } catch (err) {
-          impDetectVal.textContent = "解析失败";
-          impDetectVal.className = "val warn";
-          importMsg.className = "import-msg error";
-          importMsg.textContent = "解析出错：" + (err && err.message ? err.message : String(err));
-        }
-      }
-
-      function buildManifestFromStaged() {
-        if (!stagedImport) return null;
-        if (stagedImport.mode === "manifest") {
-          const copy = JSON.parse(JSON.stringify(stagedImport.manifest));
-          if (impTitleInput.value.trim()) copy.title = impTitleInput.value.trim();
-          return copy;
-        }
-
-        const bpm = Math.max(30, Math.min(240, Number(impBpmInput.value) || 72));
-        const leadIn = Math.max(0, Number(impLeadInInput.value) || 0);
-        const duration = stagedImport.duration || 120;
-        const scoreMeta = stagedImport.scoreMeta;
-        const phraseCues = stagedImport.phraseCues || {};
+      function buildManifestFromDetection(detection, opts) {
+        const bpm = Math.max(20, Math.min(260, Number(opts.bpm) || 72));
+        const leadIn = Math.max(0, Number(opts.leadIn) || 0);
+        const firstIsPickup = Boolean(opts.pickup);
+        const duration = detection.duration || 120;
+        const scoreMeta = detection.scoreMeta;
+        const phraseCues = detection.phraseCues || {};
         const parsedBars = scoreMeta ? scoreMeta.parsedBars : {};
-
-        const pickupChoice = impPickupSelect.value;
-        let firstIsPickup = false;
-        if (pickupChoice === "yes") firstIsPickup = true;
-        else if (pickupChoice === "auto" && parsedBars[0] && parsedBars[0].isPickup) firstIsPickup = true;
 
         const hasZeroBar = Boolean(parsedBars[0]);
         const barOffset = (hasZeroBar || firstIsPickup) ? 0 : 1;
@@ -3408,14 +3678,14 @@
         const systemsOut = [];
         const barsOut = [];
         const sectionsOut = [];
-        let curSec = "演奏开始";
+        let curSec = "Intro";
         let curTime = leadIn;
         let sysCounter = 0;
         let barIdx = 0;
 
         let headerInfo = null;
-        if (stagedImport.pageLayouts[0] && stagedImport.pageLayouts[0].headerSlice) {
-          const p1 = stagedImport.pageLayouts[0];
+        if (detection.pageLayouts[0] && detection.pageLayouts[0].headerSlice) {
+          const p1 = detection.pageLayouts[0];
           headerInfo = {
             page: 1,
             width: p1.width,
@@ -3424,12 +3694,12 @@
           };
         }
 
-        const totalDetectedBars = stagedImport.pageLayouts.reduce(
+        const totalDetectedBars = detection.pageLayouts.reduce(
           (acc, pg) => acc + pg.sysEntries.reduce((s, sys) => s + sys.barBoxes.length, 0),
           0
         );
 
-        stagedImport.pageLayouts.forEach((pg, pgIdx) => {
+        detection.pageLayouts.forEach((pg, pgIdx) => {
           const pageNum = pgIdx + 1;
           pg.sysEntries.forEach((rawSys) => {
             const sysBars = [];
@@ -3457,7 +3727,7 @@
                 start: Number(curTime.toFixed(4)),
                 end: Number(endT.toFixed(4)),
                 sec: curSec,
-                chords: pInfo.chords || (isFirstPickup ? "弱起 Pick-up" : ""),
+                chords: pInfo.chords || "",
                 cue: phraseCues[barNum] || ""
               };
               sysBars.push(rec);
@@ -3484,16 +3754,16 @@
 
         return {
           version: 1,
-          title: impTitleInput.value.trim() || (scoreMeta && scoreMeta.title) || "导入指弹作品",
-          subtitle: (scoreMeta && scoreMeta.subtitle) || "本地导入 Skill 产物 · 自动识别连续六线谱",
+          title: opts.title || (scoreMeta && scoreMeta.title) || "导入曲目",
+          subtitle: (scoreMeta && scoreMeta.subtitle) || "",
           composer: (scoreMeta && scoreMeta.composer) || "",
           arrangerInfo: (scoreMeta && scoreMeta.arrangerInfo) || "",
           bpm,
           capo: scoreMeta && scoreMeta.capo !== null ? scoreMeta.capo : undefined,
           duration: Number(duration.toFixed(4)),
-          audio: stagedImport.audioFile.name,
-          pdf: stagedImport.pdfFile ? stagedImport.pdfFile.name : "",
-          pages: stagedImport.pngFiles.map((f) => "previews/" + f.name),
+          audio: detection.audioName,
+          pdf: detection.pdfName || "",
+          pages: detection.pageNames.map((n) => "previews/" + n),
           header: headerInfo,
           sections: sectionsOut,
           systems: systemsOut,
@@ -3513,80 +3783,190 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      modalLoadBtn.addEventListener("click", () => {
-        const manifest = buildManifestFromStaged();
-        if (!manifest || !stagedImport) return;
-        const ownedUrls = [];
-        const audioUrl = URL.createObjectURL(stagedImport.audioFile);
-        ownedUrls.push(audioUrl);
+      async function handleImportedFiles(rawFiles) {
+        const files = rawFiles.filter((f) => !isIgnoredPath(fileRel(f)) && !f.name.startsWith("."));
 
-        const pngByName = new Map(stagedImport.pngFiles.map((f) => [f.name, f]));
-        const orderedPageUrls = (manifest.pages && manifest.pages.length === stagedImport.pngFiles.length)
-          ? manifest.pages.map((rel, i) => {
-              const fname = rel.split("/").pop();
-              const f = pngByName.get(fname) || stagedImport.pngFiles[i];
-              const u = URL.createObjectURL(f);
-              ownedUrls.push(u);
-              return u;
-            })
-          : stagedImport.pngFiles.map((f) => {
-              const u = URL.createObjectURL(f);
-              ownedUrls.push(u);
-              return u;
-            });
+        const audioFiles = files.filter((f) => /\.(mp3|wav|m4a|ogg|flac)$/i.test(f.name));
+        audioFiles.sort((a, b) => {
+          const am = a.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
+          const bm = b.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
+          return am - bm || b.size - a.size;
+        });
+        const audioFile = audioFiles[0] || null;
 
-        let pdfUrl = "";
-        if (stagedImport.pdfFile) {
-          pdfUrl = URL.createObjectURL(stagedImport.pdfFile);
-          ownedUrls.push(pdfUrl);
+        let pngFiles = files
+          .filter((f) => /^page[-_]?\d+\.png$/i.test(f.name))
+          .sort((a, b) => parsePageNum(a.name) - parsePageNum(b.name) || a.name.localeCompare(b.name));
+
+        if (!pngFiles.length) {
+          pngFiles = files
+            .filter((f) => /\.png$/i.test(f.name) && /(^|\/)previews\//i.test(fileRel(f)))
+            .sort((a, b) => parsePageNum(a.name) - parsePageNum(b.name) || a.name.localeCompare(b.name));
         }
 
-        loadProject(manifest, orderedPageUrls, audioUrl, pdfUrl, true, ownedUrls);
-        closeImportModal();
-      });
-
-      modalExportBtn.addEventListener("click", () => {
-        const manifest = buildManifestFromStaged();
-        if (manifest) triggerDownloadJson(manifest);
-      });
-
-      document.getElementById("export-manifest-btn").addEventListener("click", () => {
-        if (activeManifest) triggerDownloadJson(activeManifest);
-      });
-
-      document.getElementById("reset-builtin-btn").addEventListener("click", () => {
-        loadBuiltinProject();
-      });
-
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          importModal.classList.remove("open");
-          pdfModal.classList.remove("open");
+        if (!audioFile) {
+          showToast("缺少 MP3", { type: "error", duration: 6000 });
           return;
         }
-        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
-        const ignoreSpace =
-          ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "AUDIO"].includes(tag) ||
-          (e.target && e.target.isContentEditable) ||
-          importModal.classList.contains("open") ||
-          pdfModal.classList.contains("open");
-        if (e.code === "Space" && !ignoreSpace) {
-          e.preventDefault();
-          if (player.paused) {
-            player.play().catch(() => {});
-          } else {
-            player.pause();
-          }
+        if (!pngFiles.length) {
+          showToast("缺少 previews/page-*.png", { type: "error", duration: 6000 });
+          return;
         }
-      });
+
+        const manifestFile = files.find((f) => f.name === "sync_manifest.json") || null;
+        const scoreDataFile = files.find((f) => f.name === "score_data.py") || null;
+        const buildPdfFile = files.find((f) => f.name === "build_pdf.py") || null;
+        const pdfFile = files.find((f) => /\.pdf$/i.test(f.name)) || null;
+
+        const loadingToast = showToast("正在解析…", { loading: true });
+
+        try {
+          const duration = await probeAudioFileDuration(audioFile);
+          const audioBaseTitle = audioFile.name.replace(/\.[^.]+$/, "");
+
+          if (manifestFile) {
+            const parsedManifest = JSON.parse(await manifestFile.text());
+            if (!parsedManifest.systems || !parsedManifest.bars) {
+              throw new Error("sync_manifest.json 格式不完整");
+            }
+
+            const ownedUrls = [];
+            const audioUrl = URL.createObjectURL(audioFile);
+            ownedUrls.push(audioUrl);
+
+            const pngByName = new Map(pngFiles.map((f) => [f.name, f]));
+            const orderedPageUrls = (parsedManifest.pages && parsedManifest.pages.length === pngFiles.length)
+              ? parsedManifest.pages.map((rel, i) => {
+                  const fname = rel.split("/").pop();
+                  const f = pngByName.get(fname) || pngFiles[i];
+                  const u = URL.createObjectURL(f);
+                  ownedUrls.push(u);
+                  return u;
+                })
+              : pngFiles.map((f) => {
+                  const u = URL.createObjectURL(f);
+                  ownedUrls.push(u);
+                  return u;
+                });
+
+            let pdfUrl = "";
+            if (pdfFile) {
+              pdfUrl = URL.createObjectURL(pdfFile);
+              ownedUrls.push(pdfUrl);
+            }
+
+            revokeImportedUrls();
+            activeObjectUrls = ownedUrls;
+            activeDetection = null;
+            isImported = true;
+            hasStarted = false;
+            followPaused = false;
+            sheetPaper.classList.remove("started");
+
+            setMedia(audioUrl, pdfUrl, pdfFile ? pdfFile.name : "");
+            renderManifest(parsedManifest, orderedPageUrls);
+
+            loadingToast.remove();
+            showToast("已导入「" + (parsedManifest.title || audioBaseTitle) + "」", { duration: 3000 });
+            return;
+          }
+
+          const scoreMeta = scoreDataFile ? parseScoreDataPy(await scoreDataFile.text()) : null;
+          const phraseCues = buildPdfFile ? parsePhraseCuesPy(await buildPdfFile.text()) : {};
+
+          const pageLayouts = [];
+          for (let i = 0; i < pngFiles.length; i++) {
+            pageLayouts.push(await detectPageLayoutCanvas(pngFiles[i], i + 1));
+          }
+
+          const nBars = pageLayouts.reduce(
+            (acc, pg) => acc + pg.sysEntries.reduce((s, sys) => s + sys.barBoxes.length, 0),
+            0
+          );
+
+          let bpm;
+          let leadIn;
+          let pickup;
+          let title;
+
+          if (scoreMeta) {
+            bpm = scoreMeta.bpm || 72;
+            pickup = Boolean(scoreMeta.parsedBars[0] && scoreMeta.parsedBars[0].isPickup);
+            leadIn = Number((0.25 * 60 / bpm).toFixed(4));
+            title = scoreMeta.title || audioBaseTitle;
+          } else {
+            leadIn = 0;
+            pickup = false;
+            bpm = Math.round(((240 * nBars) / Math.max(1, duration - leadIn)) * 10) / 10;
+            title = audioBaseTitle;
+          }
+
+          const detection = {
+            audioName: audioFile.name,
+            pdfName: pdfFile ? pdfFile.name : "",
+            pageNames: pngFiles.map((f) => f.name),
+            duration,
+            pageLayouts,
+            scoreMeta,
+            phraseCues,
+            lastParams: { bpm, leadIn, pickup, title }
+          };
+
+          const manifest = buildManifestFromDetection(detection, detection.lastParams);
+
+          const ownedUrls = [];
+          const audioUrl = URL.createObjectURL(audioFile);
+          ownedUrls.push(audioUrl);
+          const orderedPageUrls = pngFiles.map((f) => {
+            const u = URL.createObjectURL(f);
+            ownedUrls.push(u);
+            return u;
+          });
+          let pdfUrl = "";
+          if (pdfFile) {
+            pdfUrl = URL.createObjectURL(pdfFile);
+            ownedUrls.push(pdfUrl);
+          }
+
+          revokeImportedUrls();
+          activeObjectUrls = ownedUrls;
+          activeDetection = detection;
+          isImported = true;
+          hasStarted = false;
+          followPaused = false;
+          sheetPaper.classList.remove("started");
+
+          setMedia(audioUrl, pdfUrl, pdfFile ? pdfFile.name : "");
+          renderManifest(manifest, orderedPageUrls);
+
+          loadingToast.remove();
+          showToast("已导入「" + manifest.title + "」", {
+            duration: 4500,
+            actionLabel: "校准",
+            onAction: openCalibrationModal
+          });
+        } catch (err) {
+          loadingToast.remove();
+          showToast(err && err.message ? err.message : "解析失败", { type: "error", duration: 6000 });
+        }
+      }
 
       function loadBuiltinProject() {
+        revokeImportedUrls();
+        activeDetection = null;
+        isImported = false;
+        hasStarted = false;
+        followPaused = false;
+        sheetPaper.classList.remove("started");
+
         const pageUrls = BUILTIN_MANIFEST.pages.map(
           (p) => "./examples/call-of-silence/" + p.split("/").map(encodeURIComponent).join("/")
         );
         const audioUrl = "./examples/call-of-silence/" + encodeURIComponent(BUILTIN_MANIFEST.audio);
         const pdfUrl = "./examples/call-of-silence/" + encodeURIComponent(BUILTIN_MANIFEST.pdf);
-        loadProject(BUILTIN_MANIFEST, pageUrls, audioUrl, pdfUrl, false, []);
+
+        setMedia(audioUrl, pdfUrl, BUILTIN_MANIFEST.pdf);
+        renderManifest(BUILTIN_MANIFEST, pageUrls);
       }
 
       loadBuiltinProject();
