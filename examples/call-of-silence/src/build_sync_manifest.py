@@ -6,6 +6,7 @@ import json
 import re
 import struct
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -225,27 +226,143 @@ def detect_page_layout(
     return w, h, header_slice, sys_entries
 
 
+def _read_vlq(data: bytes, p: int) -> Tuple[int, int]:
+    val = 0
+    while True:
+        b = data[p]
+        p += 1
+        val = (val << 7) | (b & 0x7F)
+        if not b & 0x80:
+            return val, p
+
+
+def parse_midi_note_spans(
+    path: Path,
+) -> Tuple[int, List[Tuple[int, int]], Dict[Tuple[int, int], List[Tuple[int, int]]]]:
+    """Parse a Type-1 MIDI file into (ppq, tempo_map, {(channel, pitch): [(on_tick, off_tick), ...]})."""
+    data = path.read_bytes()
+    if data[:4] != b"MThd":
+        raise ValueError(f"Not a MIDI file: {path}")
+    _fmt, ntracks, ppq = struct.unpack(">HHH", data[8:14])
+    pos = 8 + struct.unpack(">I", data[4:8])[0]
+
+    tempo_map: List[Tuple[int, int]] = []
+    ons: Dict[Tuple[int, int], List[int]] = {}
+    offs: Dict[Tuple[int, int], List[int]] = {}
+
+    for _ in range(ntracks):
+        if data[pos:pos + 4] != b"MTrk":
+            raise ValueError(f"Corrupt MIDI track header at byte {pos}")
+        length = struct.unpack(">I", data[pos + 4:pos + 8])[0]
+        p = pos + 8
+        end = p + length
+        tick = 0
+        running = 0
+        while p < end:
+            delta, p = _read_vlq(data, p)
+            tick += delta
+            status = data[p]
+            if status == 0xFF:
+                mtype = data[p + 1]
+                mlen, p = _read_vlq(data, p + 2)
+                if mtype == 0x51:
+                    tempo_map.append((tick, int.from_bytes(data[p:p + 3], "big")))
+                p += mlen
+                continue
+            if status in (0xF0, 0xF7):
+                slen, p = _read_vlq(data, p + 1)
+                p += slen
+                continue
+            if status & 0x80:
+                running = status
+                p += 1
+            else:
+                status = running
+            kind = status & 0xF0
+            ch = status & 0x0F
+            if kind in (0xC0, 0xD0):
+                p += 1
+                continue
+            d1, d2 = data[p], data[p + 1]
+            p += 2
+            if kind == 0x90 and d2 > 0:
+                ons.setdefault((ch, d1), []).append(tick)
+            elif kind == 0x80 or (kind == 0x90 and d2 == 0):
+                offs.setdefault((ch, d1), []).append(tick)
+        pos = end
+
+    spans: Dict[Tuple[int, int], List[Tuple[int, int]]] = {}
+    for key, on_list in ons.items():
+        off_list = sorted(offs.get(key, []))
+        j = 0
+        pairs: List[Tuple[int, int]] = []
+        for on_t in sorted(on_list):
+            while j < len(off_list) and off_list[j] <= on_t:
+                j += 1
+            off_t = off_list[j] if j < len(off_list) else on_t + ppq
+            j += 1
+            pairs.append((on_t, off_t))
+        spans[key] = pairs
+
+    tempo_map.sort()
+    if not tempo_map or tempo_map[0][0] != 0:
+        tempo_map.insert(0, (0, 500000))
+    return ppq, tempo_map, spans
+
+
+def make_tick_to_sec(ppq: int, tempo_map: List[Tuple[int, int]]):
+    """Return a tick -> seconds converter honouring every tempo change."""
+    segs: List[Tuple[int, float, int]] = []
+    acc = 0.0
+    for i, (tk, us) in enumerate(tempo_map):
+        segs.append((tk, acc, us))
+        if i + 1 < len(tempo_map):
+            acc += (tempo_map[i + 1][0] - tk) / ppq * us / 1e6
+
+    def tick_to_sec(tick: int) -> float:
+        seg = segs[0]
+        for s in segs:
+            if s[0] <= tick:
+                seg = s
+            else:
+                break
+        return seg[1] + (tick - seg[0]) / ppq * seg[2] / 1e6
+
+    return tick_to_sec
+
+
 def extract_note_events(measures: List[Measure], duration: float) -> List[Dict[str, object]]:
-    """Build exact per-note playback timeline matching build_audio.py timing."""
-    last_bar = measures[-1].bar
-    raw_notes: List[Dict[str, object]] = []
-    cursor_t = 120 / 480.0 * (60.0 / float(TEMPO_BPM))  # LEAD_IN_TICKS = 120
+    """Build the per-note timeline from the exact MIDI that the MP3 is rendered from.
+
+    Onsets and sustain lengths ("d") are read back from build_audio.write_midi_file, so every
+    note's hold length equals what is actually audible (chord-change damping, melody clash
+    cut-offs, legato hand-offs, palm-mute and harmonic ring times, final ritardando).
+    """
+    import build_audio  # local module in the same src/ directory
+
+    with tempfile.TemporaryDirectory() as td:
+        midi_path = Path(td) / "timeline.mid"
+        build_audio.write_midi_file(measures, midi_path)
+        ppq, tempo_map, spans = parse_midi_note_spans(midi_path)
+
+    tick_to_sec = make_tick_to_sec(ppq, tempo_map)
+    ticks_per_16th = ppq // 4
+    span_index: Dict[Tuple[int, int, int], int] = {}
+    for (ch, pitch), pairs in spans.items():
+        for on_t, off_t in pairs:
+            span_index[(ch, pitch, on_t)] = off_t
+
+    notes: List[Dict[str, object]] = []
+    missing: List[str] = []
+    cursor_tick = int(build_audio.LEAD_IN_TICKS)
 
     for m_idx, meas in enumerate(measures):
-        bpm = 60.0 if meas.bar == 44 else float(TEMPO_BPM)
-        beats = 1.0 if meas.is_pickup else 4.0
-        bar_dur = beats * (60.0 / bpm)
-        sixteenth_sec = 60.0 / bpm / 4.0
         bar_start_slot = 12 if meas.is_pickup else 0
-
         for ev_idx, ev in enumerate(meas.events):
-            ev_t = cursor_t + (ev.slot - bar_start_slot) * sixteenth_sec
-            ev_dur = max(
-                0.08,
-                (duration - ev_t) if (meas.bar == last_bar and ev.fermata) else (ev.dur * sixteenth_sec),
-            )
             if ev.rest:
                 continue
+            ev_tick = cursor_tick + (ev.slot - bar_start_slot) * ticks_per_16th
+            ev_sec = tick_to_sec(ev_tick)
 
             next_ev = None
             if ev_idx + 1 < len(meas.events):
@@ -253,44 +370,41 @@ def extract_note_events(measures: List[Measure], duration: float) -> List[Dict[s
             elif m_idx + 1 < len(measures) and measures[m_idx + 1].events:
                 next_ev = measures[m_idx + 1].events[0]
 
-            slap_notes = [nt for nt in ev.notes if nt.role == "slap"]
-            for nt in slap_notes:
-                raw_notes.append(
-                    {
-                        "t": round(ev_t, 4),
-                        "d": round(min(0.22, ev_dur), 4),
-                        "s": nt.string,
-                        "f": 0,
-                        "r": "x",
-                        "b": meas.bar,
-                        "_pm": False,
-                        "_final": False,
-                    }
-                )
+            for nt in ev.notes:
+                if nt.role == "slap":
+                    notes.append(
+                        {"t": round(ev_sec, 4), "d": 0.12, "s": nt.string, "f": 0, "r": "x", "b": meas.bar}
+                    )
 
             pitched = sorted((nt for nt in ev.notes if nt.role != "slap"), key=lambda x: -x.string)
-            roll_ticks = 16 if ev.arpeggio else (6 if len(pitched) >= 2 else 0)
-            tick_sec = (60.0 / bpm) / 480.0
+            roll_step = 16 if ev.arpeggio else (6 if len(pitched) >= 2 else 0)
 
             for idx, nt in enumerate(pitched):
-                nt_t = ev_t + idx * roll_ticks * tick_sec
-                role_code = {"melody": "m", "bass": "b", "inner": "i"}.get(nt.role, "m")
+                on_tick = ev_tick + idx * roll_step
+                channel = 2 if nt.harmonic else (3 if nt.palm_mute else 0)
+                off_tick = span_index.get((channel, nt.concert_midi, on_tick))
+                if off_tick is None:
+                    missing.append(f"M{meas.bar} slot {ev.slot} string {nt.string} fret {nt.fret}")
+                    continue
+                t0 = tick_to_sec(on_tick)
+                t1 = min(duration, tick_to_sec(off_tick))
                 item: Dict[str, object] = {
-                    "t": round(nt_t, 4),
-                    "d": round(min(0.18, ev_dur) if nt.palm_mute else ev_dur, 4),
+                    "t": round(t0, 4),
+                    "d": round(max(0.05, t1 - t0), 4),
                     "s": nt.string,
                     "f": nt.fret,
-                    "r": role_code,
+                    "r": {"melody": "m", "bass": "b", "inner": "i"}.get(nt.role, "m"),
                     "b": meas.bar,
-                    "_pm": nt.palm_mute,
-                    "_final": (meas.bar == last_bar and ev.fermata),
                 }
                 if nt.grace_from is not None:
                     item["gf"] = nt.grace_from
                 if ev.link_tech in ("H", "P", "S") and nt.role == "melody":
                     item["lt"] = ev.link_tech
                     if next_ev and not next_ev.rest:
-                        dest = next((n2 for n2 in next_ev.notes if n2.role == "melody" and n2.string == nt.string), None)
+                        dest = next(
+                            (n2 for n2 in next_ev.notes if n2.role == "melody" and n2.string == nt.string),
+                            None,
+                        )
                         if dest is not None:
                             item["to"] = dest.fret
                 if nt.harmonic:
@@ -299,38 +413,17 @@ def extract_note_events(measures: List[Measure], duration: float) -> List[Dict[s
                     item["pm"] = 1
                 if ev.arpeggio:
                     item["arp"] = 1
-                raw_notes.append(item)
+                notes.append(item)
 
-        cursor_t = duration if meas.bar == 44 else (cursor_t + bar_dur)
+        cursor_tick += (4 if meas.is_pickup else 16) * ticks_per_16th
 
-    raw_notes.sort(key=lambda x: (float(x["t"]), -int(x["s"])))
+    if missing:
+        raise AssertionError(
+            f"{len(missing)} notes have no matching MIDI span (timeline drifted from build_audio.py): {missing[:5]}"
+        )
 
-    # Extend natural sustain per string up to next onset on same string
-    by_string: Dict[int, List[int]] = {s: [] for s in range(1, 7)}
-    for i, item in enumerate(raw_notes):
-        if item["r"] != "x":
-            by_string[int(item["s"])].append(i)
-
-    for indices in by_string.values():
-        for pos, i in enumerate(indices):
-            item = raw_notes[i]
-            t0 = float(item["t"])
-            next_t = float(raw_notes[indices[pos + 1]]["t"]) if pos + 1 < len(indices) else duration
-            if item["_pm"]:
-                d_val = min(float(item["d"]), max(0.06, next_t - t0 - 0.015))
-            else:
-                cap = max(1.0, duration - t0) if item["_final"] else (1.8 if item["r"] in ("m", "b") else 1.1)
-                max_ring = min(cap, max(0.06, next_t - t0 - 0.02))
-                d_val = min(cap, max(float(item["d"]), max_ring))
-                if pos + 1 < len(indices):
-                    d_val = min(d_val, max(0.06, next_t - t0 - 0.02))
-            item["d"] = round(max(0.06, d_val), 4)
-
-    for item in raw_notes:
-        item.pop("_pm", None)
-        item.pop("_final", None)
-
-    return raw_notes
+    notes.sort(key=lambda x: (float(x["t"]), -int(x["s"])))
+    return notes
 
 
 def build_manifest() -> Path:
