@@ -225,6 +225,114 @@ def detect_page_layout(
     return w, h, header_slice, sys_entries
 
 
+def extract_note_events(measures: List[Measure], duration: float) -> List[Dict[str, object]]:
+    """Build exact per-note playback timeline matching build_audio.py timing."""
+    last_bar = measures[-1].bar
+    raw_notes: List[Dict[str, object]] = []
+    cursor_t = 120 / 480.0 * (60.0 / float(TEMPO_BPM))  # LEAD_IN_TICKS = 120
+
+    for m_idx, meas in enumerate(measures):
+        bpm = 60.0 if meas.bar == 44 else float(TEMPO_BPM)
+        beats = 1.0 if meas.is_pickup else 4.0
+        bar_dur = beats * (60.0 / bpm)
+        sixteenth_sec = 60.0 / bpm / 4.0
+        bar_start_slot = 12 if meas.is_pickup else 0
+
+        for ev_idx, ev in enumerate(meas.events):
+            ev_t = cursor_t + (ev.slot - bar_start_slot) * sixteenth_sec
+            ev_dur = max(
+                0.08,
+                (duration - ev_t) if (meas.bar == last_bar and ev.fermata) else (ev.dur * sixteenth_sec),
+            )
+            if ev.rest:
+                continue
+
+            next_ev = None
+            if ev_idx + 1 < len(meas.events):
+                next_ev = meas.events[ev_idx + 1]
+            elif m_idx + 1 < len(measures) and measures[m_idx + 1].events:
+                next_ev = measures[m_idx + 1].events[0]
+
+            slap_notes = [nt for nt in ev.notes if nt.role == "slap"]
+            for nt in slap_notes:
+                raw_notes.append(
+                    {
+                        "t": round(ev_t, 4),
+                        "d": round(min(0.22, ev_dur), 4),
+                        "s": nt.string,
+                        "f": 0,
+                        "r": "x",
+                        "b": meas.bar,
+                        "_pm": False,
+                        "_final": False,
+                    }
+                )
+
+            pitched = sorted((nt for nt in ev.notes if nt.role != "slap"), key=lambda x: -x.string)
+            roll_ticks = 16 if ev.arpeggio else (6 if len(pitched) >= 2 else 0)
+            tick_sec = (60.0 / bpm) / 480.0
+
+            for idx, nt in enumerate(pitched):
+                nt_t = ev_t + idx * roll_ticks * tick_sec
+                role_code = {"melody": "m", "bass": "b", "inner": "i"}.get(nt.role, "m")
+                item: Dict[str, object] = {
+                    "t": round(nt_t, 4),
+                    "d": round(min(0.18, ev_dur) if nt.palm_mute else ev_dur, 4),
+                    "s": nt.string,
+                    "f": nt.fret,
+                    "r": role_code,
+                    "b": meas.bar,
+                    "_pm": nt.palm_mute,
+                    "_final": (meas.bar == last_bar and ev.fermata),
+                }
+                if nt.grace_from is not None:
+                    item["gf"] = nt.grace_from
+                if ev.link_tech in ("H", "P", "S") and nt.role == "melody":
+                    item["lt"] = ev.link_tech
+                    if next_ev and not next_ev.rest:
+                        dest = next((n2 for n2 in next_ev.notes if n2.role == "melody" and n2.string == nt.string), None)
+                        if dest is not None:
+                            item["to"] = dest.fret
+                if nt.harmonic:
+                    item["h"] = 1
+                if nt.palm_mute:
+                    item["pm"] = 1
+                if ev.arpeggio:
+                    item["arp"] = 1
+                raw_notes.append(item)
+
+        cursor_t = duration if meas.bar == 44 else (cursor_t + bar_dur)
+
+    raw_notes.sort(key=lambda x: (float(x["t"]), -int(x["s"])))
+
+    # Extend natural sustain per string up to next onset on same string
+    by_string: Dict[int, List[int]] = {s: [] for s in range(1, 7)}
+    for i, item in enumerate(raw_notes):
+        if item["r"] != "x":
+            by_string[int(item["s"])].append(i)
+
+    for indices in by_string.values():
+        for pos, i in enumerate(indices):
+            item = raw_notes[i]
+            t0 = float(item["t"])
+            next_t = float(raw_notes[indices[pos + 1]]["t"]) if pos + 1 < len(indices) else duration
+            if item["_pm"]:
+                d_val = min(float(item["d"]), max(0.06, next_t - t0 - 0.015))
+            else:
+                cap = max(1.0, duration - t0) if item["_final"] else (1.8 if item["r"] in ("m", "b") else 1.1)
+                max_ring = min(cap, max(0.06, next_t - t0 - 0.02))
+                d_val = min(cap, max(float(item["d"]), max_ring))
+                if pos + 1 < len(indices):
+                    d_val = min(d_val, max(0.06, next_t - t0 - 0.02))
+            item["d"] = round(max(0.06, d_val), 4)
+
+    for item in raw_notes:
+        item.pop("_pm", None)
+        item.pop("_final", None)
+
+    return raw_notes
+
+
 def build_manifest() -> Path:
     measures: List[Measure] = build_measures()
     validate_score(measures)
@@ -326,6 +434,8 @@ def build_manifest() -> Path:
             }
         )
 
+    note_events = extract_note_events(measures, duration)
+
     manifest = {
         "version": 1,
         "title": TITLE,
@@ -342,12 +452,13 @@ def build_manifest() -> Path:
         "sections": section_starts,
         "systems": systems_out,
         "bars": bars_out,
+        "notes": note_events,
     }
 
     OUTPUT_MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         f"Generated {OUTPUT_MANIFEST.name}: {len(systems_out)} systems, {len(bars_out)} bars, "
-        f"duration={duration:.2f}s across {len(page_rels)} pages."
+        f"{len(note_events)} notes, duration={duration:.2f}s across {len(page_rels)} pages."
     )
     return OUTPUT_MANIFEST
 
