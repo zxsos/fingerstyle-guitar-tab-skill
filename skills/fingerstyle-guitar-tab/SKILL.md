@@ -19,7 +19,7 @@ A working end-to-end reference implementation lives in [../../examples/call-of-s
 4. **Render 6-line TAB PDF (`src/build_pdf.py`):** Emit `\pointAndClickOff` and synchronized `ChordNames` + `TabStaff` (`\tabFullNotation`) LilyPond source using `written_midi`, compile with `-dno-point-and-click` via local or system `lilypond`, and verify CJK fonts. See [references/lilypond-tab-patterns.md](references/lilypond-tab-patterns.md).
 5. **Synthesize preview MP3 (`src/build_audio.py`):** Build a 4-channel Type-1 MIDI (`PPQ=480`) using `concert_midi`, render WAV via FluidSynth with chorus disabled (`-C 0`), inject synthesized thumb-slap (`X`) transients into PCM, and master with FFmpeg (`-map_metadata -1`) to 44.1 kHz / 320 kbps stereo MP3. See [references/audio-and-verification.md](references/audio-and-verification.md).
 6. **Verify & iterate (`src/verify_all.py`):** Run all verification gates (score integrity, PDF page/size + 0-path-leak sanitization check, audio DSP/diatonic energy check, and optional `--ref` / `TAB_REF_AUDIO` per-bar reference chroma cosine alignment). Fix any failing measure in `src/score_data.py` and rebuild until every gate passes.
-7. **Package & publish:** Render preview PNGs with `pdftoppm -png -r 150`, generate `sync_manifest.json` via `src/build_sync_manifest.py` (white-gap system slicing + barline coordinates + timing metadata), strip/exclude `.tools/` and `build/` intermediates (`.wav`, `.mid`, `.ly`), include a zero-download `index.html` + `.nojekyll` GitHub Pages player alongside full-width `README.md` previews, and publish sanitized showcase artifacts.
+7. **Package & publish:** Render preview PNGs with `pdftoppm -png -r 150`, generate `sync_manifest.json` via `src/build_sync_manifest.py` (white-gap system slicing + barline coordinates + timing metadata), package the final deliverable bundle `*_bundle.zip` via `src/build_bundle.py` (containing `sync_manifest.json`, `*.mp3`, `*.pdf`, and `previews/page-*.png`), strip/exclude `.tools/` and `build/` intermediates (`.wav`, `.mid`, `.ly`), and import or share the bundle with the decoupled practice player (`https://zxsos.github.io/guitar-tab-player/`).
 
 ## Quick Reference
 
@@ -28,7 +28,8 @@ A working end-to-end reference implementation lives in [../../examples/call-of-s
 | `src/score_data.py` | `NoteEvent`, `BeatEvent`, `Measure`; `written_midi` (TAB) vs `concert_midi` (audio); `fret span <= 3`; 100% diatonic check |
 | `src/build_pdf.py` | LilyPond `\version "2.24.0"`, `\pointAndClickOff`, `-dno-point-and-click`, `TabStaff`, `ChordNames`, custom stencils (`X`, `<12>`), `TextSpanner` (`P.M.`) |
 | `src/build_audio.py` | MIDI Ch0 Prog25 Steel, Ch1 Prog24 Nylon, Ch2 Prog46 Harp Harmonics, Ch3 Prog28 Palm Mute; `-C 0`; WAV thumb slaps; FFmpeg `loudnorm` + `-map_metadata -1` |
-| `src/build_sync_manifest.py` | Generates `sync_manifest.json` (ink-safe `sliceY`, `staffY`, `barBoxes`, timings & cues) for seamless unpaginated web playback & drag-drop import |
+| `src/build_sync_manifest.py` | Generates `sync_manifest.json` (ink-safe `sliceY`, `staffY`, `barBoxes`, timings & cues) for seamless unpaginated web playback |
+| `src/build_bundle.py` | Packages `sync_manifest.json`, MP3, sanitized PDF, and `previews/page-*.png` into `*_bundle.zip` for one-step player import |
 | Score & PDF gates | Continuous 16th-slot coverage per bar, all target techniques `>= 1`, PDF `2–4` pages, `> 30 KB`, `0` local path leaks |
 | Audio & alignment gates | Peak `< -1.0 dBFS`, L/R diff `< 1.5 dB`, phase corr `> 0.50`, Goertzel diatonic energy `> 85%`, runtime `--ref` 8th-slot chroma cosine `>= 0.80` |
 
