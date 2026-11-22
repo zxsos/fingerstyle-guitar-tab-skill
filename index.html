@@ -6,18 +6,18 @@
   <title>Call of Silence — 指弹吉他六线谱在线试听与同步看谱</title>
   <style>
     :root {
-      --bg: #121110;
-      --surface: #1c1a17;
-      --surface-2: #26231e;
-      --border: #38322a;
-      --text: #f4efe6;
-      --muted: #b6aa99;
+      --bg: #11100f;
+      --surface: #1b1916;
+      --surface-2: #24211d;
+      --border: #363028;
+      --text: #f3eee5;
+      --muted: #b0a493;
       --accent: #e09f3e;
       --accent-soft: rgba(224, 159, 62, 0.16);
       --accent-hover: #edb55b;
       --green: #6bc47d;
       --radius: 12px;
-      --shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+      --shadow: 0 14px 36px rgba(0, 0, 0, 0.46);
     }
 
     * {
@@ -31,60 +31,60 @@
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(circle at top center, #201c16 0%, var(--bg) 52%);
+      background: radial-gradient(circle at top center, #211d17 0%, var(--bg) 52%);
       color: var(--text);
-      line-height: 1.55;
+      line-height: 1.5;
       min-height: 100vh;
     }
 
     .container {
-      max-width: 1140px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 18px 16px 72px;
+      padding: 14px 14px 84px;
     }
 
     header.hero {
-      background: linear-gradient(135deg, rgba(38, 35, 30, 0.96), rgba(24, 22, 19, 0.96));
+      background: linear-gradient(135deg, rgba(36, 33, 29, 0.96), rgba(24, 22, 19, 0.96));
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px 22px;
+      padding: 14px 18px;
       box-shadow: var(--shadow);
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .hero-top {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 14px;
+      align-items: center;
+      gap: 12px;
     }
 
     .hero h1 {
-      margin: 0 0 6px;
-      font-size: clamp(1.3rem, 2.5vw, 1.85rem);
+      margin: 0 0 3px;
+      font-size: clamp(1.18rem, 2.2vw, 1.55rem);
       letter-spacing: 0.01em;
       color: var(--text);
     }
 
     .hero-sub {
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       color: var(--muted);
-      font-size: 0.93rem;
+      font-size: 0.87rem;
     }
 
     .badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
+      gap: 6px;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      padding: 4px 10px;
+      padding: 2px 9px;
       border-radius: 999px;
-      font-size: 0.81rem;
+      font-size: 0.77rem;
       background: var(--surface-2);
       border: 1px solid var(--border);
       color: var(--text);
@@ -99,24 +99,24 @@
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 7px;
       align-items: center;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 12px;
+      gap: 5px;
+      padding: 6px 11px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
       text-decoration: none;
-      font-size: 0.86rem;
+      font-size: 0.83rem;
       font-weight: 500;
       cursor: pointer;
-      transition: background 0.16s ease, border-color 0.16s ease, transform 0.1s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
     }
 
     .btn:hover {
@@ -141,53 +141,74 @@
     }
 
     .btn.compact {
-      padding: 4px 10px;
-      font-size: 0.81rem;
+      padding: 4px 9px;
+      font-size: 0.79rem;
+    }
+
+    .import-banner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: rgba(107, 196, 125, 0.12);
+      border: 1px solid rgba(107, 196, 125, 0.38);
+      color: #d6f5dd;
+      font-size: 0.84rem;
+    }
+
+    .import-banner-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .player-dock {
       position: sticky;
       top: 8px;
       z-index: 40;
-      background: rgba(28, 26, 23, 0.96);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(25, 23, 20, 0.94);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 16px;
+      padding: 9px 14px;
       box-shadow: var(--shadow);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
-    .player-main {
+    .dock-row-1 {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 9px;
+      gap: 8px;
+      margin-bottom: 7px;
     }
 
     audio#player {
-      flex: 1 1 300px;
-      height: 38px;
-      min-width: 220px;
+      flex: 1 1 260px;
+      height: 36px;
+      min-width: 200px;
       accent-color: var(--accent);
     }
 
-    .practice-controls {
+    .dock-controls {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .ctrl-btn {
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: 7px;
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text);
-      font-size: 0.83rem;
+      font-size: 0.8rem;
       cursor: pointer;
       transition: all 0.15s ease;
     }
@@ -206,72 +227,56 @@
 
     .divider {
       width: 1px;
-      height: 18px;
+      height: 16px;
       background: var(--border);
       margin: 0 2px;
     }
 
-    .sections-row {
+    .toggle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.79rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-chip input {
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .dock-row-2 {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .section-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .sec-btn {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--muted);
-      font-size: 0.81rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .sec-btn:hover {
-      color: var(--text);
-      border-color: #625647;
-    }
-
-    .sec-btn.active {
-      background: var(--accent-soft);
-      border-color: var(--accent);
-      color: #ffd794;
-      font-weight: 600;
-    }
-
-    .sync-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(56, 50, 42, 0.75);
-      font-size: 0.83rem;
+      padding-top: 7px;
+      border-top: 1px solid rgba(54, 48, 40, 0.78);
     }
 
     .live-readout {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
+      font-size: 0.81rem;
       color: var(--text);
     }
 
     .bar-pill {
       display: inline-flex;
       align-items: center;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 6px;
       background: var(--accent-soft);
       border: 1px solid rgba(224, 159, 62, 0.55);
@@ -294,259 +299,197 @@
       font-style: italic;
     }
 
-    .sync-toggles {
+    .section-pills {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      color: var(--muted);
-    }
-
-    .follow-toggle {
-      display: inline-flex;
-      align-items: center;
       gap: 5px;
-      cursor: pointer;
-      user-select: none;
-      color: var(--text);
-      font-size: 0.82rem;
     }
 
-    .follow-toggle input {
-      accent-color: var(--accent);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-    }
-
-    .viewer-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
+    .sec-btn {
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 14px;
-      margin-bottom: 14px;
-    }
-
-    .tab-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .mode-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
       color: var(--muted);
-      font-size: 0.86rem;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
-    .mode-btn.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #16130f;
-      font-weight: 600;
+    .sec-btn:hover {
+      color: var(--text);
+      border-color: #625647;
     }
 
-    .page-nav {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .page-pill {
-      padding: 5px 10px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--muted);
-      font-size: 0.83rem;
-      cursor: pointer;
-    }
-
-    .page-pill.active {
-      border-color: var(--accent);
+    .sec-btn.active {
       background: var(--accent-soft);
+      border-color: var(--accent);
       color: #ffd794;
       font-weight: 600;
     }
 
-    .shortcut-hint {
-      font-size: 0.79rem;
-      color: var(--muted);
-    }
-
-    .sheet-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .sheet-card {
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: border-color 0.2s ease;
-    }
-
-    .sheet-card.active-page {
-      border-color: var(--accent);
-    }
-
-    .sheet-card-head {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 14px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.86rem;
-      color: var(--muted);
-    }
-
-    .sheet-card-head-left {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .sheet-card.active-page .sheet-card-head strong {
-      color: var(--accent-hover);
-    }
-
-    .sheet-stage {
-      position: relative;
+    /* Seamless unpaginated continuous editorial sheet */
+    .sheet-paper {
       background: #ffffff;
-      user-select: none;
+      border-radius: 14px;
+      box-shadow: 0 20px 52px rgba(0, 0, 0, 0.5);
+      padding: 18px 18px 28px;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .sheet-stage img {
-      display: block;
+    .sheet-header-crop {
+      margin-bottom: 6px;
+      border-bottom: 1px solid #ece7df;
+      padding-bottom: 8px;
+    }
+
+    .slice-viewport {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .slice-viewport img {
+      position: absolute;
+      left: 0;
       width: 100%;
       height: auto;
+      max-width: none;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
-    .sheet-overlay {
+    .systems-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sys-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 6px 8px 6px 6px;
+      border-radius: 10px;
+      border-left: 4px solid transparent;
+      background: #ffffff;
+      transition: opacity 0.24s ease, background-color 0.22s ease, border-color 0.22s ease;
+    }
+
+    .sheet-paper.focus-enabled .sys-row:not(.is-active) {
+      opacity: 0.38;
+    }
+
+    .sheet-paper.focus-enabled .sys-row:not(.is-active):hover {
+      opacity: 0.88;
+    }
+
+    .sys-row.is-active {
+      opacity: 1;
+    }
+
+    .sheet-paper.focus-enabled .sys-row.is-active {
+      background: #fffcf5;
+      border-left-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(224, 159, 62, 0.22);
+    }
+
+    .sys-gutter {
+      flex: 0 0 42px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding-right: 4px;
+      color: #9e9384;
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+    }
+
+    .sys-row.is-active .sys-gutter {
+      color: #b46d0c;
+    }
+
+    .gutter-pill {
+      display: inline-block;
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #f3efe8;
+      border: 1px solid #e2dbd0;
+      line-height: 1.25;
+    }
+
+    .sys-row.is-active .gutter-pill {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #16130f;
+    }
+
+    .gutter-sub {
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    .sys-clip {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .sys-overlay {
       position: absolute;
       inset: 0;
       pointer-events: none;
     }
 
-    .dim-curtain {
-      position: absolute;
-      left: 0;
-      width: 100%;
-      background: rgba(16, 15, 13, 0.30);
-      opacity: 0;
-      transition: opacity 0.22s ease, top 0.2s ease, height 0.2s ease;
-      pointer-events: none;
-    }
-
-    .dim-curtain.visible {
-      opacity: 1;
-    }
-
-    .dim-curtain.dim-full {
-      top: 0;
-      height: 100%;
-      background: rgba(16, 15, 13, 0.24);
-    }
-
-    .sys-focus-frame {
-      position: absolute;
-      left: 4.4%;
-      width: 91.2%;
-      border: 2px solid rgba(224, 159, 62, 0.85);
-      border-radius: 8px;
-      box-shadow: 0 0 0 2px rgba(224, 159, 62, 0.18), 0 6px 20px rgba(224, 159, 62, 0.18);
-      opacity: 0;
-      transition: top 0.22s ease, height 0.22s ease, opacity 0.2s ease;
-      pointer-events: none;
-    }
-
-    .sys-focus-frame.visible {
-      opacity: 1;
-    }
-
     .karaoke-fill {
       position: absolute;
       border-radius: 4px;
-      background: linear-gradient(90deg, rgba(224, 159, 62, 0.16), rgba(235, 168, 58, 0.34));
+      background: linear-gradient(90deg, rgba(224, 159, 62, 0.17), rgba(235, 168, 58, 0.34));
       mix-blend-mode: multiply;
       opacity: 0;
       pointer-events: none;
-      will-change: width, top, height, left;
+      will-change: width;
     }
 
-    .karaoke-fill.visible {
+    .sys-row.is-active .karaoke-fill.visible {
       opacity: 1;
     }
 
     .active-bar-box {
       position: absolute;
       border-radius: 4px;
-      border: 1.5px solid rgba(224, 159, 62, 0.92);
-      background: rgba(255, 209, 128, 0.13);
+      border: 1.5px solid rgba(224, 159, 62, 0.88);
+      background: rgba(255, 210, 128, 0.12);
       mix-blend-mode: multiply;
       opacity: 0;
-      transition: left 0.12s ease, width 0.12s ease, top 0.18s ease, height 0.18s ease, opacity 0.15s ease;
+      transition: left 0.12s ease, width 0.12s ease, opacity 0.15s ease;
       pointer-events: none;
     }
 
-    .active-bar-box.visible {
-      opacity: 1;
-    }
-
-    .bar-badge {
-      position: absolute;
-      transform: translateY(-100%);
-      margin-top: -3px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      background: var(--accent);
-      color: #16130f;
-      font-size: 11px;
-      font-weight: 700;
-      line-height: 1.35;
-      letter-spacing: 0.02em;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-      opacity: 0;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .bar-badge.visible {
+    .sys-row.is-active .active-bar-box.visible {
       opacity: 1;
     }
 
     .playhead {
       position: absolute;
       width: 2.5px;
-      background: linear-gradient(180deg, #ffcb74 0%, #e09f3e 100%);
-      box-shadow: 0 0 8px rgba(224, 159, 62, 0.95);
+      background: linear-gradient(180deg, #ffb947 0%, #d8830d 100%);
+      box-shadow: 0 0 8px rgba(224, 159, 62, 0.9);
       border-radius: 2px;
       transform: translateX(-50%);
       opacity: 0;
       pointer-events: none;
-      will-change: left, top, height;
+      will-change: left;
     }
 
-    .playhead.visible {
+    .sys-row.is-active .playhead.visible {
       opacity: 1;
     }
 
@@ -571,6 +514,8 @@
 
     .bar-hotspot {
       position: absolute;
+      top: 0;
+      height: 100%;
       pointer-events: auto;
       background: transparent;
       border: 1px solid transparent;
@@ -583,53 +528,199 @@
 
     .bar-hotspot:hover,
     .bar-hotspot:focus-visible {
-      background: rgba(224, 159, 62, 0.12);
-      border-color: rgba(224, 159, 62, 0.72);
+      background: rgba(224, 159, 62, 0.10);
+      border-color: rgba(224, 159, 62, 0.65);
       outline: none;
     }
 
-    .single-controls {
+    .sheet-footer-hint {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #ede8e0;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
+      font-size: 0.79rem;
+      color: #7d7365;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(8, 7, 6, 0.8);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(740px, 100%);
+      max-height: 92vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+      padding: 20px 22px;
+      color: var(--text);
+    }
+
+    .modal-card.wide {
+      width: min(1040px, 100%);
+      padding: 14px 16px;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .dropzone {
+      border: 2px dashed #554b3e;
+      border-radius: 12px;
+      background: rgba(36, 33, 29, 0.65);
+      padding: 22px 18px;
+      text-align: center;
+      transition: border-color 0.16s ease, background-color 0.16s ease;
+      margin-bottom: 14px;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(224, 159, 62, 0.12);
+    }
+
+    .dropzone p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .dropzone strong {
+      color: var(--text);
+    }
+
+    .drop-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 10px;
     }
 
-    .single-controls-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .hidden-input {
+      display: none;
     }
 
-    .pdf-frame-wrap {
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .status-tile {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 11px;
+      font-size: 0.82rem;
+    }
+
+    .status-tile .label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      margin-bottom: 2px;
+    }
+
+    .status-tile .val {
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .status-tile .val.ok {
+      color: #9ae1a9;
+    }
+
+    .status-tile .val.warn {
+      color: #f3c879;
+    }
+
+    .import-opts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .field input[type="number"],
+    .field input[type="text"] {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
+      border-radius: 6px;
+      padding: 6px 8px;
+      color: var(--text);
+      font-size: 0.86rem;
     }
 
-    .pdf-note {
-      padding: 10px 16px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      font-size: 0.86rem;
+    .import-msg {
+      min-height: 20px;
+      margin-bottom: 12px;
+      font-size: 0.84rem;
       color: var(--muted);
+    }
+
+    .import-msg.error {
+      color: #ff9f96;
+    }
+
+    .import-msg.ok {
+      color: #9ae1a9;
+    }
+
+    .modal-footer {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: flex-end;
       gap: 8px;
     }
 
-    .pdf-frame-wrap iframe {
-      display: block;
+    .pdf-frame {
       width: 100%;
-      height: 82vh;
-      min-height: 620px;
-      border: 0;
+      height: 78vh;
+      min-height: 520px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       background: #2b2926;
     }
 
@@ -637,55 +728,29 @@
       display: none !important;
     }
 
-    .lightbox {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.9);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      cursor: zoom-out;
-    }
-
-    .lightbox.open {
-      display: flex;
-    }
-
-    .lightbox img {
-      max-width: min(1240px, 96vw);
-      max-height: 94vh;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-    }
-
-    .lightbox-close {
-      position: fixed;
-      top: 16px;
-      right: 20px;
-      background: rgba(28, 26, 23, 0.9);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
     @media (max-width: 720px) {
       .container {
-        padding: 10px 8px 52px;
+        padding: 8px 6px 64px;
       }
       header.hero {
-        padding: 14px;
+        padding: 12px;
       }
       .player-dock {
-        padding: 10px 12px;
+        padding: 8px 10px;
         top: 4px;
       }
-      .shortcut-hint {
+      .sheet-paper {
+        padding: 10px 6px 18px;
+        border-radius: 10px;
+      }
+      .sys-row {
+        padding: 4px 4px 4px 2px;
+      }
+      .sys-gutter {
+        flex: 0 0 32px;
+        font-size: 10px;
+      }
+      .gutter-sub {
         display: none;
       }
     }
@@ -696,387 +761,1653 @@
     <header class="hero">
       <div class="hero-top">
         <div>
-          <h1>Call of Silence — 指弹吉他六线谱在线试听与同步看谱</h1>
-          <p class="hero-sub">《进击的巨人》第二季插曲 · 支持歌词级逐拍染色聚焦、自动换行滚动与点谱任意小节即播</p>
-          <div class="badges">
+          <h1 id="hero-title">Call of Silence — 指弹吉他六线谱在线试听与同步看谱</h1>
+          <p class="hero-sub" id="hero-sub">《进击的巨人》第二季插曲 · 无分页连续滚动、逐拍染色聚焦与本地 Skill 产物直读播放器</p>
+          <div class="badges" id="hero-badges">
             <span class="badge">原调 1 = A / F#m</span>
             <span class="badge">Capo 2（G / Em 指法）</span>
             <span class="badge">4/4 拍 · 72 BPM</span>
-            <span class="badge">45 小节 · 7 种指弹技巧</span>
+            <span class="badge">45 小节 · 14 行连续铺排</span>
             <span class="badge highlight">95.2% 调内纯净度</span>
           </div>
         </div>
         <div class="hero-actions">
-          <a class="btn primary" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">📄 打开/下载 PDF</a>
-          <a class="btn" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" target="_blank" rel="noopener">🎵 下载 MP3</a>
-          <a class="btn" href="https://github.com/zxsos/fingerstyle-guitar-tab-skill" target="_blank" rel="noopener">GitHub 仓库</a>
+          <button type="button" class="btn primary" id="open-import-btn">📂 导入 Skill 产物</button>
+          <button type="button" class="btn" id="open-pdf-btn">📄 原版 PDF</button>
+          <a class="btn" id="download-mp3-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" download>🎵 下载 MP3</a>
+          <a class="btn" href="https://github.com/zxsos/fingerstyle-guitar-tab-skill" target="_blank" rel="noopener">GitHub</a>
         </div>
       </div>
     </header>
 
+    <div class="import-banner hidden" id="import-banner">
+      <span id="import-banner-text">本地导入模式</span>
+      <div class="import-banner-actions">
+        <button type="button" class="btn compact" id="export-manifest-btn">💾 导出 sync_manifest.json</button>
+        <button type="button" class="btn compact" id="reset-builtin-btn">↩ 返回内置作品</button>
+      </div>
+    </div>
+
     <section class="player-dock" id="player-dock" aria-label="试听播放器与同步控制">
-      <div class="player-main">
+      <div class="dock-row-1">
         <audio id="player" controls preload="metadata">
           <source src="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" type="audio/mpeg" />
           当前浏览器不支持 HTML5 音频播放。
         </audio>
-        <div class="practice-controls">
+        <div class="dock-controls">
           <button type="button" class="ctrl-btn" id="seek-back">-5s</button>
           <button type="button" class="ctrl-btn" id="seek-fwd">+5s</button>
           <span class="divider" aria-hidden="true"></span>
           <button type="button" class="ctrl-btn speed-btn" data-rate="0.5">0.5x</button>
           <button type="button" class="ctrl-btn speed-btn" data-rate="0.75">0.75x</button>
           <button type="button" class="ctrl-btn speed-btn active" data-rate="1">1.0x</button>
+          <span class="divider" aria-hidden="true"></span>
+          <label class="toggle-chip" title="柔和淡化非当前行，突出当前小节与进度游标">
+            <input type="checkbox" id="focus-dye" checked />
+            聚焦染色
+          </label>
+          <label class="toggle-chip" title="跨行演奏时自动居中滚动到下一行">
+            <input type="checkbox" id="auto-follow" checked />
+            自动滚动
+          </label>
+          <button type="button" class="ctrl-btn" id="focus-now-btn" title="定位到当前演奏行">🎯 定位</button>
         </div>
       </div>
 
-      <div class="sections-row">
-        <div class="section-pills" role="group" aria-label="段落快速跳转">
-          <button type="button" class="sec-btn active" data-sec="0" data-start="0.00" data-page="1">Intro (M00–M09)</button>
-          <button type="button" class="sec-btn" data-sec="1" data-start="31.0417" data-page="1">Verse (M10–M17)</button>
-          <button type="button" class="sec-btn" data-sec="2" data-start="57.7083" data-page="2">Interlude · P.M. (M18–M27)</button>
-          <button type="button" class="sec-btn" data-sec="3" data-start="91.0417" data-page="2">Chorus I · 拍弦 (M28–M35)</button>
-          <button type="button" class="sec-btn" data-sec="4" data-start="117.7083" data-page="3">Chorus II (M36–M44)</button>
-        </div>
-      </div>
-
-      <div class="sync-bar">
-        <div class="live-readout" id="live-readout">
+      <div class="dock-row-2">
+        <div class="live-readout">
           <span class="bar-pill" id="live-bar">M00 / 44</span>
           <span id="live-section">Intro</span>
           <span class="meta-sep">·</span>
           <span class="chord-readout" id="live-chords">弱起 Pick-up</span>
           <span class="meta-sep">·</span>
-          <span id="live-loc">第 1 页 · 第 1 / 14 行</span>
+          <span id="live-loc">第 1 / 14 行</span>
           <span class="cue-readout" id="live-cue"></span>
         </div>
-        <div class="sync-toggles">
-          <label class="follow-toggle">
-            <input type="checkbox" id="auto-follow" checked />
-            自动换行聚焦
-          </label>
-          <label class="follow-toggle">
-            <input type="checkbox" id="focus-dye" checked />
-            歌词染色聚焦
-          </label>
-          <button type="button" class="btn compact" id="focus-now-btn">🎯 定位当前行</button>
-        </div>
+        <div class="section-pills" id="section-pills" role="group" aria-label="段落快速跳转"></div>
       </div>
     </section>
 
-    <div class="viewer-toolbar">
-      <div class="tab-group" role="tablist" aria-label="看谱视图切换">
-        <button type="button" class="mode-btn active" data-mode="scroll">连续高清看谱</button>
-        <button type="button" class="mode-btn" data-mode="single">单页翻页模式</button>
-        <button type="button" class="mode-btn" data-mode="pdf">矢量 PDF 直览</button>
-      </div>
-      <div class="page-nav">
-        <button type="button" class="page-pill active" data-jump-page="1">Page 1</button>
-        <button type="button" class="page-pill" data-jump-page="2">Page 2</button>
-        <button type="button" class="page-pill" data-jump-page="3">Page 3</button>
-        <span class="shortcut-hint">点击谱上任意小节直接播放 · 空格 播放/暂停 · ←/→ 单页翻页</span>
-      </div>
-    </div>
-
     <main>
-      <div id="view-scroll" class="sheet-stack">
-        <article class="sheet-card active-page" id="card-page-1" data-page="1">
-          <div class="sheet-card-head">
-            <div class="sheet-card-head-left">
-              <strong>第 1 页 / 共 3 页</strong>
-              <span>Intro (M00–M09) + Verse (M10–M17) · 点击任意小节跳转播放</span>
-            </div>
-            <button type="button" class="btn compact zoom-page-btn" data-zoom="./examples/call-of-silence/previews/page-1.png">🔍 放大本页</button>
-          </div>
-          <div class="sheet-stage" id="stage-page-1">
-            <img src="./examples/call-of-silence/previews/page-1.png" alt="Call of Silence 指弹吉他六线谱 第 1 页" />
-            <div class="sheet-overlay" id="overlay-page-1"></div>
-          </div>
-        </article>
-
-        <article class="sheet-card" id="card-page-2" data-page="2">
-          <div class="sheet-card-head">
-            <div class="sheet-card-head-left">
-              <strong>第 2 页 / 共 3 页</strong>
-              <span>Interlude P.M. (M18–M27) + Chorus I 前半 (M28–M32) · 点击任意小节跳转播放</span>
-            </div>
-            <button type="button" class="btn compact zoom-page-btn" data-zoom="./examples/call-of-silence/previews/page-2.png">🔍 放大本页</button>
-          </div>
-          <div class="sheet-stage" id="stage-page-2">
-            <img src="./examples/call-of-silence/previews/page-2.png" alt="Call of Silence 指弹吉他六线谱 第 2 页" />
-            <div class="sheet-overlay" id="overlay-page-2"></div>
-          </div>
-        </article>
-
-        <article class="sheet-card" id="card-page-3" data-page="3">
-          <div class="sheet-card-head">
-            <div class="sheet-card-head-left">
-              <strong>第 3 页 / 共 3 页</strong>
-              <span>Chorus I 尾段 (M33–M35) + Chorus II (M36–M44) · 点击任意小节跳转播放</span>
-            </div>
-            <button type="button" class="btn compact zoom-page-btn" data-zoom="./examples/call-of-silence/previews/page-3.png">🔍 放大本页</button>
-          </div>
-          <div class="sheet-stage" id="stage-page-3">
-            <img src="./examples/call-of-silence/previews/page-3.png" alt="Call of Silence 指弹吉他六线谱 第 3 页" />
-            <div class="sheet-overlay" id="overlay-page-3"></div>
-          </div>
-        </article>
-      </div>
-
-      <div id="view-single" class="hidden">
-        <div class="single-controls">
-          <button type="button" class="btn" id="prev-page-btn">← 上一页</button>
-          <span id="single-page-label">第 1 / 3 页</span>
-          <div class="single-controls-right">
-            <button type="button" class="btn compact" id="single-zoom-btn" data-zoom="./examples/call-of-silence/previews/page-1.png">🔍 放大本页</button>
-            <button type="button" class="btn" id="next-page-btn">下一页 →</button>
-          </div>
+      <section class="sheet-paper focus-enabled" id="sheet-paper" aria-label="连续无分页六线谱">
+        <div class="sheet-header-crop" id="sheet-header-crop"></div>
+        <div class="systems-flow" id="systems-flow"></div>
+        <div class="sheet-footer-hint">
+          <span>提示：直接点击乐谱上的任意小节即可跳转播放；空格键控制播放/暂停。</span>
+          <span>支持导入任意遵循本 Skill 产出的项目文件夹（MP3 + previews/page-*.png + 可选 sync_manifest.json / score_data.py）</span>
         </div>
-        <article class="sheet-card active-page">
-          <div class="sheet-stage" id="stage-single">
-            <img id="single-page-img" src="./examples/call-of-silence/previews/page-1.png" alt="Call of Silence 指弹吉他六线谱单页视图" />
-            <div class="sheet-overlay" id="overlay-single"></div>
-          </div>
-        </article>
-      </div>
-
-      <div id="view-pdf" class="pdf-frame-wrap hidden">
-        <div class="pdf-note">
-          <span>若移动端或部分浏览器内嵌 PDF 无法滚动，请切换“连续高清看谱”体验同步染色高亮，或点击右侧直接打开。</span>
-          <a class="btn" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">新标签页打开 PDF</a>
-        </div>
-        <iframe title="Call of Silence 矢量六线谱 PDF" src="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf"></iframe>
-      </div>
+      </section>
     </main>
   </div>
 
-  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="谱面大图预览">
-    <button type="button" class="lightbox-close" id="lightbox-close">关闭 (Esc)</button>
-    <img id="lightbox-img" src="" alt="放大谱面预览" />
+  <!-- Local Skill Artifact Importer Modal -->
+  <div class="modal-backdrop" id="import-modal" role="dialog" aria-modal="true" aria-label="导入 Skill 运行产物">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>📂 导入本 Skill 生成的本地产物</h2>
+        <button type="button" class="btn compact" id="close-import-btn">关闭 (Esc)</button>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <p>
+          将 <strong>Skill 输出文件夹</strong> 或文件直接拖拽到此处<br />
+          支持 <code>*.mp3</code> + <code>previews/page-*.png</code> + 可选 <code>sync_manifest.json</code> / <code>src/score_data.py</code> / <code>*.pdf</code>（纯浏览器本地解析，不上传服务器）
+        </p>
+        <div class="drop-btns">
+          <button type="button" class="btn primary" id="pick-dir-btn">📁 选择作品文件夹</button>
+          <button type="button" class="btn" id="pick-files-btn">📄 多选产物文件</button>
+        </div>
+        <input type="file" id="dir-input" class="hidden-input" webkitdirectory directory multiple />
+        <input type="file" id="files-input" class="hidden-input" multiple accept=".mp3,.wav,.m4a,.ogg,.png,.json,.py,.pdf" />
+      </div>
+
+      <div class="status-grid">
+        <div class="status-tile">
+          <div class="label">音频文件</div>
+          <div class="val" id="imp-audio-val">未选择</div>
+        </div>
+        <div class="status-tile">
+          <div class="label">乐谱 PNG 页面</div>
+          <div class="val" id="imp-pages-val">0 页</div>
+        </div>
+        <div class="status-tile">
+          <div class="label">同步配置 / 源码</div>
+          <div class="val" id="imp-meta-val">自动识谱模式</div>
+        </div>
+        <div class="status-tile">
+          <div class="label">识别结果</div>
+          <div class="val" id="imp-detect-val">等待文件</div>
+        </div>
+      </div>
+
+      <div class="import-opts" id="import-opts">
+        <label class="field">
+          曲名（可选覆盖）
+          <input type="text" id="imp-title-input" placeholder="自动识别" />
+        </label>
+        <label class="field">
+          速度 BPM
+          <input type="number" id="imp-bpm-input" value="72" min="30" max="240" step="1" />
+        </label>
+        <label class="field">
+          起音延迟 Lead-in (秒)
+          <input type="number" id="imp-leadin-input" value="0.2083" min="0" max="10" step="0.01" />
+        </label>
+        <label class="field">
+          首小节为 1 拍弱起
+          <select id="imp-pickup-select" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:0.86rem;">
+            <option value="auto">自动识别</option>
+            <option value="yes">是（1 拍弱起）</option>
+            <option value="no">否（完整 4 拍）</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="import-msg" id="import-msg">请先选择或拖入本 Skill 生成的乐谱文件夹（例如包含 MP3 与 previews/page-*.png 的目录）。</div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" id="modal-export-btn" disabled>💾 导出 sync_manifest.json</button>
+        <button type="button" class="btn primary" id="modal-load-btn" disabled>▶ 载入并开始同步播放</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Original PDF Viewer Modal -->
+  <div class="modal-backdrop" id="pdf-modal" role="dialog" aria-modal="true" aria-label="原版矢量 PDF 预览">
+    <div class="modal-card wide">
+      <div class="modal-head">
+        <h2>📄 原版矢量六线谱 PDF</h2>
+        <div class="hero-actions">
+          <a class="btn compact" id="pdf-newtab-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">新标签页打开</a>
+          <a class="btn compact primary" id="pdf-download-link" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" download>下载 PDF</a>
+          <button type="button" class="btn compact" id="close-pdf-btn">关闭 (Esc)</button>
+        </div>
+      </div>
+      <iframe class="pdf-frame" id="pdf-iframe" title="矢量六线谱 PDF" src="about:blank"></iframe>
+    </div>
   </div>
 
   <script>
     (function () {
-      const PAGE_W = 1241;
-      const PAGE_H = 1754;
-      const BAR_DUR = 4.0 * 60.0 / 72.0;
-      const T_B1 = (120 + 480) / 480.0 * (60.0 / 72.0);
-
-      function barStart(b) {
-        return b === 0 ? 120 / 480.0 * (60.0 / 72.0) : T_B1 + (b - 1) * BAR_DUR;
-      }
-
-      function barEnd(b) {
-        if (b === 0) return T_B1;
-        if (b === 44) return 151.80;
-        return T_B1 + b * BAR_DUR;
-      }
-
-      const BAR_META = {
-        0:  { sec: "Intro", chords: "弱起 Pick-up", cue: "" },
-        1:  { sec: "Intro", chords: "Cmaj7 → D", cue: "" },
-        2:  { sec: "Intro", chords: "Em9 → Bm7", cue: "" },
-        3:  { sec: "Intro", chords: "Cmaj7 → D", cue: "" },
-        4:  { sec: "Intro", chords: "Em", cue: "" },
-        5:  { sec: "Intro", chords: "Cmaj7 → D", cue: "" },
-        6:  { sec: "Intro", chords: "Am7 → Em → Bm7", cue: "" },
-        7:  { sec: "Intro", chords: "Cmaj7 → D", cue: "" },
-        8:  { sec: "Intro", chords: "Em9", cue: "" },
-        9:  { sec: "Intro", chords: "Em9", cue: "Don't you think..." },
-        10: { sec: "Verse", chords: "Cmaj7 → D", cue: "" },
-        11: { sec: "Verse", chords: "Em9", cue: "I've been burning..." },
-        12: { sec: "Verse", chords: "Cmaj7 → D", cue: "" },
-        13: { sec: "Verse", chords: "Em9", cue: "I've got to face..." },
-        14: { sec: "Verse", chords: "Cmaj7 → D", cue: "" },
-        15: { sec: "Verse", chords: "Em9", cue: "I won't run..." },
-        16: { sec: "Verse", chords: "Cmaj7 → D", cue: "" },
-        17: { sec: "Verse", chords: "Em", cue: "" },
-        18: { sec: "Interlude · P.M.", chords: "Cmaj7 → Am7", cue: "" },
-        19: { sec: "Interlude · P.M.", chords: "G → Bm7", cue: "" },
-        20: { sec: "Interlude · P.M.", chords: "Am7 → C", cue: "" },
-        21: { sec: "Interlude · P.M.", chords: "G → Bm7", cue: "" },
-        22: { sec: "Interlude · P.M.", chords: "Cmaj7 → Am7", cue: "" },
-        23: { sec: "Interlude", chords: "G → Bm7", cue: "" },
-        24: { sec: "Interlude", chords: "D", cue: "" },
-        25: { sec: "Interlude", chords: "D/F#", cue: "" },
-        26: { sec: "Interlude", chords: "G → D", cue: "" },
-        27: { sec: "Interlude", chords: "D", cue: "You will know..." },
-        28: { sec: "Chorus I · 拍弦", chords: "Cmaj7 → D", cue: "" },
-        29: { sec: "Chorus I · 拍弦", chords: "Em → Am7", cue: "Must be ragged..." },
-        30: { sec: "Chorus I · 拍弦", chords: "Cmaj7 → D", cue: "" },
-        31: { sec: "Chorus I · 拍弦", chords: "Em → Am7", cue: "Even if my body's..." },
-        32: { sec: "Chorus I · 拍弦", chords: "Cmaj7 → D", cue: "" },
-        33: { sec: "Chorus I · 拍弦", chords: "Em → Am7", cue: "I don't want to go..." },
-        34: { sec: "Chorus I · 拍弦", chords: "Cmaj7 → D", cue: "" },
-        35: { sec: "Chorus I · 拍弦", chords: "Em → Bm7", cue: "So cry no more..." },
-        36: { sec: "Chorus II & Outro", chords: "Cmaj7 → D", cue: "" },
-        37: { sec: "Chorus II & Outro", chords: "Em → Bm7", cue: "Go ahead, be proud..." },
-        38: { sec: "Chorus II & Outro", chords: "Cmaj7 → D", cue: "" },
-        39: { sec: "Chorus II & Outro", chords: "Em → Bm7", cue: "You are the one..." },
-        40: { sec: "Chorus II & Outro", chords: "Cmaj7 → D", cue: "" },
-        41: { sec: "Chorus II & Outro", chords: "Em → Bm7", cue: "You guide us far..." },
-        42: { sec: "Chorus II & Outro", chords: "Cmaj7 → D", cue: "" },
-        43: { sec: "Chorus II & Outro", chords: "Em → Em9", cue: "" },
-        44: { sec: "Chorus II & Outro", chords: "Em", cue: "" }
-      };
-
-      const RAW_SYSTEMS = [
-        // Page 1 (5 systems, M00..M17)
+      const BUILTIN_MANIFEST = {
+  "version": 1,
+  "title": "Call of Silence",
+  "subtitle": "《进击的巨人》第二季插曲 · 指弹吉他独奏六线谱（技巧编配版）",
+  "composer": "泽野弘之 (Hiroyuki Sawano)",
+  "arrangerInfo": "原调：1 = A / F#m  |  选调：G调指法 (Capo = 2品)  |  标准调弦：6E 5A 4D 3G 2B 1E",
+  "bpm": 72,
+  "capo": 2,
+  "duration": 151.8,
+  "audio": "Call_of_Silence_指弹吉他试听.mp3",
+  "pdf": "Call_of_Silence_指弹吉他六线谱.pdf",
+  "pages": [
+    "previews/page-1.png",
+    "previews/page-2.png",
+    "previews/page-3.png"
+  ],
+  "header": {
+    "page": 1,
+    "width": 1241,
+    "height": 1754,
+    "sliceY": [
+      71,
+      372
+    ]
+  },
+  "sections": [
+    {
+      "name": "Intro",
+      "bar": 0,
+      "start": 0.2083
+    },
+    {
+      "name": "Verse",
+      "bar": 10,
+      "start": 31.0417
+    },
+    {
+      "name": "Interlude",
+      "bar": 18,
+      "start": 57.7083
+    },
+    {
+      "name": "Chorus I",
+      "bar": 28,
+      "start": 91.0417
+    },
+    {
+      "name": "Chorus II & Outro",
+      "bar": 36,
+      "start": 117.7083
+    }
+  ],
+  "systems": [
+    {
+      "sysIdx": 0,
+      "page": 1,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        374,
+        631
+      ],
+      "inkY": [
+        388,
+        621
+      ],
+      "staffY": [
+        498,
+        578
+      ],
+      "x0": 152.0,
+      "x1": 1161.5,
+      "bars": [
         {
-          page: 1, staffY: [498, 578], bandY: [438, 626],
-          bars: [
-            { bar: 0, x0: 152.0, x1: 213.5 },
-            { bar: 1, x0: 213.5, x1: 463.0 },
-            { bar: 2, x0: 463.0, x1: 718.5 },
-            { bar: 3, x0: 718.5, x1: 944.5 },
-            { bar: 4, x0: 944.5, x1: 1161.5 }
-          ]
+          "bar": 0,
+          "start": 0.2083,
+          "end": 1.0417,
+          "sec": "Intro",
+          "chords": "弱起 Pick-up",
+          "cue": "",
+          "sysIdx": 0,
+          "page": 1,
+          "x0": 152.0,
+          "x1": 213.5
         },
         {
-          page: 1, staffY: [729, 809], bandY: [670, 856],
-          bars: [
-            { bar: 5, x0: 115.0, x1: 380.5 },
-            { bar: 6, x0: 380.5, x1: 666.0 },
-            { bar: 7, x0: 666.0, x1: 917.5 },
-            { bar: 8, x0: 917.5, x1: 1161.5 }
-          ]
+          "bar": 1,
+          "start": 1.0417,
+          "end": 4.375,
+          "sec": "Intro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 0,
+          "page": 1,
+          "x0": 213.5,
+          "x1": 459.5
         },
         {
-          page: 1, staffY: [969, 1050], bandY: [905, 1110],
-          bars: [
-            { bar: 9,  x0: 115.0, x1: 451.5 },
-            { bar: 10, x0: 451.5, x1: 785.5 },
-            { bar: 11, x0: 785.5, x1: 1161.5 }
-          ]
+          "bar": 2,
+          "start": 4.375,
+          "end": 7.7083,
+          "sec": "Intro",
+          "chords": "Em9 → Bm7",
+          "cue": "",
+          "sysIdx": 0,
+          "page": 1,
+          "x0": 459.5,
+          "x1": 718.5
         },
         {
-          page: 1, staffY: [1206, 1286], bandY: [1146, 1345],
-          bars: [
-            { bar: 12, x0: 115.0, x1: 648.5 },
-            { bar: 13, x0: 648.5, x1: 1161.5 }
-          ]
+          "bar": 3,
+          "start": 7.7083,
+          "end": 11.0417,
+          "sec": "Intro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 0,
+          "page": 1,
+          "x0": 718.5,
+          "x1": 944.5
         },
         {
-          page: 1, staffY: [1425, 1506], bandY: [1368, 1568],
-          bars: [
-            { bar: 14, x0: 115.0, x1: 396.5 },
-            { bar: 15, x0: 396.5, x1: 625.5 },
-            { bar: 16, x0: 625.5, x1: 873.5 },
-            { bar: 17, x0: 873.5, x1: 1161.5 }
-          ]
-        },
-        // Page 2 (5 systems, M18..M32)
-        {
-          page: 2, staffY: [220, 300], bandY: [150, 358],
-          bars: [
-            { bar: 18, x0: 115.0, x1: 445.5 },
-            { bar: 19, x0: 445.5, x1: 784.5 },
-            { bar: 20, x0: 784.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 2, staffY: [481, 561], bandY: [408, 618],
-          bars: [
-            { bar: 21, x0: 115.0, x1: 480.5 },
-            { bar: 22, x0: 480.5, x1: 810.5 },
-            { bar: 23, x0: 810.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 2, staffY: [742, 822], bandY: [682, 875],
-          bars: [
-            { bar: 24, x0: 115.0, x1: 478.5 },
-            { bar: 25, x0: 478.5, x1: 827.5 },
-            { bar: 26, x0: 827.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 2, staffY: [1003, 1083], bandY: [935, 1152],
-          bars: [
-            { bar: 27, x0: 115.0, x1: 349.5 },
-            { bar: 28, x0: 349.5, x1: 715.5 },
-            { bar: 29, x0: 715.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 2, staffY: [1264, 1344], bandY: [1205, 1425],
-          bars: [
-            { bar: 30, x0: 115.0, x1: 443.5 },
-            { bar: 31, x0: 443.5, x1: 792.5 },
-            { bar: 32, x0: 792.5, x1: 1161.5 }
-          ]
-        },
-        // Page 3 (4 systems, M33..M44)
-        {
-          page: 3, staffY: [176, 256], bandY: [112, 335],
-          bars: [
-            { bar: 33, x0: 115.0, x1: 503.5 },
-            { bar: 34, x0: 503.5, x1: 819.0 },
-            { bar: 35, x0: 819.0, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 3, staffY: [488, 568], bandY: [420, 635],
-          bars: [
-            { bar: 36, x0: 115.0, x1: 454.5 },
-            { bar: 37, x0: 454.5, x1: 800.5 },
-            { bar: 38, x0: 800.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 3, staffY: [799, 880], bandY: [740, 948],
-          bars: [
-            { bar: 39, x0: 115.0, x1: 441.5 },
-            { bar: 40, x0: 441.5, x1: 749.5 },
-            { bar: 41, x0: 749.5, x1: 1161.5 }
-          ]
-        },
-        {
-          page: 3, staffY: [1111, 1192], bandY: [1045, 1255],
-          bars: [
-            { bar: 42, x0: 115.0, x1: 569.5 },
-            { bar: 43, x0: 569.5, x1: 1026.5 },
-            { bar: 44, x0: 1026.5, x1: 1157.8 }
-          ]
+          "bar": 4,
+          "start": 11.0417,
+          "end": 14.375,
+          "sec": "Intro",
+          "chords": "Em",
+          "cue": "",
+          "sysIdx": 0,
+          "page": 1,
+          "x0": 944.5,
+          "x1": 1161.5
         }
-      ];
+      ]
+    },
+    {
+      "sysIdx": 1,
+      "page": 1,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        631,
+        864
+      ],
+      "inkY": [
+        642,
+        852
+      ],
+      "staffY": [
+        729,
+        809
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 5,
+          "start": 14.375,
+          "end": 17.7083,
+          "sec": "Intro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 1,
+          "page": 1,
+          "x0": 115.0,
+          "x1": 380.5
+        },
+        {
+          "bar": 6,
+          "start": 17.7083,
+          "end": 21.0417,
+          "sec": "Intro",
+          "chords": "Am7 → Em → Bm7",
+          "cue": "",
+          "sysIdx": 1,
+          "page": 1,
+          "x0": 380.5,
+          "x1": 666.0
+        },
+        {
+          "bar": 7,
+          "start": 21.0417,
+          "end": 24.375,
+          "sec": "Intro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 1,
+          "page": 1,
+          "x0": 666.0,
+          "x1": 917.5
+        },
+        {
+          "bar": 8,
+          "start": 24.375,
+          "end": 27.7083,
+          "sec": "Intro",
+          "chords": "Em9",
+          "cue": "",
+          "sysIdx": 1,
+          "page": 1,
+          "x0": 917.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 2,
+      "page": 1,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        864,
+        1115
+      ],
+      "inkY": [
+        876,
+        1112
+      ],
+      "staffY": [
+        969,
+        1050
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 9,
+          "start": 27.7083,
+          "end": 31.0417,
+          "sec": "Intro",
+          "chords": "Em9",
+          "cue": "Don't you think...",
+          "sysIdx": 2,
+          "page": 1,
+          "x0": 115.0,
+          "x1": 451.5
+        },
+        {
+          "bar": 10,
+          "start": 31.0417,
+          "end": 34.375,
+          "sec": "Verse",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 2,
+          "page": 1,
+          "x0": 451.5,
+          "x1": 785.5
+        },
+        {
+          "bar": 11,
+          "start": 34.375,
+          "end": 37.7083,
+          "sec": "Verse",
+          "chords": "Em9",
+          "cue": "I've been burning...",
+          "sysIdx": 2,
+          "page": 1,
+          "x0": 785.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 3,
+      "page": 1,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        1115,
+        1335
+      ],
+      "inkY": [
+        1119,
+        1333
+      ],
+      "staffY": [
+        1206,
+        1286
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 12,
+          "start": 37.7083,
+          "end": 41.0417,
+          "sec": "Verse",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 3,
+          "page": 1,
+          "x0": 115.0,
+          "x1": 648.5
+        },
+        {
+          "bar": 13,
+          "start": 41.0417,
+          "end": 44.375,
+          "sec": "Verse",
+          "chords": "Em9",
+          "cue": "I've got to face...",
+          "sysIdx": 3,
+          "page": 1,
+          "x0": 648.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 4,
+      "page": 1,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        1335,
+        1572
+      ],
+      "inkY": [
+        1337,
+        1556
+      ],
+      "staffY": [
+        1425,
+        1506
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 14,
+          "start": 44.375,
+          "end": 47.7083,
+          "sec": "Verse",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 4,
+          "page": 1,
+          "x0": 115.0,
+          "x1": 396.5
+        },
+        {
+          "bar": 15,
+          "start": 47.7083,
+          "end": 51.0417,
+          "sec": "Verse",
+          "chords": "Em9",
+          "cue": "I won't run...",
+          "sysIdx": 4,
+          "page": 1,
+          "x0": 396.5,
+          "x1": 625.5
+        },
+        {
+          "bar": 16,
+          "start": 51.0417,
+          "end": 54.375,
+          "sec": "Verse",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 4,
+          "page": 1,
+          "x0": 625.5,
+          "x1": 873.5
+        },
+        {
+          "bar": 17,
+          "start": 54.375,
+          "end": 57.7083,
+          "sec": "Verse",
+          "chords": "Em",
+          "cue": "",
+          "sysIdx": 4,
+          "page": 1,
+          "x0": 873.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 5,
+      "page": 2,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        98,
+        365
+      ],
+      "inkY": [
+        104,
+        351
+      ],
+      "staffY": [
+        220,
+        300
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 18,
+          "start": 57.7083,
+          "end": 61.0417,
+          "sec": "Interlude",
+          "chords": "Cmaj7 → Am7",
+          "cue": "",
+          "sysIdx": 5,
+          "page": 2,
+          "x0": 115.0,
+          "x1": 445.5
+        },
+        {
+          "bar": 19,
+          "start": 61.0417,
+          "end": 64.375,
+          "sec": "Interlude",
+          "chords": "G → Bm7",
+          "cue": "",
+          "sysIdx": 5,
+          "page": 2,
+          "x0": 445.5,
+          "x1": 784.5
+        },
+        {
+          "bar": 20,
+          "start": 64.375,
+          "end": 67.7083,
+          "sec": "Interlude",
+          "chords": "Am7 → C",
+          "cue": "",
+          "sysIdx": 5,
+          "page": 2,
+          "x0": 784.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 6,
+      "page": 2,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        366,
+        622
+      ],
+      "inkY": [
+        380,
+        606
+      ],
+      "staffY": [
+        481,
+        561
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 21,
+          "start": 67.7083,
+          "end": 71.0417,
+          "sec": "Interlude",
+          "chords": "G → Bm7",
+          "cue": "",
+          "sysIdx": 6,
+          "page": 2,
+          "x0": 115.0,
+          "x1": 480.5
+        },
+        {
+          "bar": 22,
+          "start": 71.0417,
+          "end": 74.375,
+          "sec": "Interlude",
+          "chords": "Cmaj7 → Am7",
+          "cue": "",
+          "sysIdx": 6,
+          "page": 2,
+          "x0": 480.5,
+          "x1": 810.5
+        },
+        {
+          "bar": 23,
+          "start": 74.375,
+          "end": 77.7083,
+          "sec": "Interlude",
+          "chords": "G → Bm7",
+          "cue": "",
+          "sysIdx": 6,
+          "page": 2,
+          "x0": 810.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 7,
+      "page": 2,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        675,
+        865
+      ],
+      "inkY": [
+        689,
+        849
+      ],
+      "staffY": [
+        742,
+        822
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 24,
+          "start": 77.7083,
+          "end": 81.0417,
+          "sec": "Interlude",
+          "chords": "D",
+          "cue": "",
+          "sysIdx": 7,
+          "page": 2,
+          "x0": 115.0,
+          "x1": 478.5
+        },
+        {
+          "bar": 25,
+          "start": 81.0417,
+          "end": 84.375,
+          "sec": "Interlude",
+          "chords": "D/F#",
+          "cue": "",
+          "sysIdx": 7,
+          "page": 2,
+          "x0": 478.5,
+          "x1": 827.5
+        },
+        {
+          "bar": 26,
+          "start": 84.375,
+          "end": 87.7083,
+          "sec": "Interlude",
+          "chords": "G → D",
+          "cue": "",
+          "sysIdx": 7,
+          "page": 2,
+          "x0": 827.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 8,
+      "page": 2,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        916,
+        1160
+      ],
+      "inkY": [
+        930,
+        1144
+      ],
+      "staffY": [
+        1003,
+        1083
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 27,
+          "start": 87.7083,
+          "end": 91.0417,
+          "sec": "Interlude",
+          "chords": "D",
+          "cue": "You will know...",
+          "sysIdx": 8,
+          "page": 2,
+          "x0": 115.0,
+          "x1": 349.5
+        },
+        {
+          "bar": 28,
+          "start": 91.0417,
+          "end": 94.375,
+          "sec": "Chorus I",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 8,
+          "page": 2,
+          "x0": 349.5,
+          "x1": 715.5
+        },
+        {
+          "bar": 29,
+          "start": 94.375,
+          "end": 97.7083,
+          "sec": "Chorus I",
+          "chords": "Em → Am7",
+          "cue": "Must be ragged...",
+          "sysIdx": 8,
+          "page": 2,
+          "x0": 715.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 9,
+      "page": 2,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        1199,
+        1433
+      ],
+      "inkY": [
+        1213,
+        1417
+      ],
+      "staffY": [
+        1264,
+        1344
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 30,
+          "start": 97.7083,
+          "end": 101.0417,
+          "sec": "Chorus I",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 9,
+          "page": 2,
+          "x0": 115.0,
+          "x1": 443.5
+        },
+        {
+          "bar": 31,
+          "start": 101.0417,
+          "end": 104.375,
+          "sec": "Chorus I",
+          "chords": "Em → Am7",
+          "cue": "Even if my body's...",
+          "sysIdx": 9,
+          "page": 2,
+          "x0": 443.5,
+          "x1": 792.5
+        },
+        {
+          "bar": 32,
+          "start": 104.375,
+          "end": 107.7083,
+          "sec": "Chorus I",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 9,
+          "page": 2,
+          "x0": 792.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 10,
+      "page": 3,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        98,
+        345
+      ],
+      "inkY": [
+        103,
+        329
+      ],
+      "staffY": [
+        176,
+        256
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 33,
+          "start": 107.7083,
+          "end": 111.0417,
+          "sec": "Chorus I",
+          "chords": "Em → Am7",
+          "cue": "I don't want to go...",
+          "sysIdx": 10,
+          "page": 3,
+          "x0": 115.0,
+          "x1": 503.5
+        },
+        {
+          "bar": 34,
+          "start": 111.0417,
+          "end": 114.375,
+          "sec": "Chorus I",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 10,
+          "page": 3,
+          "x0": 503.5,
+          "x1": 819.0
+        },
+        {
+          "bar": 35,
+          "start": 114.375,
+          "end": 117.7083,
+          "sec": "Chorus I",
+          "chords": "Em → Bm7",
+          "cue": "So cry no more...",
+          "sysIdx": 10,
+          "page": 3,
+          "x0": 819.0,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 11,
+      "page": 3,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        404,
+        647
+      ],
+      "inkY": [
+        418,
+        631
+      ],
+      "staffY": [
+        488,
+        568
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 36,
+          "start": 117.7083,
+          "end": 121.0417,
+          "sec": "Chorus II & Outro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 11,
+          "page": 3,
+          "x0": 115.0,
+          "x1": 454.5
+        },
+        {
+          "bar": 37,
+          "start": 121.0417,
+          "end": 124.375,
+          "sec": "Chorus II & Outro",
+          "chords": "Em → Bm7",
+          "cue": "Go ahead, be proud...",
+          "sysIdx": 11,
+          "page": 3,
+          "x0": 454.5,
+          "x1": 800.5
+        },
+        {
+          "bar": 38,
+          "start": 124.375,
+          "end": 127.7083,
+          "sec": "Chorus II & Outro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 11,
+          "page": 3,
+          "x0": 800.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 12,
+      "page": 3,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        735,
+        957
+      ],
+      "inkY": [
+        749,
+        941
+      ],
+      "staffY": [
+        799,
+        880
+      ],
+      "x0": 115.0,
+      "x1": 1161.5,
+      "bars": [
+        {
+          "bar": 39,
+          "start": 127.7083,
+          "end": 131.0417,
+          "sec": "Chorus II & Outro",
+          "chords": "Em → Bm7",
+          "cue": "You are the one...",
+          "sysIdx": 12,
+          "page": 3,
+          "x0": 115.0,
+          "x1": 441.5
+        },
+        {
+          "bar": 40,
+          "start": 131.0417,
+          "end": 134.375,
+          "sec": "Chorus II & Outro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 12,
+          "page": 3,
+          "x0": 441.5,
+          "x1": 749.5
+        },
+        {
+          "bar": 41,
+          "start": 134.375,
+          "end": 137.7083,
+          "sec": "Chorus II & Outro",
+          "chords": "Em → Bm7",
+          "cue": "You guide us far...",
+          "sysIdx": 12,
+          "page": 3,
+          "x0": 749.5,
+          "x1": 1161.5
+        }
+      ]
+    },
+    {
+      "sysIdx": 13,
+      "page": 3,
+      "width": 1241,
+      "height": 1754,
+      "sliceY": [
+        1025,
+        1250
+      ],
+      "inkY": [
+        1039,
+        1234
+      ],
+      "staffY": [
+        1111,
+        1192
+      ],
+      "x0": 115.0,
+      "x1": 1157.8,
+      "bars": [
+        {
+          "bar": 42,
+          "start": 137.7083,
+          "end": 141.0417,
+          "sec": "Chorus II & Outro",
+          "chords": "Cmaj7 → D",
+          "cue": "",
+          "sysIdx": 13,
+          "page": 3,
+          "x0": 115.0,
+          "x1": 569.5
+        },
+        {
+          "bar": 43,
+          "start": 141.0417,
+          "end": 144.375,
+          "sec": "Chorus II & Outro",
+          "chords": "Em → Em9",
+          "cue": "",
+          "sysIdx": 13,
+          "page": 3,
+          "x0": 569.5,
+          "x1": 1026.5
+        },
+        {
+          "bar": 44,
+          "start": 144.375,
+          "end": 151.8,
+          "sec": "Chorus II & Outro",
+          "chords": "Em",
+          "cue": "",
+          "sysIdx": 13,
+          "page": 3,
+          "x0": 1026.5,
+          "x1": 1157.8
+        }
+      ]
+    }
+  ],
+  "bars": [
+    {
+      "bar": 0,
+      "start": 0.2083,
+      "end": 1.0417,
+      "sec": "Intro",
+      "chords": "弱起 Pick-up",
+      "cue": "",
+      "sysIdx": 0,
+      "page": 1,
+      "x0": 152.0,
+      "x1": 213.5
+    },
+    {
+      "bar": 1,
+      "start": 1.0417,
+      "end": 4.375,
+      "sec": "Intro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 0,
+      "page": 1,
+      "x0": 213.5,
+      "x1": 459.5
+    },
+    {
+      "bar": 2,
+      "start": 4.375,
+      "end": 7.7083,
+      "sec": "Intro",
+      "chords": "Em9 → Bm7",
+      "cue": "",
+      "sysIdx": 0,
+      "page": 1,
+      "x0": 459.5,
+      "x1": 718.5
+    },
+    {
+      "bar": 3,
+      "start": 7.7083,
+      "end": 11.0417,
+      "sec": "Intro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 0,
+      "page": 1,
+      "x0": 718.5,
+      "x1": 944.5
+    },
+    {
+      "bar": 4,
+      "start": 11.0417,
+      "end": 14.375,
+      "sec": "Intro",
+      "chords": "Em",
+      "cue": "",
+      "sysIdx": 0,
+      "page": 1,
+      "x0": 944.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 5,
+      "start": 14.375,
+      "end": 17.7083,
+      "sec": "Intro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 1,
+      "page": 1,
+      "x0": 115.0,
+      "x1": 380.5
+    },
+    {
+      "bar": 6,
+      "start": 17.7083,
+      "end": 21.0417,
+      "sec": "Intro",
+      "chords": "Am7 → Em → Bm7",
+      "cue": "",
+      "sysIdx": 1,
+      "page": 1,
+      "x0": 380.5,
+      "x1": 666.0
+    },
+    {
+      "bar": 7,
+      "start": 21.0417,
+      "end": 24.375,
+      "sec": "Intro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 1,
+      "page": 1,
+      "x0": 666.0,
+      "x1": 917.5
+    },
+    {
+      "bar": 8,
+      "start": 24.375,
+      "end": 27.7083,
+      "sec": "Intro",
+      "chords": "Em9",
+      "cue": "",
+      "sysIdx": 1,
+      "page": 1,
+      "x0": 917.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 9,
+      "start": 27.7083,
+      "end": 31.0417,
+      "sec": "Intro",
+      "chords": "Em9",
+      "cue": "Don't you think...",
+      "sysIdx": 2,
+      "page": 1,
+      "x0": 115.0,
+      "x1": 451.5
+    },
+    {
+      "bar": 10,
+      "start": 31.0417,
+      "end": 34.375,
+      "sec": "Verse",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 2,
+      "page": 1,
+      "x0": 451.5,
+      "x1": 785.5
+    },
+    {
+      "bar": 11,
+      "start": 34.375,
+      "end": 37.7083,
+      "sec": "Verse",
+      "chords": "Em9",
+      "cue": "I've been burning...",
+      "sysIdx": 2,
+      "page": 1,
+      "x0": 785.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 12,
+      "start": 37.7083,
+      "end": 41.0417,
+      "sec": "Verse",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 3,
+      "page": 1,
+      "x0": 115.0,
+      "x1": 648.5
+    },
+    {
+      "bar": 13,
+      "start": 41.0417,
+      "end": 44.375,
+      "sec": "Verse",
+      "chords": "Em9",
+      "cue": "I've got to face...",
+      "sysIdx": 3,
+      "page": 1,
+      "x0": 648.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 14,
+      "start": 44.375,
+      "end": 47.7083,
+      "sec": "Verse",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 4,
+      "page": 1,
+      "x0": 115.0,
+      "x1": 396.5
+    },
+    {
+      "bar": 15,
+      "start": 47.7083,
+      "end": 51.0417,
+      "sec": "Verse",
+      "chords": "Em9",
+      "cue": "I won't run...",
+      "sysIdx": 4,
+      "page": 1,
+      "x0": 396.5,
+      "x1": 625.5
+    },
+    {
+      "bar": 16,
+      "start": 51.0417,
+      "end": 54.375,
+      "sec": "Verse",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 4,
+      "page": 1,
+      "x0": 625.5,
+      "x1": 873.5
+    },
+    {
+      "bar": 17,
+      "start": 54.375,
+      "end": 57.7083,
+      "sec": "Verse",
+      "chords": "Em",
+      "cue": "",
+      "sysIdx": 4,
+      "page": 1,
+      "x0": 873.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 18,
+      "start": 57.7083,
+      "end": 61.0417,
+      "sec": "Interlude",
+      "chords": "Cmaj7 → Am7",
+      "cue": "",
+      "sysIdx": 5,
+      "page": 2,
+      "x0": 115.0,
+      "x1": 445.5
+    },
+    {
+      "bar": 19,
+      "start": 61.0417,
+      "end": 64.375,
+      "sec": "Interlude",
+      "chords": "G → Bm7",
+      "cue": "",
+      "sysIdx": 5,
+      "page": 2,
+      "x0": 445.5,
+      "x1": 784.5
+    },
+    {
+      "bar": 20,
+      "start": 64.375,
+      "end": 67.7083,
+      "sec": "Interlude",
+      "chords": "Am7 → C",
+      "cue": "",
+      "sysIdx": 5,
+      "page": 2,
+      "x0": 784.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 21,
+      "start": 67.7083,
+      "end": 71.0417,
+      "sec": "Interlude",
+      "chords": "G → Bm7",
+      "cue": "",
+      "sysIdx": 6,
+      "page": 2,
+      "x0": 115.0,
+      "x1": 480.5
+    },
+    {
+      "bar": 22,
+      "start": 71.0417,
+      "end": 74.375,
+      "sec": "Interlude",
+      "chords": "Cmaj7 → Am7",
+      "cue": "",
+      "sysIdx": 6,
+      "page": 2,
+      "x0": 480.5,
+      "x1": 810.5
+    },
+    {
+      "bar": 23,
+      "start": 74.375,
+      "end": 77.7083,
+      "sec": "Interlude",
+      "chords": "G → Bm7",
+      "cue": "",
+      "sysIdx": 6,
+      "page": 2,
+      "x0": 810.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 24,
+      "start": 77.7083,
+      "end": 81.0417,
+      "sec": "Interlude",
+      "chords": "D",
+      "cue": "",
+      "sysIdx": 7,
+      "page": 2,
+      "x0": 115.0,
+      "x1": 478.5
+    },
+    {
+      "bar": 25,
+      "start": 81.0417,
+      "end": 84.375,
+      "sec": "Interlude",
+      "chords": "D/F#",
+      "cue": "",
+      "sysIdx": 7,
+      "page": 2,
+      "x0": 478.5,
+      "x1": 827.5
+    },
+    {
+      "bar": 26,
+      "start": 84.375,
+      "end": 87.7083,
+      "sec": "Interlude",
+      "chords": "G → D",
+      "cue": "",
+      "sysIdx": 7,
+      "page": 2,
+      "x0": 827.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 27,
+      "start": 87.7083,
+      "end": 91.0417,
+      "sec": "Interlude",
+      "chords": "D",
+      "cue": "You will know...",
+      "sysIdx": 8,
+      "page": 2,
+      "x0": 115.0,
+      "x1": 349.5
+    },
+    {
+      "bar": 28,
+      "start": 91.0417,
+      "end": 94.375,
+      "sec": "Chorus I",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 8,
+      "page": 2,
+      "x0": 349.5,
+      "x1": 715.5
+    },
+    {
+      "bar": 29,
+      "start": 94.375,
+      "end": 97.7083,
+      "sec": "Chorus I",
+      "chords": "Em → Am7",
+      "cue": "Must be ragged...",
+      "sysIdx": 8,
+      "page": 2,
+      "x0": 715.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 30,
+      "start": 97.7083,
+      "end": 101.0417,
+      "sec": "Chorus I",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 9,
+      "page": 2,
+      "x0": 115.0,
+      "x1": 443.5
+    },
+    {
+      "bar": 31,
+      "start": 101.0417,
+      "end": 104.375,
+      "sec": "Chorus I",
+      "chords": "Em → Am7",
+      "cue": "Even if my body's...",
+      "sysIdx": 9,
+      "page": 2,
+      "x0": 443.5,
+      "x1": 792.5
+    },
+    {
+      "bar": 32,
+      "start": 104.375,
+      "end": 107.7083,
+      "sec": "Chorus I",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 9,
+      "page": 2,
+      "x0": 792.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 33,
+      "start": 107.7083,
+      "end": 111.0417,
+      "sec": "Chorus I",
+      "chords": "Em → Am7",
+      "cue": "I don't want to go...",
+      "sysIdx": 10,
+      "page": 3,
+      "x0": 115.0,
+      "x1": 503.5
+    },
+    {
+      "bar": 34,
+      "start": 111.0417,
+      "end": 114.375,
+      "sec": "Chorus I",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 10,
+      "page": 3,
+      "x0": 503.5,
+      "x1": 819.0
+    },
+    {
+      "bar": 35,
+      "start": 114.375,
+      "end": 117.7083,
+      "sec": "Chorus I",
+      "chords": "Em → Bm7",
+      "cue": "So cry no more...",
+      "sysIdx": 10,
+      "page": 3,
+      "x0": 819.0,
+      "x1": 1161.5
+    },
+    {
+      "bar": 36,
+      "start": 117.7083,
+      "end": 121.0417,
+      "sec": "Chorus II & Outro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 11,
+      "page": 3,
+      "x0": 115.0,
+      "x1": 454.5
+    },
+    {
+      "bar": 37,
+      "start": 121.0417,
+      "end": 124.375,
+      "sec": "Chorus II & Outro",
+      "chords": "Em → Bm7",
+      "cue": "Go ahead, be proud...",
+      "sysIdx": 11,
+      "page": 3,
+      "x0": 454.5,
+      "x1": 800.5
+    },
+    {
+      "bar": 38,
+      "start": 124.375,
+      "end": 127.7083,
+      "sec": "Chorus II & Outro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 11,
+      "page": 3,
+      "x0": 800.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 39,
+      "start": 127.7083,
+      "end": 131.0417,
+      "sec": "Chorus II & Outro",
+      "chords": "Em → Bm7",
+      "cue": "You are the one...",
+      "sysIdx": 12,
+      "page": 3,
+      "x0": 115.0,
+      "x1": 441.5
+    },
+    {
+      "bar": 40,
+      "start": 131.0417,
+      "end": 134.375,
+      "sec": "Chorus II & Outro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 12,
+      "page": 3,
+      "x0": 441.5,
+      "x1": 749.5
+    },
+    {
+      "bar": 41,
+      "start": 134.375,
+      "end": 137.7083,
+      "sec": "Chorus II & Outro",
+      "chords": "Em → Bm7",
+      "cue": "You guide us far...",
+      "sysIdx": 12,
+      "page": 3,
+      "x0": 749.5,
+      "x1": 1161.5
+    },
+    {
+      "bar": 42,
+      "start": 137.7083,
+      "end": 141.0417,
+      "sec": "Chorus II & Outro",
+      "chords": "Cmaj7 → D",
+      "cue": "",
+      "sysIdx": 13,
+      "page": 3,
+      "x0": 115.0,
+      "x1": 569.5
+    },
+    {
+      "bar": 43,
+      "start": 141.0417,
+      "end": 144.375,
+      "sec": "Chorus II & Outro",
+      "chords": "Em → Em9",
+      "cue": "",
+      "sysIdx": 13,
+      "page": 3,
+      "x0": 569.5,
+      "x1": 1026.5
+    },
+    {
+      "bar": 44,
+      "start": 144.375,
+      "end": 151.8,
+      "sec": "Chorus II & Outro",
+      "chords": "Em",
+      "cue": "",
+      "sysIdx": 13,
+      "page": 3,
+      "x0": 1026.5,
+      "x1": 1157.8
+    }
+  ]
+};
 
-      const SYNC_DATA = {
-        width: PAGE_W,
-        height: PAGE_H,
-        systems: [],
-        bars: []
-      };
+      const player = document.getElementById("player");
+      const playerDock = document.getElementById("player-dock");
+      const sheetPaper = document.getElementById("sheet-paper");
+      const headerCropEl = document.getElementById("sheet-header-crop");
+      const systemsFlowEl = document.getElementById("systems-flow");
 
-      RAW_SYSTEMS.forEach((sys, sysIdx) => {
-        const mappedBars = sys.bars.map((b) => {
-          const meta = BAR_META[b.bar];
-          const item = {
-            bar: b.bar,
-            sysIdx,
-            page: sys.page,
-            x0: b.x0,
-            x1: b.x1,
-            start: barStart(b.bar),
-            end: barEnd(b.bar),
-            sec: meta.sec,
-            chords: meta.chords,
-            cue: meta.cue
-          };
-          SYNC_DATA.bars.push(item);
-          return item;
-        });
+      const heroTitleEl = document.getElementById("hero-title");
+      const heroSubEl = document.getElementById("hero-sub");
+      const heroBadgesEl = document.getElementById("hero-badges");
+      const openPdfBtn = document.getElementById("open-pdf-btn");
+      const downloadMp3Link = document.getElementById("download-mp3-link");
 
-        SYNC_DATA.systems.push({
-          sysIdx,
-          page: sys.page,
-          staffY: sys.staffY,
-          bandY: sys.bandY,
-          x0: mappedBars[0].x0,
-          x1: mappedBars[mappedBars.length - 1].x1,
-          bars: mappedBars
-        });
-      });
+      const importBanner = document.getElementById("import-banner");
+      const importBannerText = document.getElementById("import-banner-text");
+
+      const autoFollowEl = document.getElementById("auto-follow");
+      const focusDyeEl = document.getElementById("focus-dye");
+      const liveBarEl = document.getElementById("live-bar");
+      const liveSectionEl = document.getElementById("live-section");
+      const liveChordsEl = document.getElementById("live-chords");
+      const liveLocEl = document.getElementById("live-loc");
+      const liveCueEl = document.getElementById("live-cue");
+      const sectionPillsEl = document.getElementById("section-pills");
+      const speedBtns = Array.from(document.querySelectorAll(".speed-btn"));
+
+      let activeManifest = null;
+      let activePageUrls = [];
+      let activeObjectUrls = [];
+      let isBuiltin = true;
+      let rowRefs = [];
+      let secBtnRefs = [];
+      let lastSysIdx = -1;
+      let rafId = null;
 
       function fmtTime(sec) {
         const s = Math.max(0, Math.floor(sec));
@@ -1085,232 +2416,226 @@
         return m + ":" + (r < 10 ? "0" : "") + r;
       }
 
-      const player = document.getElementById("player");
-      const playerDock = document.getElementById("player-dock");
-      const autoFollowEl = document.getElementById("auto-follow");
-      const focusDyeEl = document.getElementById("focus-dye");
-
-      const liveBarEl = document.getElementById("live-bar");
-      const liveSectionEl = document.getElementById("live-section");
-      const liveChordsEl = document.getElementById("live-chords");
-      const liveLocEl = document.getElementById("live-loc");
-      const liveCueEl = document.getElementById("live-cue");
-
-      const sections = [
-        { name: "Intro (M00–M09)", start: 0.0 },
-        { name: "Verse (M10–M17)", start: barStart(10) },
-        { name: "Interlude · P.M. (M18–M27)", start: barStart(18) },
-        { name: "Chorus I · 拍弦 (M28–M35)", start: barStart(28) },
-        { name: "Chorus II (M36–M44)", start: barStart(36) }
-      ];
-
-      const pageImgs = [
-        "./examples/call-of-silence/previews/page-1.png",
-        "./examples/call-of-silence/previews/page-2.png",
-        "./examples/call-of-silence/previews/page-3.png"
-      ];
-
-      let currentMode = "scroll";
-      let currentPage = 1;
-      let lastSysIdx = -1;
-      let rafId = null;
-
-      const secBtns = Array.from(document.querySelectorAll(".sec-btn"));
-      const speedBtns = Array.from(document.querySelectorAll(".speed-btn"));
-      const modeBtns = Array.from(document.querySelectorAll(".mode-btn"));
-      const pagePills = Array.from(document.querySelectorAll(".page-pill"));
-      const sheetCards = [1, 2, 3].map((p) => document.getElementById("card-page-" + p));
-
-      const viewScroll = document.getElementById("view-scroll");
-      const viewSingle = document.getElementById("view-single");
-      const viewPdf = document.getElementById("view-pdf");
-      const singleImg = document.getElementById("single-page-img");
-      const singleZoomBtn = document.getElementById("single-zoom-btn");
-      const singleLabel = document.getElementById("single-page-label");
-
-      const lightbox = document.getElementById("lightbox");
-      const lightboxImg = document.getElementById("lightbox-img");
-
-      function pctX(x) {
-        return (x / PAGE_W * 100).toFixed(4) + "%";
+      function revokeImportedUrls() {
+        activeObjectUrls.forEach((u) => URL.revokeObjectURL(u));
+        activeObjectUrls = [];
       }
 
-      function pctY(y) {
-        return (y / PAGE_H * 100).toFixed(4) + "%";
+      function createSliceViewport(imgUrl, natW, sliceY0, sliceY1) {
+        const sliceH = Math.max(1, sliceY1 - sliceY0);
+        const vp = document.createElement("div");
+        vp.className = "slice-viewport";
+        vp.style.paddingTop = ((sliceH / natW) * 100).toFixed(4) + "%";
+
+        const img = document.createElement("img");
+        img.src = imgUrl;
+        img.alt = "六线谱乐句切片";
+        img.draggable = false;
+        img.style.top = (-(sliceY0 / sliceH) * 100).toFixed(4) + "%";
+
+        vp.appendChild(img);
+        return vp;
       }
 
-      function seekAndPlayBar(bar) {
-        const targetTime = bar.bar === 0 ? 0.0 : bar.start;
-        const sysChanged = bar.sysIdx !== lastSysIdx;
-        player.currentTime = targetTime;
-        lastSysIdx = bar.sysIdx;
+      function buildHero(manifest, importedMode) {
+        heroTitleEl.textContent = (manifest.title || "未命名作品") + " — 指弹吉他六线谱在线试听与同步看谱";
+        heroSubEl.textContent = manifest.subtitle || "无分页连续滚动 · 逐拍染色聚焦 · 点谱任意小节即播";
 
-        if (currentMode === "pdf") {
-          setMode("scroll");
+        const badges = [];
+        if (manifest.arrangerInfo) {
+          badges.push(manifest.arrangerInfo);
+        } else if (manifest.capo !== undefined) {
+          badges.push("Capo = " + manifest.capo);
         }
-        if (currentMode === "single" && currentPage !== bar.page) {
-          setPageUI(bar.page, false);
+        if (manifest.bpm) badges.push(manifest.bpm + " BPM");
+        badges.push(manifest.bars.length + " 小节 · " + manifest.systems.length + " 行连续铺排");
+        if (importedMode) {
+          badges.push({ text: "本地 Skill 产物已载入", highlight: true });
+        } else {
+          badges.push({ text: "95.2% 调内纯净度 · 0 泄漏", highlight: true });
         }
-        renderSync(targetTime);
-        if (sysChanged || currentMode === "single") {
-          scrollToSystem(bar.sysIdx, true);
-        }
-        player.play().catch(() => {});
+
+        heroBadgesEl.innerHTML = "";
+        badges.forEach((b) => {
+          const span = document.createElement("span");
+          if (typeof b === "string") {
+            span.className = "badge";
+            span.textContent = b;
+          } else {
+            span.className = "badge" + (b.highlight ? " highlight" : "");
+            span.textContent = b.text;
+          }
+          heroBadgesEl.appendChild(span);
+        });
       }
 
-      function createOverlayController(containerEl, initialPage) {
-        containerEl.innerHTML = "";
+      function loadProject(manifest, pageUrls, audioUrl, pdfUrl, importedMode, objectUrlsToOwn) {
+        player.pause();
+        stopRaf();
+        if (objectUrlsToOwn !== activeObjectUrls) {
+          revokeImportedUrls();
+          activeObjectUrls = objectUrlsToOwn || [];
+        }
 
-        const dimFull = document.createElement("div");
-        dimFull.className = "dim-curtain dim-full";
+        activeManifest = manifest;
+        activePageUrls = pageUrls;
+        isBuiltin = !importedMode;
+        lastSysIdx = -1;
 
-        const dimTop = document.createElement("div");
-        dimTop.className = "dim-curtain";
-        dimTop.style.top = "0%";
+        player.src = audioUrl;
+        player.load();
+        downloadMp3Link.href = audioUrl;
 
-        const dimBot = document.createElement("div");
-        dimBot.className = "dim-curtain";
+        if (pdfUrl) {
+          openPdfBtn.classList.remove("hidden");
+          document.getElementById("pdf-newtab-link").href = pdfUrl;
+          document.getElementById("pdf-download-link").href = pdfUrl;
+          document.getElementById("pdf-iframe").dataset.src = pdfUrl;
+        } else {
+          openPdfBtn.classList.add("hidden");
+        }
 
-        const focusFrame = document.createElement("div");
-        focusFrame.className = "sys-focus-frame";
+        if (importedMode) {
+          importBanner.classList.remove("hidden");
+          importBannerText.textContent =
+            "本地导入 · " + (manifest.title || "Skill 作品") + "（" + manifest.systems.length + " 行 / " + manifest.bars.length + " 小节）";
+        } else {
+          importBanner.classList.add("hidden");
+        }
 
-        const karaokeFill = document.createElement("div");
-        karaokeFill.className = "karaoke-fill";
+        buildHero(manifest, importedMode);
 
-        const activeBarBox = document.createElement("div");
-        activeBarBox.className = "active-bar-box";
+        // Render Header Banner Slice (if present)
+        headerCropEl.innerHTML = "";
+        if (manifest.header && pageUrls[manifest.header.page - 1]) {
+          headerCropEl.classList.remove("hidden");
+          const h = manifest.header;
+          headerCropEl.appendChild(
+            createSliceViewport(pageUrls[h.page - 1], h.width, h.sliceY[0], h.sliceY[1])
+          );
+        } else {
+          headerCropEl.classList.add("hidden");
+        }
 
-        const barBadge = document.createElement("div");
-        barBadge.className = "bar-badge";
-
-        const playhead = document.createElement("div");
-        playhead.className = "playhead";
-
-        const hotspotsLayer = document.createElement("div");
-        hotspotsLayer.className = "hotspots-layer";
-
-        containerEl.append(
-          dimFull,
-          dimTop,
-          dimBot,
-          focusFrame,
-          karaokeFill,
-          activeBarBox,
-          barBadge,
-          playhead,
-          hotspotsLayer
-        );
-
-        let builtPage = null;
-
-        function setPageHotspots(pageNum) {
-          if (builtPage === pageNum) return;
-          builtPage = pageNum;
-          hotspotsLayer.innerHTML = "";
-          SYNC_DATA.systems.filter((s) => s.page === pageNum).forEach((sys) => {
-            sys.bars.forEach((b) => {
-              const btn = document.createElement("button");
-              btn.type = "button";
-              btn.className = "bar-hotspot";
-              btn.style.left = pctX(b.x0);
-              btn.style.width = pctX(b.x1 - b.x0);
-              btn.style.top = pctY(sys.bandY[0]);
-              btn.style.height = pctY(sys.bandY[1] - sys.bandY[0]);
-              const tag = "M" + String(b.bar).padStart(2, "0");
-              btn.title = "点击跳转到 " + tag + " · " + b.chords + " · " + fmtTime(b.start);
-              btn.setAttribute("aria-label", btn.title);
-              btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                seekAndPlayBar(b);
-              });
-              hotspotsLayer.appendChild(btn);
-            });
+        // Render Section Pills
+        sectionPillsEl.innerHTML = "";
+        secBtnRefs = [];
+        const secs = (manifest.sections && manifest.sections.length)
+          ? manifest.sections
+          : [{ name: "全曲开始", bar: 0, start: 0 }];
+        secs.forEach((sec, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "sec-btn" + (idx === 0 ? " active" : "");
+          btn.textContent = sec.name;
+          btn.addEventListener("click", () => {
+            const targetBar = manifest.bars.find((b) => b.bar === sec.bar) || manifest.bars[0];
+            seekAndPlayBar(targetBar);
           });
-        }
+          sectionPillsEl.appendChild(btn);
+          secBtnRefs.push({ btn, start: sec.start });
+        });
 
-        setPageHotspots(initialPage);
+        // Render Seamless Continuous System Rows
+        systemsFlowEl.innerHTML = "";
+        rowRefs = [];
+        manifest.systems.forEach((sys) => {
+          const row = document.createElement("article");
+          row.className = "sys-row";
+          row.dataset.sysIdx = String(sys.sysIdx);
 
-        function hideAll() {
-          dimFull.classList.remove("visible");
-          dimTop.classList.remove("visible");
-          dimBot.classList.remove("visible");
-          focusFrame.classList.remove("visible");
-          karaokeFill.classList.remove("visible");
-          activeBarBox.classList.remove("visible");
-          barBadge.classList.remove("visible");
-          playhead.classList.remove("visible");
-        }
+          const firstBar = sys.bars[0].bar;
+          const lastBar = sys.bars[sys.bars.length - 1].bar;
+          const gutter = document.createElement("div");
+          gutter.className = "sys-gutter";
+          const pill = document.createElement("span");
+          pill.className = "gutter-pill";
+          pill.textContent = "M" + String(firstBar).padStart(2, "0");
+          const sub = document.createElement("span");
+          sub.className = "gutter-sub";
+          sub.textContent = firstBar === lastBar ? "L" + (sys.sysIdx + 1) : "–" + String(lastBar).padStart(2, "0");
+          gutter.append(pill, sub);
 
-        function update(state, pageNum, dyeEnabled) {
-          setPageHotspots(pageNum);
-          if (!dyeEnabled) {
-            hideAll();
-            return;
-          }
-          const { bar, sys, cursorX } = state;
-          if (sys.page !== pageNum) {
-            dimTop.classList.remove("visible");
-            dimBot.classList.remove("visible");
-            focusFrame.classList.remove("visible");
-            karaokeFill.classList.remove("visible");
-            activeBarBox.classList.remove("visible");
-            barBadge.classList.remove("visible");
-            playhead.classList.remove("visible");
-            dimFull.classList.add("visible");
-            return;
-          }
+          const clip = document.createElement("div");
+          clip.className = "sys-clip";
 
-          dimFull.classList.remove("visible");
+          const imgUrl = pageUrls[sys.page - 1];
+          const [sy0, sy1] = sys.sliceY;
+          const sliceH = Math.max(1, sy1 - sy0);
+          const vp = createSliceViewport(imgUrl, sys.width, sy0, sy1);
 
-          dimTop.style.height = pctY(sys.bandY[0]);
-          dimTop.classList.add("visible");
+          const overlay = document.createElement("div");
+          overlay.className = "sys-overlay";
 
-          dimBot.style.top = pctY(sys.bandY[1]);
-          dimBot.style.height = pctY(PAGE_H - sys.bandY[1]);
-          dimBot.classList.add("visible");
+          const staffTopPct = (Math.max(0, sys.staffY[0] - 8 - sy0) / sliceH * 100).toFixed(4) + "%";
+          const staffH = Math.min(sliceH, sys.staffY[1] + 8 - sy0) - Math.max(0, sys.staffY[0] - 8 - sy0);
+          const staffHPct = (Math.max(1, staffH) / sliceH * 100).toFixed(4) + "%";
 
-          focusFrame.style.top = pctY(sys.bandY[0]);
-          focusFrame.style.height = pctY(sys.bandY[1] - sys.bandY[0]);
-          focusFrame.classList.add("visible");
+          const boxTopPct = (Math.max(0, sys.staffY[0] - 10 - sy0) / sliceH * 100).toFixed(4) + "%";
+          const boxH = Math.min(sliceH, sys.staffY[1] + 10 - sy0) - Math.max(0, sys.staffY[0] - 10 - sy0);
+          const boxHPct = (Math.max(1, boxH) / sliceH * 100).toFixed(4) + "%";
 
-          const staffTop = sys.staffY[0] - 16;
-          const staffBot = sys.staffY[1] + 34;
+          const needleTopPct = (Math.max(0, sys.staffY[0] - 14 - sy0) / sliceH * 100).toFixed(4) + "%";
+          const needleH = Math.min(sliceH, sys.staffY[1] + 14 - sy0) - Math.max(0, sys.staffY[0] - 14 - sy0);
+          const needleHPct = (Math.max(1, needleH) / sliceH * 100).toFixed(4) + "%";
 
-          karaokeFill.style.left = pctX(sys.x0);
-          karaokeFill.style.width = pctX(Math.max(0, cursorX - sys.x0));
-          karaokeFill.style.top = pctY(staffTop);
-          karaokeFill.style.height = pctY(staffBot - staffTop);
-          karaokeFill.classList.add("visible");
+          const karaokeFill = document.createElement("div");
+          karaokeFill.className = "karaoke-fill";
+          karaokeFill.style.top = staffTopPct;
+          karaokeFill.style.height = staffHPct;
+          karaokeFill.style.left = ((sys.x0 / sys.width) * 100).toFixed(4) + "%";
+          karaokeFill.style.width = "0%";
 
-          activeBarBox.style.left = pctX(bar.x0);
-          activeBarBox.style.width = pctX(bar.x1 - bar.x0);
-          activeBarBox.style.top = pctY(sys.staffY[0] - 18);
-          activeBarBox.style.height = pctY(sys.staffY[1] + 34 - (sys.staffY[0] - 18));
-          activeBarBox.classList.add("visible");
+          const activeBarBox = document.createElement("div");
+          activeBarBox.className = "active-bar-box";
+          activeBarBox.style.top = boxTopPct;
+          activeBarBox.style.height = boxHPct;
 
-          barBadge.textContent = "M" + String(bar.bar).padStart(2, "0");
-          barBadge.style.left = pctX(bar.x0);
-          barBadge.style.top = pctY(sys.staffY[0] - 18);
-          barBadge.classList.add("visible");
+          const playhead = document.createElement("div");
+          playhead.className = "playhead";
+          playhead.style.top = needleTopPct;
+          playhead.style.height = needleHPct;
 
-          playhead.style.left = pctX(cursorX);
-          playhead.style.top = pctY(sys.staffY[0] - 20);
-          playhead.style.height = pctY(sys.staffY[1] + 36 - (sys.staffY[0] - 20));
-          playhead.classList.add("visible");
-        }
+          const hotspotsLayer = document.createElement("div");
+          hotspotsLayer.className = "hotspots-layer";
+          sys.bars.forEach((b) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "bar-hotspot";
+            btn.style.left = ((b.x0 / sys.width) * 100).toFixed(4) + "%";
+            btn.style.width = (((b.x1 - b.x0) / sys.width) * 100).toFixed(4) + "%";
+            const tag = "M" + String(b.bar).padStart(2, "0");
+            btn.title = "点击跳转到 " + tag + (b.chords ? " · " + b.chords : "") + " · " + fmtTime(b.start);
+            btn.setAttribute("aria-label", btn.title);
+            btn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              seekAndPlayBar(b);
+            });
+            hotspotsLayer.appendChild(btn);
+          });
 
-        return { update, setPageHotspots };
+          overlay.append(karaokeFill, activeBarBox, playhead, hotspotsLayer);
+          vp.appendChild(overlay);
+          clip.appendChild(vp);
+          row.append(gutter, clip);
+          systemsFlowEl.appendChild(row);
+
+          rowRefs.push({
+            sys,
+            row,
+            karaokeFill,
+            activeBarBox,
+            playhead
+          });
+        });
+
+        sheetPaper.classList.toggle("focus-enabled", focusDyeEl.checked);
+        lastSysIdx = 0;
+        renderSync(0);
       }
-
-      const scrollOverlays = {
-        1: createOverlayController(document.getElementById("overlay-page-1"), 1),
-        2: createOverlayController(document.getElementById("overlay-page-2"), 2),
-        3: createOverlayController(document.getElementById("overlay-page-3"), 3)
-      };
-      const singleOverlay = createOverlayController(document.getElementById("overlay-single"), 1);
 
       function findPlaybackState(t) {
-        const bars = SYNC_DATA.bars;
+        const bars = activeManifest.bars;
         let activeBar = bars[0];
         if (t >= bars[bars.length - 1].end) {
           activeBar = bars[bars.length - 1];
@@ -1322,7 +2647,7 @@
             }
           }
         }
-        const sys = SYNC_DATA.systems[activeBar.sysIdx];
+        const sys = activeManifest.systems[activeBar.sysIdx];
         const span = Math.max(0.001, activeBar.end - activeBar.start);
         const frac = Math.max(0, Math.min(1, (t - activeBar.start) / span));
         const cursorX = activeBar.x0 + (activeBar.x1 - activeBar.x0) * frac;
@@ -1330,89 +2655,76 @@
       }
 
       function scrollToSystem(sysIdx, force) {
-        if (currentMode === "pdf") return;
-        const sys = SYNC_DATA.systems[sysIdx];
-        if (!sys) return;
         if (!force && !autoFollowEl.checked) return;
-
-        const stageEl = currentMode === "single"
-          ? document.getElementById("stage-single")
-          : document.getElementById("stage-page-" + sys.page);
-
-        if (!stageEl) return;
-        const rect = stageEl.getBoundingClientRect();
+        const ref = rowRefs[sysIdx];
+        if (!ref) return;
+        const rect = ref.row.getBoundingClientRect();
         if (rect.height <= 0) return;
 
-        const bandTopPx = rect.top + window.scrollY + (sys.bandY[0] / PAGE_H) * rect.height;
-        const bandHeightPx = ((sys.bandY[1] - sys.bandY[0]) / PAGE_H) * rect.height;
-        const dockHeight = playerDock.getBoundingClientRect().height + 14;
-        const viewportRemaining = Math.max(200, window.innerHeight - dockHeight);
-        const targetY = Math.max(0, bandTopPx - dockHeight - Math.max(24, (viewportRemaining - bandHeightPx) * 0.32));
-
+        const dockH = playerDock.getBoundingClientRect().height + 14;
+        const viewportRem = Math.max(180, window.innerHeight - dockH);
+        const targetY = Math.max(
+          0,
+          rect.top + window.scrollY - dockH - Math.max(18, (viewportRem - rect.height) * 0.32)
+        );
         window.scrollTo({ top: targetY, behavior: "smooth" });
       }
 
-      function setPageUI(pageNum, shouldScroll) {
-        currentPage = Math.max(1, Math.min(3, pageNum));
-        pagePills.forEach((btn) => {
-          btn.classList.toggle("active", Number(btn.dataset.jumpPage) === currentPage);
-        });
-        sheetCards.forEach((card, idx) => {
-          card.classList.toggle("active-page", idx + 1 === currentPage);
-        });
-        singleImg.src = pageImgs[currentPage - 1];
-        singleZoomBtn.dataset.zoom = pageImgs[currentPage - 1];
-        singleLabel.textContent = "第 " + currentPage + " / 3 页";
-        singleOverlay.setPageHotspots(currentPage);
-
-        if (shouldScroll && currentMode === "scroll") {
-          const target = document.getElementById("card-page-" + currentPage);
-          if (target) {
-            const dockH = playerDock.getBoundingClientRect().height + 14;
-            const y = Math.max(0, target.getBoundingClientRect().top + window.scrollY - dockH);
-            window.scrollTo({ top: y, behavior: "smooth" });
-          }
+      function seekAndPlayBar(bar) {
+        const targetTime = bar.bar === 0 ? 0.0 : bar.start;
+        const sysChanged = bar.sysIdx !== lastSysIdx;
+        player.currentTime = targetTime;
+        lastSysIdx = bar.sysIdx;
+        renderSync(targetTime);
+        if (sysChanged) {
+          scrollToSystem(bar.sysIdx, true);
         }
-      }
-
-      function setMode(mode) {
-        currentMode = mode;
-        modeBtns.forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
-        viewScroll.classList.toggle("hidden", mode !== "scroll");
-        viewSingle.classList.toggle("hidden", mode !== "single");
-        viewPdf.classList.toggle("hidden", mode !== "pdf");
-        renderSync(player.currentTime || 0);
+        player.play().catch(() => {});
       }
 
       function renderSync(t) {
-        const state = findPlaybackState(t);
-        const { bar, sys } = state;
+        if (!activeManifest) return;
+        const { bar, sys, cursorX } = findPlaybackState(t);
         const dyeEnabled = focusDyeEl.checked;
+        const totalBar = activeManifest.bars[activeManifest.bars.length - 1].bar;
 
-        let secIdx = 0;
-        for (let i = sections.length - 1; i >= 0; i--) {
-          if (t >= sections[i].start - 0.15) {
-            secIdx = i;
+        let activeSecIdx = 0;
+        for (let i = secBtnRefs.length - 1; i >= 0; i--) {
+          if (t >= secBtnRefs[i].start - 0.15) {
+            activeSecIdx = i;
             break;
           }
         }
-        secBtns.forEach((b, i) => b.classList.toggle("active", i === secIdx));
+        secBtnRefs.forEach((s, i) => s.btn.classList.toggle("active", i === activeSecIdx));
 
         const tag = "M" + String(bar.bar).padStart(2, "0");
-        liveBarEl.textContent = tag + " / 44";
-        liveSectionEl.textContent = bar.sec;
-        liveChordsEl.textContent = bar.chords;
-        liveLocEl.textContent = "第 " + bar.page + " 页 · 第 " + (sys.sysIdx + 1) + " / 14 行";
+        liveBarEl.textContent = tag + " / " + totalBar;
+        liveSectionEl.textContent = bar.sec || "演奏中";
+        liveChordsEl.textContent = bar.chords || "指弹编配";
+        liveLocEl.textContent = "第 " + (sys.sysIdx + 1) + " / " + activeManifest.systems.length + " 行";
         liveCueEl.textContent = bar.cue ? "♪ “" + bar.cue + "”" : "";
 
-        if (bar.page !== currentPage && !player.paused && autoFollowEl.checked) {
-          setPageUI(bar.page, false);
-        }
+        rowRefs.forEach((ref, idx) => {
+          const isCur = idx === sys.sysIdx;
+          ref.row.classList.toggle("is-active", isCur);
 
-        [1, 2, 3].forEach((p) => {
-          scrollOverlays[p].update(state, p, dyeEnabled);
+          if (!isCur || !dyeEnabled) {
+            ref.karaokeFill.classList.remove("visible");
+            ref.activeBarBox.classList.remove("visible");
+            ref.playhead.classList.remove("visible");
+            return;
+          }
+
+          ref.karaokeFill.style.width = (Math.max(0, cursorX - sys.x0) / sys.width * 100).toFixed(4) + "%";
+          ref.karaokeFill.classList.add("visible");
+
+          ref.activeBarBox.style.left = ((bar.x0 / sys.width) * 100).toFixed(4) + "%";
+          ref.activeBarBox.style.width = (((bar.x1 - bar.x0) / sys.width) * 100).toFixed(4) + "%";
+          ref.activeBarBox.classList.add("visible");
+
+          ref.playhead.style.left = ((cursorX / sys.width) * 100).toFixed(4) + "%";
+          ref.playhead.classList.add("visible");
         });
-        singleOverlay.update(state, currentPage, dyeEnabled);
 
         if (sys.sysIdx !== lastSysIdx) {
           const prev = lastSysIdx;
@@ -1443,103 +2755,41 @@
         }
       }
 
+      // Player & Dock Events
       document.getElementById("seek-back").addEventListener("click", () => {
         player.currentTime = Math.max(0, (player.currentTime || 0) - 5);
         renderSync(player.currentTime);
       });
 
       document.getElementById("seek-fwd").addEventListener("click", () => {
-        const dur = Number.isFinite(player.duration) ? player.duration : 151.8;
+        const dur = Number.isFinite(player.duration) ? player.duration : (activeManifest ? activeManifest.duration : 151.8);
         player.currentTime = Math.min(dur, (player.currentTime || 0) + 5);
         renderSync(player.currentTime);
       });
 
       speedBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
-          const rate = Number(btn.dataset.rate);
-          player.playbackRate = rate;
+          player.playbackRate = Number(btn.dataset.rate);
           speedBtns.forEach((b) => b.classList.toggle("active", b === btn));
         });
       });
 
-      secBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const start = Number(btn.dataset.start);
-          const targetState = findPlaybackState(start);
-          if (currentMode === "pdf") {
-            setMode("scroll");
-          }
-          player.currentTime = start;
-          lastSysIdx = targetState.sys.sysIdx;
-          setPageUI(targetState.bar.page, false);
-          renderSync(start);
-          scrollToSystem(targetState.sys.sysIdx, true);
-          player.play().catch(() => {});
-        });
-      });
-
-      modeBtns.forEach((btn) => {
-        btn.addEventListener("click", () => setMode(btn.dataset.mode));
-      });
-
-      pagePills.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const p = Number(btn.dataset.jumpPage);
-          if (currentMode === "pdf") {
-            setMode("scroll");
-          }
-          setPageUI(p, true);
-          renderSync(player.currentTime || 0);
-        });
-      });
-
-      document.getElementById("prev-page-btn").addEventListener("click", () => {
-        setPageUI(currentPage - 1, false);
-        renderSync(player.currentTime || 0);
-      });
-
-      document.getElementById("next-page-btn").addEventListener("click", () => {
-        setPageUI(currentPage + 1, false);
-        renderSync(player.currentTime || 0);
-      });
-
-      document.getElementById("focus-now-btn").addEventListener("click", () => {
-        const state = findPlaybackState(player.currentTime || 0);
-        if (currentMode === "pdf") {
-          setMode("scroll");
-        }
-        setPageUI(state.bar.page, false);
-        renderSync(player.currentTime || 0);
-        scrollToSystem(state.sys.sysIdx, true);
-      });
-
       focusDyeEl.addEventListener("change", () => {
+        sheetPaper.classList.toggle("focus-enabled", focusDyeEl.checked);
         renderSync(player.currentTime || 0);
       });
 
       autoFollowEl.addEventListener("change", () => {
         if (autoFollowEl.checked) {
           const state = findPlaybackState(player.currentTime || 0);
-          setPageUI(state.bar.page, false);
-          renderSync(player.currentTime || 0);
           scrollToSystem(state.sys.sysIdx, true);
         }
       });
 
-      document.querySelectorAll("[data-zoom]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          lightboxImg.src = btn.dataset.zoom;
-          lightbox.classList.add("open");
-        });
-      });
-
-      function closeLightbox() {
-        lightbox.classList.remove("open");
-      }
-
-      document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
-      lightbox.addEventListener("click", (e) => {
-        if (e.target === lightbox) closeLightbox();
+      document.getElementById("focus-now-btn").addEventListener("click", () => {
+        const state = findPlaybackState(player.currentTime || 0);
+        renderSync(player.currentTime || 0);
+        scrollToSystem(state.sys.sysIdx, true);
       });
 
       player.addEventListener("play", startRaf);
@@ -1558,23 +2808,768 @@
       player.addEventListener("seeked", () => {
         const state = findPlaybackState(player.currentTime || 0);
         lastSysIdx = state.sys.sysIdx;
-        if (autoFollowEl.checked && state.bar.page !== currentPage) {
-          setPageUI(state.bar.page, false);
-        }
         renderSync(player.currentTime || 0);
         if (autoFollowEl.checked) {
           scrollToSystem(state.sys.sysIdx, false);
         }
       });
 
-      document.addEventListener("keydown", (e) => {
-        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
-        const ignoreSpace = ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "AUDIO"].includes(tag) || (e.target && e.target.isContentEditable);
+      // PDF Modal
+      const pdfModal = document.getElementById("pdf-modal");
+      const pdfIframe = document.getElementById("pdf-iframe");
 
-        if (e.key === "Escape" && lightbox.classList.contains("open")) {
-          closeLightbox();
+      openPdfBtn.addEventListener("click", () => {
+        const src = pdfIframe.dataset.src || "./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf";
+        if (pdfIframe.getAttribute("src") !== src) {
+          pdfIframe.setAttribute("src", src);
+        }
+        pdfModal.classList.add("open");
+      });
+
+      document.getElementById("close-pdf-btn").addEventListener("click", () => {
+        pdfModal.classList.remove("open");
+      });
+      pdfModal.addEventListener("click", (e) => {
+        if (e.target === pdfModal) pdfModal.classList.remove("open");
+      });
+
+      // =========================================================================
+      // Local Skill Artifact Importer (zero server upload)
+      // =========================================================================
+      const importModal = document.getElementById("import-modal");
+      const dropzone = document.getElementById("dropzone");
+      const dirInput = document.getElementById("dir-input");
+      const filesInput = document.getElementById("files-input");
+      const impAudioVal = document.getElementById("imp-audio-val");
+      const impPagesVal = document.getElementById("imp-pages-val");
+      const impMetaVal = document.getElementById("imp-meta-val");
+      const impDetectVal = document.getElementById("imp-detect-val");
+      const impTitleInput = document.getElementById("imp-title-input");
+      const impBpmInput = document.getElementById("imp-bpm-input");
+      const impLeadInInput = document.getElementById("imp-leadin-input");
+      const impPickupSelect = document.getElementById("imp-pickup-select");
+      const importMsg = document.getElementById("import-msg");
+      const modalLoadBtn = document.getElementById("modal-load-btn");
+      const modalExportBtn = document.getElementById("modal-export-btn");
+
+      let stagedImport = null;
+
+      function openImportModal() {
+        importModal.classList.add("open");
+      }
+
+      function closeImportModal() {
+        importModal.classList.remove("open");
+      }
+
+      document.getElementById("open-import-btn").addEventListener("click", openImportModal);
+      document.getElementById("close-import-btn").addEventListener("click", closeImportModal);
+      importModal.addEventListener("click", (e) => {
+        if (e.target === importModal) closeImportModal();
+      });
+
+      document.getElementById("pick-dir-btn").addEventListener("click", () => dirInput.click());
+      document.getElementById("pick-files-btn").addEventListener("click", () => filesInput.click());
+      dirInput.addEventListener("change", () => {
+        if (dirInput.files && dirInput.files.length) {
+          handleImportedFiles(Array.from(dirInput.files));
+        }
+      });
+      filesInput.addEventListener("change", () => {
+        if (filesInput.files && filesInput.files.length) {
+          handleImportedFiles(Array.from(filesInput.files));
+        }
+      });
+
+      ["dragenter", "dragover"].forEach((ev) => {
+        dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropzone.classList.add("dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((ev) => {
+        dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("dragover");
+        });
+      });
+
+      const IGNORED_DIRS = new Set([".tools", "build", ".git", "__pycache__", "node_modules"]);
+
+      async function collectEntryFiles(entry, relPrefix) {
+        if (entry.isFile) {
+          const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+          Object.defineProperty(file, "_relPath", { value: relPrefix + entry.name });
+          return [file];
+        }
+        if (entry.isDirectory) {
+          if (IGNORED_DIRS.has(entry.name)) return [];
+          const reader = entry.createReader();
+          const allEntries = [];
+          while (true) {
+            const batch = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+            if (!batch.length) break;
+            allEntries.push(...batch);
+          }
+          const nested = [];
+          for (const child of allEntries) {
+            nested.push(...(await collectEntryFiles(child, relPrefix + entry.name + "/")));
+          }
+          return nested;
+        }
+        return [];
+      }
+
+      dropzone.addEventListener("drop", async (e) => {
+        const dt = e.dataTransfer;
+        if (!dt) return;
+        const items = dt.items ? Array.from(dt.items) : [];
+        const entries = items.map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean);
+        if (entries.length) {
+          const collected = [];
+          for (const ent of entries) {
+            collected.push(...(await collectEntryFiles(ent, "")));
+          }
+          await handleImportedFiles(collected);
+        } else if (dt.files && dt.files.length) {
+          await handleImportedFiles(Array.from(dt.files));
+        }
+      });
+
+      function fileRel(f) {
+        return f._relPath || f.webkitRelativePath || f.name;
+      }
+
+      function isIgnoredPath(rel) {
+        const parts = rel.split("/");
+        return parts.some((p) => IGNORED_DIRS.has(p));
+      }
+
+      function parsePageNum(name) {
+        const m = name.match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
+      }
+
+      function parseScoreDataPy(pyText) {
+        const strVal = (k) => {
+          const m = pyText.match(new RegExp("^" + k + "\\s*=\\s*[\"']([^\"']+)[\"']", "m"));
+          return m ? m[1] : "";
+        };
+        const numVal = (k) => {
+          const m = pyText.match(new RegExp("^" + k + "\\s*=\\s*([0-9.]+)", "m"));
+          return m ? Number(m[1]) : null;
+        };
+
+        const title = strVal("TITLE");
+        const subtitle = strVal("SUBTITLE");
+        const composer = strVal("COMPOSER");
+        const arrangerInfo = strVal("ARRANGER_INFO");
+        const bpm = numVal("TEMPO_BPM");
+        const capo = numVal("CAPO");
+
+        const barChunks = pyText.split(/m\.append\(\s*Measure\(/).slice(1);
+        const parsedBars = {};
+        for (const chunk of barChunks) {
+          const bm = chunk.match(/\bbar\s*=\s*(\d+)/);
+          if (!bm) continue;
+          const b = parseInt(bm[1], 10);
+          const isPickup = /\bis_pickup\s*=\s*True\b/.test(chunk);
+          const secM = chunk.match(/\bsection\s*=\s*["']([^"']+)["']/);
+          const chM = chunk.match(/\bchords\s*=\s*\[([^\]]*)\]/);
+          let chords = "";
+          if (chM) {
+            const labels = [];
+            const itemRe = /["']([^"']+)["']/g;
+            let im;
+            while ((im = itemRe.exec(chM[1])) !== null) labels.push(im[1]);
+            chords = labels.join(" → ");
+          }
+          parsedBars[b] = { isPickup, section: secM ? secM[1] : "", chords };
+        }
+
+        return { title, subtitle, composer, arrangerInfo, bpm, capo, parsedBars };
+      }
+
+      function parsePhraseCuesPy(pyText) {
+        const cues = {};
+        const block = pyText.match(/PHRASE_CUES[^=]*=\s*\{([\s\S]*?)\}/);
+        if (!block) return cues;
+        const rowRe = /\(\s*(\d+)\s*,\s*\d+\s*\)\s*:\s*["']([^"']+)["']/g;
+        let m;
+        while ((m = rowRe.exec(block[1])) !== null) {
+          cues[parseInt(m[1], 10)] = m[2];
+        }
+        return cues;
+      }
+
+      function probeAudioFileDuration(audioFile) {
+        return new Promise((resolve) => {
+          const url = URL.createObjectURL(audioFile);
+          const tmp = document.createElement("audio");
+          tmp.preload = "metadata";
+          tmp.onloadedmetadata = () => {
+            const dur = Number.isFinite(tmp.duration) ? tmp.duration : 0;
+            URL.revokeObjectURL(url);
+            resolve(dur);
+          };
+          tmp.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(0);
+          };
+          tmp.src = url;
+        });
+      }
+
+      function whiteGapMidJS(rowHasInk, yLo, yHi, h) {
+        const lo = Math.max(0, yLo);
+        const hi = Math.min(h - 1, yHi);
+        if (lo > hi) return Math.max(0, Math.min(h - 1, (yLo + yHi) >> 1));
+        let best = null;
+        let cur = null;
+        for (let y = lo; y <= hi; y++) {
+          if (!rowHasInk[y]) {
+            if (!cur) cur = [y, y];
+            else cur[1] = y;
+          } else if (cur) {
+            if (!best || cur[1] - cur[0] > best[1] - best[0]) best = cur;
+            cur = null;
+          }
+        }
+        if (cur && (!best || cur[1] - cur[0] > best[1] - best[0])) best = cur;
+        return best ? ((best[0] + best[1]) >> 1) : ((lo + hi) >> 1);
+      }
+
+      async function detectPageLayoutCanvas(pngFile, pageNum) {
+        const url = URL.createObjectURL(pngFile);
+        try {
+          const img = await new Promise((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = url;
+          });
+          const w = img.naturalWidth;
+          const h = img.naturalHeight;
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d", { willReadFrequently: true });
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0);
+
+          const rgba = ctx.getImageData(0, 0, w, h).data;
+          const gray = new Uint8Array(w * h);
+          for (let i = 0, p = 0; i < gray.length; i++, p += 4) {
+            gray[i] = (rgba[p] * 77 + rgba[p + 1] * 150 + rgba[p + 2] * 29) >> 8;
+          }
+
+          const x0 = Math.floor(w * 0.05);
+          const x1 = Math.floor(w * 0.95);
+          const darkThreshold = (x1 - x0) * 0.65;
+
+          const darkRows = [];
+          const rowHasInk = new Uint8Array(h);
+          for (let y = 0; y < h; y++) {
+            const off = y * w;
+            let d = 0;
+            let anyInk = 0;
+            for (let x = 0; x < w; x++) {
+              const v = gray[off + x];
+              if (v < 235) anyInk = 1;
+              if (x >= x0 && x < x1 && v < 190) d++;
+            }
+            rowHasInk[y] = anyInk;
+            if (d > darkThreshold) darkRows.push(y);
+          }
+
+          const lines = [];
+          for (const y of darkRows) {
+            if (!lines.length || y > lines[lines.length - 1][lines[lines.length - 1].length - 1] + 2) {
+              lines.push([y]);
+            } else {
+              lines[lines.length - 1].push(y);
+            }
+          }
+          const lineYs = lines.map((g) => g.reduce((a, b) => a + b, 0) / g.length);
+
+          const grouped = [];
+          for (const ly of lineYs) {
+            if (!grouped.length || ly - grouped[grouped.length - 1][grouped[grouped.length - 1].length - 1] > 35) {
+              grouped.push([ly]);
+            } else {
+              grouped[grouped.length - 1].push(ly);
+            }
+          }
+          const staves = grouped.filter((s) => s.length === 6);
+          if (!staves.length) {
+            throw new Error("第 " + pageNum + " 页未能检测到 6 线吉他谱表");
+          }
+
+          const firstStaff = Math.round(staves[0][0]);
+          let topCut;
+          let headerSlice = null;
+          if (pageNum === 1) {
+            topCut = whiteGapMidJS(rowHasInk, Math.max(0, firstStaff - 170), Math.max(0, firstStaff - 60), h);
+            let hMin = -1;
+            let hMax = -1;
+            for (let y = 0; y <= topCut; y++) {
+              if (rowHasInk[y]) {
+                if (hMin === -1) hMin = y;
+                hMax = y;
+              }
+            }
+            if (hMin !== -1) {
+              headerSlice = [Math.max(0, hMin - 16), Math.min(topCut, hMax + 16)];
+            }
+          } else {
+            topCut = whiteGapMidJS(rowHasInk, 90, 125, h);
+          }
+
+          const cuts = [topCut];
+          for (let i = 0; i < staves.length - 1; i++) {
+            const prevBot = Math.round(staves[i][5]);
+            const nextTop = Math.round(staves[i + 1][0]);
+            const safeLo = prevBot + 40;
+            const safeHi = nextTop - 78;
+            let hasSafeWhite = false;
+            for (let y = safeLo; y <= safeHi; y++) {
+              if (y >= 0 && y < h && !rowHasInk[y]) {
+                hasSafeWhite = true;
+                break;
+              }
+            }
+            if (safeLo <= safeHi && hasSafeWhite) {
+              cuts.push(whiteGapMidJS(rowHasInk, safeLo, safeHi, h));
+            } else {
+              cuts.push(whiteGapMidJS(rowHasInk, prevBot + 20, nextTop - 20, h));
+            }
+          }
+          const lastBot = Math.round(staves[staves.length - 1][5]);
+          cuts.push(whiteGapMidJS(rowHasInk, lastBot + 40, Math.min(h - 1, lastBot + 160), h));
+
+          const sysEntries = [];
+          for (let si = 0; si < staves.length; si++) {
+            const sysLines = staves[si];
+            const yTop = Math.round(sysLines[0]);
+            const yBot = Math.round(sysLines[5]);
+            const c0 = cuts[si];
+            const c1 = cuts[si + 1];
+
+            let ink0 = -1;
+            let ink1 = -1;
+            for (let y = c0; y <= c1; y++) {
+              if (rowHasInk[y]) {
+                if (ink0 === -1) ink0 = y;
+                ink1 = y;
+              }
+            }
+            if (ink0 === -1) {
+              ink0 = yTop - 40;
+              ink1 = yBot + 40;
+            }
+            const sliceY = [Math.max(c0, ink0 - 14), Math.min(c1, ink1 + 16)];
+
+            const gapYs = [];
+            for (let k = 0; k < 5; k++) {
+              const g0 = Math.round(sysLines[k]) + 3;
+              const g1 = Math.round(sysLines[k + 1]) - 3;
+              for (let gy = g0; gy <= g1; gy++) gapYs.push(gy);
+            }
+
+            let sx0 = w;
+            let sx1 = 0;
+            for (let x = 0; x < w; x++) {
+              if (gray[yTop * w + x] < 190) {
+                if (x < sx0) sx0 = x;
+                if (x > sx1) sx1 = x;
+              }
+            }
+            const span = Math.max(1, yBot - yTop + 1);
+            const barCols = [];
+            for (let x = sx0; x <= sx1; x++) {
+              let inside = 0;
+              for (let y = yTop; y <= yBot; y++) {
+                if (gray[y * w + x] < 140) inside++;
+              }
+              let below = 0;
+              for (let y = yBot + 3; y < Math.min(h, yBot + 15); y++) {
+                if (gray[y * w + x] < 140) below++;
+              }
+              if (inside >= span * 0.95 && below === 0) {
+                if (x > sx1 - 20 || x < sx0 + 10) {
+                  barCols.push(x);
+                } else {
+                  let sideDark = 0;
+                  for (const gy of gapYs) {
+                    if (gray[gy * w + x - 3] < 160 || gray[gy * w + x + 3] < 160) sideDark++;
+                  }
+                  if (sideDark <= gapYs.length * 0.15) barCols.push(x);
+                }
+              }
+            }
+
+            const clusters = [];
+            for (const x of barCols) {
+              if (!clusters.length || x > clusters[clusters.length - 1][clusters[clusters.length - 1].length - 1] + 15) {
+                clusters.push([x]);
+              } else {
+                clusters[clusters.length - 1].push(x);
+              }
+            }
+            const barXs = clusters.map((g) => Math.round((g.reduce((a, b) => a + b, 0) / g.length) * 10) / 10);
+            const startX = pageNum === 1 && si === 0 ? Math.round(w * 0.122) : Math.round(w * 0.093);
+            const boundaries = [startX, ...barXs.slice(1)];
+            const barBoxes = [];
+            for (let i = 0; i < boundaries.length - 1; i++) {
+              barBoxes.push([boundaries[i], boundaries[i + 1]]);
+            }
+            if (!barBoxes.length) {
+              barBoxes.push([startX, sx1]);
+            }
+
+            sysEntries.push({
+              page: pageNum,
+              width: w,
+              height: h,
+              sliceY,
+              inkY: [ink0, ink1],
+              staffY: [yTop, yBot],
+              barBoxes
+            });
+          }
+
+          return { width: w, height: h, headerSlice, sysEntries };
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      async function handleImportedFiles(rawFiles) {
+        const files = rawFiles.filter((f) => !isIgnoredPath(fileRel(f)) && !f.name.startsWith("."));
+
+        const audioFiles = files.filter((f) => /\.(mp3|wav|m4a|ogg|flac)$/i.test(f.name));
+        audioFiles.sort((a, b) => {
+          const am = a.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
+          const bm = b.name.toLowerCase().endsWith(".mp3") ? 0 : 1;
+          return am - bm || b.size - a.size;
+        });
+        const audioFile = audioFiles[0] || null;
+
+        const pngFiles = files
+          .filter((f) => /\.png$/i.test(f.name) && (fileRel(f).includes("previews/") || /^page[-_]?\d+/i.test(f.name) || audioFile))
+          .sort((a, b) => parsePageNum(a.name) - parsePageNum(b.name) || a.name.localeCompare(b.name));
+
+        const manifestFile = files.find((f) => f.name === "sync_manifest.json") || null;
+        const scoreDataFile = files.find((f) => f.name === "score_data.py") || null;
+        const buildPdfFile = files.find((f) => f.name === "build_pdf.py") || null;
+        const pdfFile = files.find((f) => /\.pdf$/i.test(f.name)) || null;
+
+        impAudioVal.textContent = audioFile ? audioFile.name : "缺少音频文件 (.mp3)";
+        impAudioVal.className = "val " + (audioFile ? "ok" : "warn");
+
+        impPagesVal.textContent = pngFiles.length ? pngFiles.length + " 页 PNG" : "缺少预览 PNG";
+        impPagesVal.className = "val " + (pngFiles.length ? "ok" : "warn");
+
+        if (manifestFile) {
+          impMetaVal.textContent = "sync_manifest.json";
+          impMetaVal.className = "val ok";
+        } else if (scoreDataFile) {
+          impMetaVal.textContent = "score_data.py + 自动识谱";
+          impMetaVal.className = "val ok";
+        } else {
+          impMetaVal.textContent = "纯图片/音频自动识谱";
+          impMetaVal.className = "val";
+        }
+
+        stagedImport = null;
+        modalLoadBtn.disabled = true;
+        modalExportBtn.disabled = true;
+
+        if (!audioFile || !pngFiles.length) {
+          impDetectVal.textContent = "文件不完整";
+          impDetectVal.className = "val warn";
+          importMsg.className = "import-msg error";
+          importMsg.textContent = !pngFiles.length
+            ? "未找到预览图 (previews/page-*.png)。请先运行 `pdftoppm -png -r 150 <乐谱>.pdf previews/page` 或导入完整作品文件夹。"
+            : "未找到音频文件（*.mp3）。请确保选择了包含 MP3 与预览 PNG 的文件夹。";
           return;
         }
+
+        importMsg.className = "import-msg";
+        importMsg.textContent = "正在本地解析音频与乐谱图像，请稍候...";
+
+        try {
+          const duration = await probeAudioFileDuration(audioFile);
+
+          if (manifestFile) {
+            const mText = await manifestFile.text();
+            const parsedManifest = JSON.parse(mText);
+            if (!parsedManifest.systems || !parsedManifest.bars) {
+              throw new Error("sync_manifest.json 格式不完整");
+            }
+            impTitleInput.value = parsedManifest.title || "";
+            impBpmInput.value = parsedManifest.bpm || 72;
+            impDetectVal.textContent = parsedManifest.systems.length + " 行 / " + parsedManifest.bars.length + " 小节";
+            impDetectVal.className = "val ok";
+            importMsg.className = "import-msg ok";
+            importMsg.textContent = "已直接载入 sync_manifest.json 精确坐标，点击下方按钮即可同步播放！";
+
+            stagedImport = {
+              mode: "manifest",
+              manifest: parsedManifest,
+              audioFile,
+              pngFiles,
+              pdfFile,
+              duration
+            };
+            modalLoadBtn.disabled = false;
+            modalExportBtn.disabled = false;
+            return;
+          }
+
+          let scoreMeta = null;
+          if (scoreDataFile) {
+            scoreMeta = parseScoreDataPy(await scoreDataFile.text());
+            if (scoreMeta.title) impTitleInput.value = scoreMeta.title;
+            if (scoreMeta.bpm) impBpmInput.value = scoreMeta.bpm;
+            const b0 = scoreMeta.parsedBars[0];
+            if (b0 && b0.isPickup) {
+              impPickupSelect.value = "yes";
+            }
+          }
+          const phraseCues = buildPdfFile ? parsePhraseCuesPy(await buildPdfFile.text()) : {};
+
+          const pageLayouts = [];
+          for (let i = 0; i < pngFiles.length; i++) {
+            pageLayouts.push(await detectPageLayoutCanvas(pngFiles[i], i + 1));
+          }
+
+          const totalBars = pageLayouts.reduce(
+            (acc, pg) => acc + pg.sysEntries.reduce((s, sys) => s + sys.barBoxes.length, 0),
+            0
+          );
+          const totalSystems = pageLayouts.reduce((acc, pg) => acc + pg.sysEntries.length, 0);
+
+          if (!impTitleInput.value.trim()) {
+            impTitleInput.value = audioFile.name.replace(/\.[^.]+$/, "");
+          }
+
+          impDetectVal.textContent = totalSystems + " 行 / " + totalBars + " 小节";
+          impDetectVal.className = "val ok";
+          importMsg.className = "import-msg ok";
+          importMsg.textContent = "自动识谱完成！已定位 " + totalSystems + " 行六线谱与 " + totalBars + " 个小节热区。";
+
+          stagedImport = {
+            mode: "detected",
+            audioFile,
+            pngFiles,
+            pdfFile,
+            duration,
+            pageLayouts,
+            scoreMeta,
+            phraseCues
+          };
+          modalLoadBtn.disabled = false;
+          modalExportBtn.disabled = false;
+        } catch (err) {
+          impDetectVal.textContent = "解析失败";
+          impDetectVal.className = "val warn";
+          importMsg.className = "import-msg error";
+          importMsg.textContent = "解析出错：" + (err && err.message ? err.message : String(err));
+        }
+      }
+
+      function buildManifestFromStaged() {
+        if (!stagedImport) return null;
+        if (stagedImport.mode === "manifest") {
+          const copy = JSON.parse(JSON.stringify(stagedImport.manifest));
+          if (impTitleInput.value.trim()) copy.title = impTitleInput.value.trim();
+          return copy;
+        }
+
+        const bpm = Math.max(30, Math.min(240, Number(impBpmInput.value) || 72));
+        const leadIn = Math.max(0, Number(impLeadInInput.value) || 0);
+        const duration = stagedImport.duration || 120;
+        const scoreMeta = stagedImport.scoreMeta;
+        const phraseCues = stagedImport.phraseCues || {};
+        const parsedBars = scoreMeta ? scoreMeta.parsedBars : {};
+
+        const pickupChoice = impPickupSelect.value;
+        let firstIsPickup = false;
+        if (pickupChoice === "yes") firstIsPickup = true;
+        else if (pickupChoice === "auto" && parsedBars[0] && parsedBars[0].isPickup) firstIsPickup = true;
+
+        const hasZeroBar = Boolean(parsedBars[0]);
+        const barOffset = (hasZeroBar || firstIsPickup) ? 0 : 1;
+        const barDur = (4.0 * 60.0) / bpm;
+        const beatDur = 60.0 / bpm;
+
+        const systemsOut = [];
+        const barsOut = [];
+        const sectionsOut = [];
+        let curSec = "演奏开始";
+        let curTime = leadIn;
+        let sysCounter = 0;
+        let barIdx = 0;
+
+        let headerInfo = null;
+        if (stagedImport.pageLayouts[0] && stagedImport.pageLayouts[0].headerSlice) {
+          const p1 = stagedImport.pageLayouts[0];
+          headerInfo = {
+            page: 1,
+            width: p1.width,
+            height: p1.height,
+            sliceY: p1.headerSlice
+          };
+        }
+
+        const totalDetectedBars = stagedImport.pageLayouts.reduce(
+          (acc, pg) => acc + pg.sysEntries.reduce((s, sys) => s + sys.barBoxes.length, 0),
+          0
+        );
+
+        stagedImport.pageLayouts.forEach((pg, pgIdx) => {
+          const pageNum = pgIdx + 1;
+          pg.sysEntries.forEach((rawSys) => {
+            const sysBars = [];
+            rawSys.barBoxes.forEach(([x0, x1]) => {
+              const barNum = barIdx + barOffset;
+              const pInfo = parsedBars[barNum] || {};
+              if (pInfo.section) {
+                curSec = pInfo.section;
+                sectionsOut.push({ name: curSec, bar: barNum, start: Number(curTime.toFixed(4)) });
+              } else if (barIdx === 0) {
+                sectionsOut.push({ name: curSec, bar: barNum, start: Number(curTime.toFixed(4)) });
+              }
+
+              const isFirstPickup = barIdx === 0 && firstIsPickup;
+              const isLast = barIdx === totalDetectedBars - 1;
+              const dur = isFirstPickup ? beatDur : barDur;
+              const endT = isLast ? Math.max(curTime + 0.5, duration) : curTime + dur;
+
+              const rec = {
+                bar: barNum,
+                sysIdx: sysCounter,
+                page: pageNum,
+                x0,
+                x1,
+                start: Number(curTime.toFixed(4)),
+                end: Number(endT.toFixed(4)),
+                sec: curSec,
+                chords: pInfo.chords || (isFirstPickup ? "弱起 Pick-up" : ""),
+                cue: phraseCues[barNum] || ""
+              };
+              sysBars.push(rec);
+              barsOut.push(rec);
+              curTime = endT;
+              barIdx++;
+            });
+
+            systemsOut.push({
+              sysIdx: sysCounter,
+              page: pageNum,
+              width: rawSys.width,
+              height: rawSys.height,
+              sliceY: rawSys.sliceY,
+              inkY: rawSys.inkY,
+              staffY: rawSys.staffY,
+              x0: sysBars[0].x0,
+              x1: sysBars[sysBars.length - 1].x1,
+              bars: sysBars
+            });
+            sysCounter++;
+          });
+        });
+
+        return {
+          version: 1,
+          title: impTitleInput.value.trim() || (scoreMeta && scoreMeta.title) || "导入指弹作品",
+          subtitle: (scoreMeta && scoreMeta.subtitle) || "本地导入 Skill 产物 · 自动识别连续六线谱",
+          composer: (scoreMeta && scoreMeta.composer) || "",
+          arrangerInfo: (scoreMeta && scoreMeta.arrangerInfo) || "",
+          bpm,
+          capo: scoreMeta && scoreMeta.capo !== null ? scoreMeta.capo : undefined,
+          duration: Number(duration.toFixed(4)),
+          audio: stagedImport.audioFile.name,
+          pdf: stagedImport.pdfFile ? stagedImport.pdfFile.name : "",
+          pages: stagedImport.pngFiles.map((f) => "previews/" + f.name),
+          header: headerInfo,
+          sections: sectionsOut,
+          systems: systemsOut,
+          bars: barsOut
+        };
+      }
+
+      function triggerDownloadJson(manifestObj) {
+        const blob = new Blob([JSON.stringify(manifestObj, null, 2) + "\n"], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "sync_manifest.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      modalLoadBtn.addEventListener("click", () => {
+        const manifest = buildManifestFromStaged();
+        if (!manifest || !stagedImport) return;
+        const ownedUrls = [];
+        const audioUrl = URL.createObjectURL(stagedImport.audioFile);
+        ownedUrls.push(audioUrl);
+
+        const pngByName = new Map(stagedImport.pngFiles.map((f) => [f.name, f]));
+        const orderedPageUrls = (manifest.pages && manifest.pages.length === stagedImport.pngFiles.length)
+          ? manifest.pages.map((rel, i) => {
+              const fname = rel.split("/").pop();
+              const f = pngByName.get(fname) || stagedImport.pngFiles[i];
+              const u = URL.createObjectURL(f);
+              ownedUrls.push(u);
+              return u;
+            })
+          : stagedImport.pngFiles.map((f) => {
+              const u = URL.createObjectURL(f);
+              ownedUrls.push(u);
+              return u;
+            });
+
+        let pdfUrl = "";
+        if (stagedImport.pdfFile) {
+          pdfUrl = URL.createObjectURL(stagedImport.pdfFile);
+          ownedUrls.push(pdfUrl);
+        }
+
+        loadProject(manifest, orderedPageUrls, audioUrl, pdfUrl, true, ownedUrls);
+        closeImportModal();
+      });
+
+      modalExportBtn.addEventListener("click", () => {
+        const manifest = buildManifestFromStaged();
+        if (manifest) triggerDownloadJson(manifest);
+      });
+
+      document.getElementById("export-manifest-btn").addEventListener("click", () => {
+        if (activeManifest) triggerDownloadJson(activeManifest);
+      });
+
+      document.getElementById("reset-builtin-btn").addEventListener("click", () => {
+        loadBuiltinProject();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          importModal.classList.remove("open");
+          pdfModal.classList.remove("open");
+          return;
+        }
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
+        const ignoreSpace =
+          ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "AUDIO"].includes(tag) ||
+          (e.target && e.target.isContentEditable) ||
+          importModal.classList.contains("open") ||
+          pdfModal.classList.contains("open");
         if (e.code === "Space" && !ignoreSpace) {
           e.preventDefault();
           if (player.paused) {
@@ -1582,18 +3577,19 @@
           } else {
             player.pause();
           }
-        } else if (e.key === "ArrowLeft" && currentMode === "single") {
-          setPageUI(currentPage - 1, false);
-          renderSync(player.currentTime || 0);
-        } else if (e.key === "ArrowRight" && currentMode === "single") {
-          setPageUI(currentPage + 1, false);
-          renderSync(player.currentTime || 0);
         }
       });
 
-      // Initialize sync state on M00
-      lastSysIdx = 0;
-      renderSync(0);
+      function loadBuiltinProject() {
+        const pageUrls = BUILTIN_MANIFEST.pages.map(
+          (p) => "./examples/call-of-silence/" + p.split("/").map(encodeURIComponent).join("/")
+        );
+        const audioUrl = "./examples/call-of-silence/" + encodeURIComponent(BUILTIN_MANIFEST.audio);
+        const pdfUrl = "./examples/call-of-silence/" + encodeURIComponent(BUILTIN_MANIFEST.pdf);
+        loadProject(BUILTIN_MANIFEST, pageUrls, audioUrl, pdfUrl, false, []);
+      }
+
+      loadBuiltinProject();
     })();
   </script>
 </body>

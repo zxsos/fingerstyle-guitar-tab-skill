@@ -2,7 +2,7 @@
 
 > 一套可跨 AI Agent 复现的指弹吉他**六线谱矢量 PDF + 拟真试听 MP3** 工程化工作流 Skill，内置《Call of Silence》（《进击的巨人》第二季插曲）完整源码与免下载在线看谱试听页面。
 
-> **[▶️ 点此直接在线试听 + 歌词级自动染色看谱（无需下载，支持 60fps 播放游标、自动换行居中滚动、点谱任意小节即播、0.5x/0.75x 变速练琴）](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)**
+> **[▶️ 点此直接在线试听 + 无分页连续滚屏看谱（支持无遮挡逐拍染色聚焦、自动换行居中滚动、点谱任意小节即播、以及 `📂 导入 Skill 产物` 本地试听）](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)**
 
 核心架构为 **Single Source of Truth（单一数据源）**：同一份 Python 乐谱模型（`score_data.py`）同时驱动 GNU LilyPond 矢量六线谱排版与 FluidSynth + FFmpeg 音频合成，从根源上避免“谱面品格与试听音高错位”的问题，并通过自动化脱敏、声学与指法校验门禁把关。
 
@@ -24,7 +24,7 @@ flowchart LR
 
 ### 成品文件与在线直览
 
-- **🌐 免下载在线看谱 + 同步试听页**：[https://zxsos.github.io/fingerstyle-guitar-tab-skill/](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)（支持歌词级逐拍染色聚焦、60fps 播放游标、自动换行居中滚动、点谱任意小节即播、0.5x/0.75x 变速练琴）
+- **🌐 免下载在线看谱 + 同步试听页**：[https://zxsos.github.io/fingerstyle-guitar-tab-skill/](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)（无分页连续滚动白底纸张、无遮挡歌词级逐拍染色聚焦、60fps 游标、点谱任意小节即播、0.5x/0.75x 变速练琴，并支持直接拖拽导入其他曲目的 Skill 生成产物）
 - **📄 高清矢量六线谱 PDF**：[Call_of_Silence_指弹吉他六线谱.pdf](examples/call-of-silence/Call_of_Silence_指弹吉他六线谱.pdf)（A4 · 3 页 · 已脱敏 0 本地路径泄漏）
 - **🎵 拟真指弹试听 MP3**：[Call_of_Silence_指弹吉他试听.mp3](examples/call-of-silence/Call_of_Silence_指弹吉他试听.mp3)（44.1 kHz · 320 kbps 立体声 · 151.80 s）
 - **💻 完整可复现源码**：[examples/call-of-silence/src/](examples/call-of-silence/src/)
@@ -115,7 +115,7 @@ cp -r skills/fingerstyle-guitar-tab .agents/skills/
 1. 在 Debian/Ubuntu 环境下先运行 `bash skills/fingerstyle-guitar-tab/scripts/setup_tools.sh` 免 sudo 安装本地 LilyPond / FluidSynth / FluidR3_GM.sf2 工具链，并确认系统存在 python3、ffmpeg、ffprobe、gs、pdftoppm。
 2. 先运行 `examples/call-of-silence/src/` 下的 `build_pdf.py`、`build_audio.py` 和 `verify_all.py`，确保看到 `ALL VERIFICATION CHECKS PASSED.`（如有参考音频，可额外传入 `--ref <参考音频路径或URL>`）。
 3. 若我要编配新曲目《<填入曲名>》：严格参考 `examples/call-of-silence/src/` 的 Single Source of Truth 架构，新建项目目录编写 `src/score_data.py`、`src/build_pdf.py`、`src/build_audio.py`、`src/verify_all.py`，确保通过全部验证门槛（音阶纯净度 > 85%、峰值 < -1 dBFS、PDF 无本地路径泄漏，禁止在代码里硬编码第三方抓取链接）。
-4. 使用 `pdftoppm -png -r 150` 导出 PDF 预览图，参考根目录 `index.html` + `.nojekyll` 生成在线试听与看谱页面，检查 `.gitignore` 确保不提交 `.tools/` 和 `.wav/.mid/.ly` 中间文件，然后提交并推送到 GitHub 仓库开启 GitHub Pages 展示。
+4. 使用 `pdftoppm -png -r 150` 导出 PDF 预览图并运行 `src/build_sync_manifest.py` 生成 `sync_manifest.json`（用户可直接拖入 `https://zxsos.github.io/fingerstyle-guitar-tab-skill/` 的 `📂 导入 Skill 产物` 即刻无分页连续滚屏试听），检查 `.gitignore` 确保不提交 `.tools/` 和 `.wav/.mid/.ly` 中间文件，然后提交并推送到 GitHub 仓库开启 GitHub Pages 展示。
 ```
 
 ---
@@ -144,7 +144,10 @@ bash skills/fingerstyle-guitar-tab/scripts/setup_tools.sh
 python3 examples/call-of-silence/src/build_pdf.py
 python3 examples/call-of-silence/src/build_audio.py
 python3 examples/call-of-silence/src/verify_all.py
+python3 examples/call-of-silence/src/build_sync_manifest.py
 ```
+
+> **直接拖入新曲产物试听**：任何遵循本 Skill 生成的本地项目目录（包含 `*.mp3` + `previews/page-*.png`，以及可选的 `sync_manifest.json` / `src/score_data.py` / `*.pdf`），都可以直接拖入 **[在线播放器](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)** 右上角的 **`📂 导入 Skill 产物`**，纯浏览器本地自动识谱、无缝切片、逐拍染色播放并支持导出 `sync_manifest.json`。
 
 ### 3. 编配新曲目的核心工程约定
 
@@ -157,12 +160,13 @@ python3 examples/call-of-silence/src/verify_all.py
 - **多轨音频合成与 4 重校验**：[skills/fingerstyle-guitar-tab/references/audio-and-verification.md](skills/fingerstyle-guitar-tab/references/audio-and-verification.md)
   - 4 通道 MIDI（Ch0 钢弦、Ch1 尼龙弦、Ch2 竖琴泛音层、Ch3 闷音吉他）、FluidSynth `-C 0` 与 `CC93=0` 禁用人工合唱走音、WAV 波形层注入 30ms 拇指拍弦冲击、FFmpeg 均衡与 `-16 LUFS` 响度标准化（`-map_metadata -1` 剥离多余元数据）、PDF 0 路径泄漏校验及可选 `--ref` Goertzel 色度对齐校验。
 
-### 4. 生成预览图、在线试听页并上传 GitHub 展示
+### 4. 生成预览图、同步清单并上传 GitHub 展示
 
 ```bash
-# 1) 导出 PDF 每页 PNG 预览图
+# 1) 导出 PDF 每页 PNG 预览图，并生成 sync_manifest.json（用于在线播放器无分页连续同步滚动）
 mkdir -p previews
 pdftoppm -png -r 150 <你的乐谱>.pdf previews/page
+python3 src/build_sync_manifest.py
 
 # 2) 确保包含 index.html 与 .nojekyll（实现免下载浏览器直览与试听），且未把 .tools/、build/*.wav、__pycache__/ 纳入版本控制
 git status
@@ -180,8 +184,8 @@ gh repo create <your-repo-name> --public --source=. --remote=origin --push
 ```text
 fingerstyle-guitar-tab-skill/
 ├── README.md
-├── index.html                                   # GitHub Pages 免下载在线试听 + 同步看谱网页
-├── .nojekyll                                    # 禁用 Jekyll，直接静态托管 HTML/PDF/MP3/PNG
+├── index.html                                   # GitHub Pages 免下载无分页连续看谱 + 本地产物导入播放器
+├── .nojekyll                                    # 禁用 Jekyll，直接静态托管 HTML/PDF/MP3/PNG/JSON
 ├── LICENSE
 ├── .gitignore
 ├── skills/
@@ -197,7 +201,8 @@ fingerstyle-guitar-tab-skill/
     └── call-of-silence/
         ├── Call_of_Silence_指弹吉他六线谱.pdf     # 成品矢量六线谱（3 页 A4）
         ├── Call_of_Silence_指弹吉他试听.mp3       # 成品 320 kbps 立体声试听音频
-        ├── previews/                            # README 展示用 PNG 预览图
+        ├── sync_manifest.json                   # 14 行无遮挡切片 + 45 小节同步时间轴清单
+        ├── previews/                            # 展示与切片用 PNG 预览图
         │   ├── page-1.png
         │   ├── page-2.png
         │   └── page-3.png
@@ -205,6 +210,7 @@ fingerstyle-guitar-tab-skill/
             ├── score_data.py
             ├── build_pdf.py
             ├── build_audio.py
+            ├── build_sync_manifest.py
             └── verify_all.py
 ```
 
