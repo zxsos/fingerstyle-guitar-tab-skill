@@ -2,7 +2,7 @@
 
 > 一套可跨 AI Agent 复现的指弹吉他**六线谱矢量 PDF + 拟真试听 MP3** 工程化工作流 Skill，内置《Call of Silence》（《进击的巨人》第二季插曲）完整源码与免下载在线看谱试听页面。
 
-> **[▶️ 点此直接在线试听 + 跟随看谱（无需下载，支持 0.5x / 0.75x 变速练琴与段落跳转）](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)**
+> **[▶️ 点此直接在线试听 + 歌词级自动染色看谱（无需下载，支持 60fps 播放游标、自动换行居中滚动、点谱任意小节即播、0.5x/0.75x 变速练琴）](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)**
 
 核心架构为 **Single Source of Truth（单一数据源）**：同一份 Python 乐谱模型（`score_data.py`）同时驱动 GNU LilyPond 矢量六线谱排版与 FluidSynth + FFmpeg 音频合成，从根源上避免“谱面品格与试听音高错位”的问题，并通过自动化脱敏、声学与指法校验门禁把关。
 
@@ -24,7 +24,7 @@ flowchart LR
 
 ### 成品文件与在线直览
 
-- **🌐 免下载在线看谱 + 同步试听页**：[https://zxsos.github.io/fingerstyle-guitar-tab-skill/](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)（直接点击播放、0.5x/0.75x 变速练琴、段落一键跳转、自动跟随翻页）
+- **🌐 免下载在线看谱 + 同步试听页**：[https://zxsos.github.io/fingerstyle-guitar-tab-skill/](https://zxsos.github.io/fingerstyle-guitar-tab-skill/)（支持歌词级逐拍染色聚焦、60fps 播放游标、自动换行居中滚动、点谱任意小节即播、0.5x/0.75x 变速练琴）
 - **📄 高清矢量六线谱 PDF**：[Call_of_Silence_指弹吉他六线谱.pdf](examples/call-of-silence/Call_of_Silence_指弹吉他六线谱.pdf)（A4 · 3 页 · 已脱敏 0 本地路径泄漏）
 - **🎵 拟真指弹试听 MP3**：[Call_of_Silence_指弹吉他试听.mp3](examples/call-of-silence/Call_of_Silence_指弹吉他试听.mp3)（44.1 kHz · 320 kbps 立体声 · 151.80 s）
 - **💻 完整可复现源码**：[examples/call-of-silence/src/](examples/call-of-silence/src/)
