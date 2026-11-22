@@ -1574,12 +1574,19 @@ def cmd_bundle(proj: Path) -> Path:
     leaks = _scan_pdf_leaks(paths["pdf"])
     assert not leaks, f"Refusing to bundle unsanitized PDF ({len(leaks)} leaks)"
 
+    score_src = proj / "src" / "score_data.py"
+    if score_src.is_file():
+        src_leaks = LEAK_PAT.findall(score_src.read_bytes())
+        assert not src_leaks, f"Refusing to bundle unsanitized {score_src.name} ({len(src_leaks)} leaks)"
+
     with zipfile.ZipFile(paths["bundle"], "w") as zf:
         zf.write(paths["manifest"], arcname="sync_manifest.json", compress_type=zipfile.ZIP_DEFLATED)
         zf.write(paths["mp3"], arcname=paths["mp3"].name, compress_type=zipfile.ZIP_STORED)
         zf.write(paths["pdf"], arcname=paths["pdf"].name, compress_type=zipfile.ZIP_STORED)
         for png in pngs:
             zf.write(png, arcname=f"previews/{png.name}", compress_type=zipfile.ZIP_STORED)
+        if score_src.is_file():
+            zf.write(score_src, arcname="src/score_data.py", compress_type=zipfile.ZIP_DEFLATED)
 
     with zipfile.ZipFile(paths["bundle"], "r") as zf:
         bad = zf.testzip()

@@ -77,7 +77,7 @@ If any rule fails (bar sum != 16, voice crossing, span exceeded, non-diatonic pi
 ```bash
 python3 scripts/tab_engine.py build <proj>
 ```
-This runs: `check` -> LilyPond sanitized PDF (`\pointAndClickOff`, `-dno-point-and-click`) -> `pdftoppm -png -r 150` previews -> FluidSynth `-C 0` + FFmpeg 320 kbps MP3 (`98/74/48` velocity balance, `2880t` melody sustain, `<= 1` semitone clash damping) -> 4-Gate `verify` -> MIDI-exact `sync_manifest.json` -> verified `*_bundle.zip` -> cleans temporary `build/` & `__pycache__/`.
+This runs: `check` -> LilyPond sanitized PDF (`\pointAndClickOff`, `-dno-point-and-click`) -> `pdftoppm -png -r 150` previews -> FluidSynth `-C 0` + FFmpeg 320 kbps MP3 (`98/74/48` velocity balance, `2880t` melody sustain, `<= 1` semitone clash damping) -> 4-Gate `verify` -> MIDI-exact `sync_manifest.json` -> verified `*_bundle.zip` (which also bundles `src/score_data.py` so the single source of truth travels with the deliverables for future re-editing or tier conversion) -> cleans temporary `build/` & `__pycache__/`.
 
 Pass `--ref <audio_path_or_url>` (or set `TAB_REF_AUDIO`) if you also want optional Gate 4 reference chroma alignment (`>= 0.80`). Never commit third-party URLs into code. Import the resulting `*_bundle.zip` into `https://zxsos.github.io/guitar-tab-player/`.
 

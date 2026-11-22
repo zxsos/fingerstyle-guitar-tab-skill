@@ -59,12 +59,23 @@ def build_bundle() -> Path:
 
     assert_pdf_sanitized(PDF_PATH)
 
+    score_src = PROJECT_DIR / "src" / "score_data.py"
+    if score_src.is_file():
+        leak_pat = re.compile(
+            b"(textedit://|" + b"/" + b"home/|" + b"/" + b"Users/|C:\\\\" + b"Users\\\\)"
+        )
+        src_leaks = leak_pat.findall(score_src.read_bytes())
+        if src_leaks:
+            raise AssertionError(f"Refusing to package unsanitized {score_src.name}: {src_leaks[:3]}")
+
     with zipfile.ZipFile(BUNDLE_PATH, "w") as zf:
         zf.write(MANIFEST_PATH, arcname="sync_manifest.json", compress_type=zipfile.ZIP_DEFLATED)
         zf.write(MP3_PATH, arcname=MP3_PATH.name, compress_type=zipfile.ZIP_STORED)
         zf.write(PDF_PATH, arcname=PDF_PATH.name, compress_type=zipfile.ZIP_STORED)
         for png in png_files:
             zf.write(png, arcname=f"previews/{png.name}", compress_type=zipfile.ZIP_STORED)
+        if score_src.is_file():
+            zf.write(score_src, arcname="src/score_data.py", compress_type=zipfile.ZIP_DEFLATED)
 
     with zipfile.ZipFile(BUNDLE_PATH, "r") as zf:
         bad = zf.testzip()

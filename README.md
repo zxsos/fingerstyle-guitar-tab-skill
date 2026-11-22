@@ -47,7 +47,7 @@ python3 skills/fingerstyle-guitar-tab/scripts/tab_engine.py build my_song
 
 | 文件 | 用途 |
 | --- | --- |
-| `*_bundle.zip` | 打包产物，可直接拖入在线播放器导入（[示例包下载](examples/call-of-silence/Call_of_Silence_bundle.zip)） |
+| `*_bundle.zip` | 打包产物（含同步谱面、音频与源码 `src/score_data.py`，可拖入在线播放器导入，也可解压修改重出成品：[示例包下载](examples/call-of-silence/Call_of_Silence_bundle.zip)） |
 | `*.pdf` | 六线谱 |
 | `*.mp3` | 试听音频 |
 | `previews/page-*.png` | 每页预览图 |
