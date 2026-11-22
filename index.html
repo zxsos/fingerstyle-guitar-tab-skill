@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call of Silence — 指弹吉他六线谱在线试听与阅览</title>
+  <style>
+    :root {
+      --bg: #121110;
+      --surface: #1c1a17;
+      --surface-2: #26231e;
+      --border: #38322a;
+      --text: #f4efe6;
+      --muted: #b6aa99;
+      --accent: #e09f3e;
+      --accent-soft: rgba(224, 159, 62, 0.16);
+      --accent-hover: #edb55b;
+      --green: #6bc47d;
+      --radius: 12px;
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top center, #201c16 0%, var(--bg) 52%);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 20px 16px 64px;
+    }
+
+    header.hero {
+      background: linear-gradient(135deg, rgba(38, 35, 30, 0.96), rgba(24, 22, 19, 0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .hero-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+      letter-spacing: 0.01em;
+      color: var(--text);
+    }
+
+    .hero-sub {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .badge.highlight {
+      border-color: rgba(107, 196, 125, 0.45);
+      color: #bdebc6;
+      background: rgba(107, 196, 125, 0.12);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.1s ease;
+    }
+
+    .btn:hover {
+      background: #302c25;
+      border-color: #544a3d;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #16130f;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .player-dock {
+      position: sticky;
+      top: 10px;
+      z-index: 40;
+      background: rgba(28, 26, 23, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .player-main {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    audio#player {
+      flex: 1 1 320px;
+      height: 40px;
+      min-width: 240px;
+      accent-color: var(--accent);
+    }
+
+    .practice-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-btn {
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .ctrl-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    .ctrl-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #16130f;
+      font-weight: 600;
+    }
+
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 2px;
+    }
+
+    .sections-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .sec-btn {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .sec-btn:hover {
+      color: var(--text);
+      border-color: #625647;
+    }
+
+    .sec-btn.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffd794;
+      font-weight: 600;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.83rem;
+      color: var(--muted);
+    }
+
+    .follow-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+    }
+
+    .follow-toggle input {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .viewer-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .tab-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #16130f;
+      font-weight: 600;
+    }
+
+    .page-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .page-pill {
+      padding: 5px 11px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.84rem;
+      cursor: pointer;
+    }
+
+    .page-pill.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: #ffd794;
+      font-weight: 600;
+    }
+
+    .shortcut-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .sheet-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sheet-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s ease;
+    }
+
+    .sheet-card.active-page {
+      border-color: var(--accent);
+    }
+
+    .sheet-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .sheet-card.active-page .sheet-card-head strong {
+      color: var(--accent-hover);
+    }
+
+    .sheet-img-wrap {
+      background: #ffffff;
+      cursor: zoom-in;
+      text-align: center;
+    }
+
+    .sheet-img-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .single-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .pdf-frame-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .pdf-note {
+      padding: 10px 16px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.86rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pdf-frame-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 82vh;
+      min-height: 620px;
+      border: 0;
+      background: #2b2926;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      cursor: zoom-out;
+    }
+
+    .lightbox.open {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: min(1240px, 96vw);
+      max-height: 94vh;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      background: rgba(28, 26, 23, 0.9);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    @media (max-width: 720px) {
+      .container {
+        padding: 12px 10px 44px;
+      }
+      header.hero {
+        padding: 16px;
+      }
+      .player-dock {
+        padding: 12px;
+        top: 6px;
+      }
+      .shortcut-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>Call of Silence — 指弹吉他六线谱在线试听与阅览</h1>
+          <p class="hero-sub">《进击的巨人》第二季插曲 · Single Source of Truth 自动生成与声学校验成品</p>
+          <div class="badges">
+            <span class="badge">原调 1 = A / F#m</span>
+            <span class="badge">Capo 2（G / Em 指法）</span>
+            <span class="badge">4/4 拍 · 72 BPM</span>
+            <span class="badge">45 小节 · 7 种指弹技巧</span>
+            <span class="badge highlight">95.2% 调内纯净度</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn primary" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">📄 打开/下载 PDF</a>
+          <a class="btn" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" target="_blank" rel="noopener">🎵 下载 MP3</a>
+          <a class="btn" href="https://github.com/zxsos/fingerstyle-guitar-tab-skill" target="_blank" rel="noopener">GitHub 仓库</a>
+        </div>
+      </div>
+    </header>
+
+    <section class="player-dock" aria-label="试听播放器与练琴控制">
+      <div class="player-main">
+        <audio id="player" controls preload="metadata">
+          <source src="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E8%AF%95%E5%90%AC.mp3" type="audio/mpeg" />
+          当前浏览器不支持 HTML5 音频播放。
+        </audio>
+        <div class="practice-controls">
+          <button type="button" class="ctrl-btn" id="seek-back">-5s</button>
+          <button type="button" class="ctrl-btn" id="seek-fwd">+5s</button>
+          <span class="divider" aria-hidden="true"></span>
+          <button type="button" class="ctrl-btn speed-btn" data-rate="0.5">0.5x</button>
+          <button type="button" class="ctrl-btn speed-btn" data-rate="0.75">0.75x</button>
+          <button type="button" class="ctrl-btn speed-btn active" data-rate="1">1.0x</button>
+        </div>
+      </div>
+
+      <div class="sections-row">
+        <div class="section-pills" role="group" aria-label="段落快速跳转">
+          <button type="button" class="sec-btn active" data-sec="0" data-start="0.00" data-page="1">Intro (M00–M09)</button>
+          <button type="button" class="sec-btn" data-sec="1" data-start="31.04" data-page="1">Verse (M10–M17)</button>
+          <button type="button" class="sec-btn" data-sec="2" data-start="57.71" data-page="2">Interlude · P.M. (M18–M27)</button>
+          <button type="button" class="sec-btn" data-sec="3" data-start="91.04" data-page="2">Chorus I · 拍弦 (M28–M35)</button>
+          <button type="button" class="sec-btn" data-sec="4" data-start="117.71" data-page="3">Chorus II (M36–M44)</button>
+        </div>
+        <div class="status-strip">
+          <span id="current-status">当前：Intro · 第 1 页</span>
+          <label class="follow-toggle">
+            <input type="checkbox" id="auto-follow" checked />
+            自动跟随翻页
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="viewer-toolbar">
+      <div class="tab-group" role="tablist" aria-label="看谱视图切换">
+        <button type="button" class="mode-btn active" data-mode="scroll">连续高清看谱</button>
+        <button type="button" class="mode-btn" data-mode="single">单页翻页模式</button>
+        <button type="button" class="mode-btn" data-mode="pdf">矢量 PDF 直览</button>
+      </div>
+      <div class="page-nav">
+        <button type="button" class="page-pill active" data-jump-page="1">Page 1</button>
+        <button type="button" class="page-pill" data-jump-page="2">Page 2</button>
+        <button type="button" class="page-pill" data-jump-page="3">Page 3</button>
+        <span class="shortcut-hint">空格 播放/暂停 · ←/→ 单页翻页 · 点击谱面放大</span>
+      </div>
+    </div>
+
+    <main>
+      <div id="view-scroll" class="sheet-stack">
+        <article class="sheet-card active-page" id="card-page-1" data-page="1">
+          <div class="sheet-card-head">
+            <strong>第 1 页 / 共 3 页</strong>
+            <span>Intro (M00–M09) + Verse (M10–M17) · 0:00 – 0:57</span>
+          </div>
+          <div class="sheet-img-wrap" data-zoom="./examples/call-of-silence/previews/page-1.png">
+            <img src="./examples/call-of-silence/previews/page-1.png" alt="Call of Silence 指弹吉他六线谱 第 1 页" />
+          </div>
+        </article>
+
+        <article class="sheet-card" id="card-page-2" data-page="2">
+          <div class="sheet-card-head">
+            <strong>第 2 页 / 共 3 页</strong>
+            <span>Interlude P.M. (M18–M27) + Chorus I 前半 (M28–M32) · 0:57 – 1:47</span>
+          </div>
+          <div class="sheet-img-wrap" data-zoom="./examples/call-of-silence/previews/page-2.png">
+            <img src="./examples/call-of-silence/previews/page-2.png" alt="Call of Silence 指弹吉他六线谱 第 2 页" />
+          </div>
+        </article>
+
+        <article class="sheet-card" id="card-page-3" data-page="3">
+          <div class="sheet-card-head">
+            <strong>第 3 页 / 共 3 页</strong>
+            <span>Chorus I 尾段 (M33–M35) + Chorus II (M36–M44) · 1:47 – 2:31</span>
+          </div>
+          <div class="sheet-img-wrap" data-zoom="./examples/call-of-silence/previews/page-3.png">
+            <img src="./examples/call-of-silence/previews/page-3.png" alt="Call of Silence 指弹吉他六线谱 第 3 页" />
+          </div>
+        </article>
+      </div>
+
+      <div id="view-single" class="hidden">
+        <div class="single-controls">
+          <button type="button" class="btn" id="prev-page-btn">← 上一页</button>
+          <span id="single-page-label">第 1 / 3 页</span>
+          <button type="button" class="btn" id="next-page-btn">下一页 →</button>
+        </div>
+        <article class="sheet-card active-page">
+          <div class="sheet-img-wrap" id="single-zoom-wrap" data-zoom="./examples/call-of-silence/previews/page-1.png">
+            <img id="single-page-img" src="./examples/call-of-silence/previews/page-1.png" alt="Call of Silence 指弹吉他六线谱单页视图" />
+          </div>
+        </article>
+      </div>
+
+      <div id="view-pdf" class="pdf-frame-wrap hidden">
+        <div class="pdf-note">
+          <span>若移动端或部分浏览器内嵌 PDF 无法滚动，请使用顶部“连续高清看谱”或点击右侧直接打开。</span>
+          <a class="btn" href="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf" target="_blank" rel="noopener">新标签页打开 PDF</a>
+        </div>
+        <iframe title="Call of Silence 矢量六线谱 PDF" src="./examples/call-of-silence/Call_of_Silence_%E6%8C%87%E5%BC%B9%E5%90%89%E4%BB%96%E5%85%AD%E7%BA%BF%E8%B0%B1.pdf"></iframe>
+      </div>
+    </main>
+  </div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="谱面大图预览">
+    <button type="button" class="lightbox-close" id="lightbox-close">关闭 (Esc)</button>
+    <img id="lightbox-img" src="" alt="放大谱面预览" />
+  </div>
+
+  <script>
+    (function () {
+      const player = document.getElementById("player");
+      const statusEl = document.getElementById("current-status");
+      const autoFollowEl = document.getElementById("auto-follow");
+
+      const sections = [
+        { name: "Intro (M00–M09)", start: 0.0 },
+        { name: "Verse (M10–M17)", start: 31.04 },
+        { name: "Interlude · P.M. (M18–M27)", start: 57.71 },
+        { name: "Chorus I · 拍弦 (M28–M35)", start: 91.04 },
+        { name: "Chorus II (M36–M44)", start: 117.71 }
+      ];
+
+      const pageWindows = [
+        { page: 1, start: 0.0, end: 57.7 },
+        { page: 2, start: 57.7, end: 107.7 },
+        { page: 3, start: 107.7, end: 999.0 }
+      ];
+
+      const pageImgs = [
+        "./examples/call-of-silence/previews/page-1.png",
+        "./examples/call-of-silence/previews/page-2.png",
+        "./examples/call-of-silence/previews/page-3.png"
+      ];
+
+      let currentMode = "scroll";
+      let currentPage = 1;
+      let lastAutoPage = 1;
+
+      const secBtns = Array.from(document.querySelectorAll(".sec-btn"));
+      const speedBtns = Array.from(document.querySelectorAll(".speed-btn"));
+      const modeBtns = Array.from(document.querySelectorAll(".mode-btn"));
+      const pagePills = Array.from(document.querySelectorAll(".page-pill"));
+      const sheetCards = [1, 2, 3].map((p) => document.getElementById("card-page-" + p));
+
+      const viewScroll = document.getElementById("view-scroll");
+      const viewSingle = document.getElementById("view-single");
+      const viewPdf = document.getElementById("view-pdf");
+      const singleImg = document.getElementById("single-page-img");
+      const singleZoomWrap = document.getElementById("single-zoom-wrap");
+      const singleLabel = document.getElementById("single-page-label");
+
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightbox-img");
+
+      function setPageUI(pageNum, shouldScroll) {
+        currentPage = Math.max(1, Math.min(3, pageNum));
+        pagePills.forEach((btn) => {
+          btn.classList.toggle("active", Number(btn.dataset.jumpPage) === currentPage);
+        });
+        sheetCards.forEach((card, idx) => {
+          card.classList.toggle("active-page", idx + 1 === currentPage);
+        });
+        singleImg.src = pageImgs[currentPage - 1];
+        singleZoomWrap.dataset.zoom = pageImgs[currentPage - 1];
+        singleLabel.textContent = "第 " + currentPage + " / 3 页";
+
+        if (shouldScroll && currentMode === "scroll") {
+          const target = document.getElementById("card-page-" + currentPage);
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+      }
+
+      function setMode(mode) {
+        currentMode = mode;
+        modeBtns.forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+        viewScroll.classList.toggle("hidden", mode !== "scroll");
+        viewSingle.classList.toggle("hidden", mode !== "single");
+        viewPdf.classList.toggle("hidden", mode !== "pdf");
+      }
+
+      function updatePlaybackUI() {
+        const t = player.currentTime || 0;
+        let secIdx = 0;
+        for (let i = sections.length - 1; i >= 0; i--) {
+          if (t >= sections[i].start - 0.15) {
+            secIdx = i;
+            break;
+          }
+        }
+        secBtns.forEach((b, i) => b.classList.toggle("active", i === secIdx));
+
+        let activePage = 1;
+        for (const pw of pageWindows) {
+          if (t >= pw.start && t < pw.end) {
+            activePage = pw.page;
+            break;
+          }
+        }
+
+        statusEl.textContent = "当前：" + sections[secIdx].name + " · 第 " + activePage + " 页";
+
+        if (activePage !== currentPage) {
+          const autoScroll = autoFollowEl.checked && !player.paused && activePage !== lastAutoPage;
+          lastAutoPage = activePage;
+          if (autoFollowEl.checked) {
+            setPageUI(activePage, autoScroll);
+          }
+        }
+      }
+
+      document.getElementById("seek-back").addEventListener("click", () => {
+        player.currentTime = Math.max(0, (player.currentTime || 0) - 5);
+        updatePlaybackUI();
+      });
+
+      document.getElementById("seek-fwd").addEventListener("click", () => {
+        const dur = Number.isFinite(player.duration) ? player.duration : 151.8;
+        player.currentTime = Math.min(dur, (player.currentTime || 0) + 5);
+        updatePlaybackUI();
+      });
+
+      speedBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const rate = Number(btn.dataset.rate);
+          player.playbackRate = rate;
+          speedBtns.forEach((b) => b.classList.toggle("active", b === btn));
+        });
+      });
+
+      secBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const start = Number(btn.dataset.start);
+          const page = Number(btn.dataset.page);
+          player.currentTime = start;
+          lastAutoPage = page;
+          setPageUI(page, true);
+          player.play().catch(() => {});
+          updatePlaybackUI();
+        });
+      });
+
+      modeBtns.forEach((btn) => {
+        btn.addEventListener("click", () => setMode(btn.dataset.mode));
+      });
+
+      pagePills.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const p = Number(btn.dataset.jumpPage);
+          if (currentMode === "pdf") {
+            setMode("scroll");
+          }
+          setPageUI(p, true);
+        });
+      });
+
+      document.getElementById("prev-page-btn").addEventListener("click", () => {
+        setPageUI(currentPage - 1, false);
+      });
+
+      document.getElementById("next-page-btn").addEventListener("click", () => {
+        setPageUI(currentPage + 1, false);
+      });
+
+      document.querySelectorAll("[data-zoom]").forEach((wrap) => {
+        wrap.addEventListener("click", () => {
+          lightboxImg.src = wrap.dataset.zoom;
+          lightbox.classList.add("open");
+        });
+      });
+
+      function closeLightbox() {
+        lightbox.classList.remove("open");
+      }
+
+      document.getElementById("lightbox-close").addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      player.addEventListener("timeupdate", updatePlaybackUI);
+      player.addEventListener("seeked", updatePlaybackUI);
+
+      document.addEventListener("keydown", (e) => {
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
+        const ignoreSpace = ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "AUDIO"].includes(tag) || (e.target && e.target.isContentEditable);
+
+        if (e.key === "Escape" && lightbox.classList.contains("open")) {
+          closeLightbox();
+          return;
+        }
+        if (e.code === "Space" && !ignoreSpace) {
+          e.preventDefault();
+          if (player.paused) {
+            player.play().catch(() => {});
+          } else {
+            player.pause();
+          }
+        } else if (e.key === "ArrowLeft" && currentMode === "single") {
+          setPageUI(currentPage - 1, false);
+        } else if (e.key === "ArrowRight" && currentMode === "single") {
+          setPageUI(currentPage + 1, false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

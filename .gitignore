@@ -1,0 +1,10 @@
+.tools/
+build/
+**/build/
+**/__pycache__/
+*.pyc
+*.pyo
+*.wav
+*.mid
+*.ly
+.DS_Store
