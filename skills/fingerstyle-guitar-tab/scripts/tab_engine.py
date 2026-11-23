@@ -64,6 +64,7 @@ def _tool_candidates(project_dir: Path) -> List[Path]:
         cands.append(Path(env["TAB_TOOLS_ROOT"]).expanduser())
     cands.extend([
         project_dir / ".tools" / "root",
+        project_dir.parent / ".tools" / "root",
         project_dir.parent.parent / ".tools" / "root",
         SKILL_ROOT / ".tools" / "root",
     ])
@@ -115,8 +116,8 @@ def resolve_lilypond(project_dir: Path) -> Tuple[Path, Dict[str, str]]:
     if sys_lily:
         return Path(sys_lily), env
     raise FileNotFoundError(
-        "LilyPond not found in TAB_TOOLS_ROOT, .tools/root, or PATH. "
-        "Run `bash skills/fingerstyle-guitar-tab/scripts/setup_tools.sh`."
+        "LilyPond not found in TAB_TOOLS_ROOT, .tools/root, or PATH.\n"
+        f"Install shared tools once via: bash {SCRIPT_DIR / 'setup_tools.sh'} {SKILL_ROOT}"
     )
 
 
@@ -143,7 +144,10 @@ def resolve_fluidsynth_and_sf2(project_dir: Path) -> Tuple[Path, Path, Dict[str,
         if sys_fs:
             fs_bin = Path(sys_fs)
     if fs_bin is None:
-        raise FileNotFoundError("FluidSynth not found. Run `bash skills/fingerstyle-guitar-tab/scripts/setup_tools.sh`.")
+        raise FileNotFoundError(
+            "FluidSynth not found.\n"
+            f"Install shared tools once via: bash {SCRIPT_DIR / 'setup_tools.sh'} {SKILL_ROOT}"
+        )
 
     sf2_cands: List[Path] = []
     if env.get("TAB_SF2_PATH"):
@@ -253,30 +257,65 @@ def _format_tab_music(mod: Any, measures: List[Any]) -> str:
     if explicit_pages is not None:
         page_breaks = set(explicit_pages)
     else:
-        page_breaks = {
-            m.bar for m in measures
-            if not getattr(m, "is_pickup", False) and m.bar >= 16 and m.bar % 16 == 0 and (last_bar - m.bar) >= 2
-        }
+        page_breaks = set()
+        non_pickup = [m.bar for m in measures if not getattr(m, "is_pickup", False)]
+        n_sys = math.ceil(len(non_pickup) / 4)
+        if n_sys > 4:
+            # Balance pages cleanly (Page 1 holds <=4 systems under title/legend; later pages hold 4-5 systems)
+            n_pages = max(2, math.ceil((n_sys + 1) / 5))
+            p1_sys = min(4, max(3, n_sys // n_pages))
+            rem_sys = n_sys - p1_sys
+            rem_pages = n_pages - 1
+            base_s, extra_s = divmod(rem_sys, rem_pages)
+            sys_counts = [p1_sys] + [base_s + (1 if idx < extra_s else 0) for idx in range(rem_pages)]
+            acc_bars = 0
+            for sc in sys_counts[:-1]:
+                acc_bars += sc * 4
+                if acc_bars < len(non_pickup):
+                    page_breaks.add(non_pickup[acc_bars - 1])
 
-    # Flatten event sequence to compute clean palm-mute TextSpanner boundaries
+    # Flatten event sequence and bridge short (<=2) unmuted melody gaps inside a P.M. passage
+    # so LilyPond draws one clean continuous "P.M. -----|" bracket instead of overlapping restarts.
     flat: List[Tuple[int, int, Any, bool]] = []
     for m_i, meas in enumerate(measures):
         for e_i, ev in enumerate(meas.events):
             has_pm = (not ev.rest) and any(nt.palm_mute for nt in ev.notes)
             flat.append((m_i, e_i, ev, has_pm))
 
+    pm_vis = [item[3] for item in flat]
+    idx = 0
+    while idx < len(pm_vis):
+        if pm_vis[idx]:
+            idx += 1
+            continue
+        gap_start = idx
+        while idx < len(pm_vis) and not pm_vis[idx]:
+            idx += 1
+        gap_len = idx - gap_start
+        if gap_start > 0 and idx < len(pm_vis) and pm_vis[gap_start - 1] and pm_vis[idx] and gap_len <= 2:
+            for k in range(gap_start, idx):
+                if not flat[k][2].rest:
+                    pm_vis[k] = True
+
     pm_starts: Set[Tuple[int, int]] = set()
     pm_stops: Set[Tuple[int, int]] = set()
-    in_pm = False
-    for idx, (m_i, e_i, _ev, has_pm) in enumerate(flat):
-        if has_pm and not in_pm:
-            pm_starts.add((m_i, e_i))
-            in_pm = True
-        if in_pm:
-            nxt_pm = flat[idx + 1][3] if idx + 1 < len(flat) else False
-            if has_pm and not nxt_pm:
-                pm_stops.add((m_i, e_i))
-                in_pm = False
+    pm_singles: Set[Tuple[int, int]] = set()
+    idx = 0
+    while idx < len(flat):
+        if not pm_vis[idx]:
+            idx += 1
+            continue
+        run_start = idx
+        while idx < len(flat) and pm_vis[idx]:
+            idx += 1
+        run_end = idx - 1
+        s_key = (flat[run_start][0], flat[run_start][1])
+        e_key = (flat[run_end][0], flat[run_end][1])
+        if run_start == run_end:
+            pm_singles.add(s_key)
+        else:
+            pm_starts.add(s_key)
+            pm_stops.add(e_key)
 
     harm_labeled = False
     slap_labeled = False
@@ -333,6 +372,8 @@ def _format_tab_music(mod: Any, measures: List[Any]) -> str:
                 tok += "\\arpeggio"
             if ev.fermata:
                 tok += "\\fermata"
+            if (m_i, ev_idx) in pm_singles:
+                suffix_marks.append('^\\markup { \\bold \\upright \\fontsize #-2 "P.M." }')
             if (m_i, ev_idx) in pm_starts:
                 tok += "\\startTextSpan"
             if (m_i, ev_idx) in pm_stops:
@@ -610,11 +651,19 @@ def write_midi_file(mod: Any, measures: List[Any], path: Path) -> Tuple[List[flo
             new_melodies = [nt for nt in pitched_notes if nt.role == "melody"]
             if new_melodies:
                 new_m = note_concert_midi(new_melodies[0], capo)
+                new_mel_strings = {nt.string for nt in new_melodies}
                 for s in list(active.keys()):
-                    old_m, _on, old_r, _chs, _ma = active[s]
-                    if old_r == "melody" and abs(new_m - old_m) <= 2:
-                        if not (incoming_link is not None and s == incoming_string):
-                            stop_string(s, ev_tick - 10)
+                    old_m, _on, old_r, old_chs, _ma = active[s]
+                    if old_r != "melody":
+                        continue
+                    if incoming_link is not None and s == incoming_string:
+                        continue
+                    if abs(new_m - old_m) <= 2:
+                        stop_string(s, ev_tick - 10)
+                    elif s not in new_mel_strings and old_chs != (2, 1):
+                        # Smooth ~28ms legato tail before damping superseded melody string,
+                        # preventing old melody notes from bleeding across upcoming chord changes.
+                        stop_string(s, ev_tick + 24)
 
             for nt in pitched_notes:
                 if nt.role in ("bass", "inner"):
@@ -1177,6 +1226,14 @@ def cmd_check(proj: Path) -> int:
         f"{summary['total_notes']} notes/slaps | max_fret={summary['max_fret']} | "
         f"0 voice crossings | landmarks={summary['landmarks']} | techniques={tech_counts}"
     )
+    try:
+        resolve_lilypond(proj)
+        resolve_fluidsynth_and_sf2(proj)
+    except FileNotFoundError:
+        print(
+            f"[TIP] 未检测到 LilyPond/FluidSynth；运行 build 前请先执行一次安装: "
+            f"bash {SCRIPT_DIR / 'setup_tools.sh'} {SKILL_ROOT}"
+        )
     return 0
 
 

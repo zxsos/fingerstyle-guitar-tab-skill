@@ -536,6 +536,8 @@ def validate_project_score(
     last_bar = measures[-1].bar
 
     active_melody_midi: Optional[int] = None
+    prev_mel_bar: Optional[int] = None
+    prev_mel_midi_for_grace: Optional[int] = None
     max_fret_seen = 0
     total_notes = 0
     bar_by_idx: Dict[int, Any] = {}
@@ -559,6 +561,17 @@ def validate_project_score(
     chord_bass_checks = 0
     chord_bass_hits = 0
     chord_bass_mismatches: List[str] = []
+    chord_root_checks = 0
+    chord_root_hits = 0
+    chord_root_mismatches: List[str] = []
+    inner_on_s6_locs: List[Tuple[int, int, int]] = []
+    non_strong_mel = 0
+    non_strong_mel_with_inner = 0
+    mel_16th = 0
+    mel_16th_with_inner = 0
+    arp_bars = 0
+    slap_offbeat_locs: List[Tuple[int, int]] = []
+    prev_bar_section: Optional[str] = None
     distinct_bass: Set[int] = set()
     sections: Set[str] = set()
     dynamics: Set[float] = set()
@@ -597,7 +610,16 @@ def validate_project_score(
         is_pickup_bar = bool(i == 0 and getattr(meas, "is_pickup", False))
         sec_lbl = getattr(meas, "section", None)
         if sec_lbl:
-            sections.add(str(sec_lbl).strip())
+            sec_clean = str(sec_lbl).strip()
+            sections.add(sec_clean)
+            if prev_bar_section is not None and sec_clean == prev_bar_section:
+                errors.append(
+                    f"M{meas.bar:02d}: 段落标记重复 — 与上一小节重复标注了相同的 section='{sec_clean}' "
+                    f"-> 修复建议: section= 只需写在每个段落的第一小节，不要每小节都写，否则每行会印满重复方框。"
+                )
+            prev_bar_section = sec_clean
+        else:
+            prev_bar_section = None
         dynamics.add(round(float(getattr(meas, "dynamic", 1.0) or 1.0), 2))
         if not is_pickup_bar:
             non_pickup_bars += 1
@@ -631,8 +653,16 @@ def validate_project_score(
         dur_sum = 0
         sorted_chords = sorted(getattr(meas, "chords", []), key=lambda x: x[0])
         chords_by_slot = {sl: lbl for sl, lbl in sorted_chords}
+        ev_start_slots = {e.slot for e in meas.events}
+        for c_sl, c_lbl in sorted_chords:
+            if c_sl not in ev_start_slots:
+                errors.append(
+                    f"M{meas.bar:02d} slot {c_sl}: 和弦标记 '{c_lbl}' 落在延音/空档中（缺少起始于 slot={c_sl} 的事件）"
+                    f" -> 修复建议: 拆分前一个事件的 dur，并在 slot={c_sl} 放置 '{c_lbl}' 的根音 bass 事件。"
+                )
         bar_has_mel = False
         bar_has_bass = False
+        bar_has_arp = False
         bar_pitched = 0
         bar_fp_items: List[Any] = []
 
@@ -684,6 +714,7 @@ def validate_project_score(
 
             if e.arpeggio:
                 tech_counts["arpeggio"] += 1
+                bar_has_arp = True
                 ev_has_tech = True
                 if "arpeggio" not in tier.allowed_techs:
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用 arpeggio -> 删掉 arpeggio=True。")
@@ -706,8 +737,20 @@ def validate_project_score(
 
             mel_notes = [nt for nt in pitched_notes if nt.role == "melody"]
             bass_notes = [nt for nt in pitched_notes if nt.role == "bass"]
+            inner_notes = [nt for nt in pitched_notes if nt.role == "inner"]
+            for nt in inner_notes:
+                if nt.string == 6:
+                    inner_on_s6_locs.append((meas.bar, e.slot, nt.fret))
             if mel_notes:
                 bar_has_mel = True
+                if e.slot not in (0, 8):
+                    non_strong_mel += 1
+                    if inner_notes:
+                        non_strong_mel_with_inner += 1
+                if e.dur == 1:
+                    mel_16th += 1
+                    if inner_notes:
+                        mel_16th_with_inner += 1
                 for nt in mel_notes:
                     mel_total += 1
                     if nt.string in (5, 6):
@@ -724,6 +767,7 @@ def validate_project_score(
                 if e.slot in chords_by_slot:
                     slot_lbl = chords_by_slot[e.slot]
                     slot_pcs = chord_pitch_classes(slot_lbl, capo)
+                    slot_root_pc = chord_root_concert_pc(slot_lbl, capo)
                     if slot_pcs:
                         chord_bass_checks += 1
                         if any((note_concert_midi(nt, capo) % 12) in slot_pcs for nt in bass_notes):
@@ -733,6 +777,16 @@ def validate_project_score(
                             bm = note_concert_midi(b0, capo)
                             chord_bass_mismatches.append(
                                 f"M{meas.bar:02d} slot {e.slot} 和弦 '{slot_lbl}' 却配了低音 n({b0.string},{b0.fret})={midi_to_name(bm)}"
+                            )
+                    if slot_root_pc is not None:
+                        chord_root_checks += 1
+                        if any((note_concert_midi(nt, capo) % 12) == slot_root_pc for nt in bass_notes):
+                            chord_root_hits += 1
+                        else:
+                            b0 = bass_notes[0]
+                            bm = note_concert_midi(b0, capo)
+                            chord_root_mismatches.append(
+                                f"M{meas.bar:02d} s{e.slot} '{slot_lbl}' 弹了 n({b0.string},{b0.fret})={midi_to_name(bm)} 而非根音 {NOTE_NAMES[slot_root_pc]}"
                             )
 
             # Active chord for self-healing voice-crossing tips
@@ -765,6 +819,8 @@ def validate_project_score(
                 if nt.role == "slap":
                     tech_counts["slap"] += 1
                     ev_has_tech = True
+                    if e.slot not in (4, 8, 12):
+                        slap_offbeat_locs.append((meas.bar, e.slot))
                     if "slap" not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 TIER='{tier.key}' ({tier.label_zh}) 禁用拍弦 slap "
@@ -821,7 +877,6 @@ def validate_project_score(
 
                 if nt.grace_from is not None:
                     tech_counts["grace"] += 1
-                    tech_counts["S"] += 1
                     ev_has_tech = True
                     if "grace" not in tier.allowed_techs and "S" not in tier.allowed_techs:
                         errors.append(
@@ -834,6 +889,23 @@ def validate_project_score(
                         errors.append(f"M{meas.bar:02d} slot {e.slot}: grace_from={nt.grace_from} 为调外音，请改用邻近调内品格。")
                     if abs(nt.fret - nt.grace_from) > 3 or nt.fret == nt.grace_from:
                         errors.append(f"M{meas.bar:02d} slot {e.slot}: 倚音滑音跨度需在 1..3 品内，当前 {nt.grace_from}->{nt.fret}。")
+                    if nt.role == "melody" and prev_mel_bar == meas.bar and prev_mel_midi_for_grace is not None:
+                        if cm < prev_mel_midi_for_grace and nt.grace_from < nt.fret:
+                            errors.append(
+                                f"M{meas.bar:02d} slot {e.slot}: 反向滑入倚音 — 同小节前一主旋律更高 ({midi_to_name(prev_mel_midi_for_grace)})、"
+                                f"当前下行至 {midi_to_name(cm)}，却从更低品 grace_from={nt.grace_from} 上滑（听感像插入错音）"
+                                f" -> 修复建议: 删除该下行音上的 grace_from，或将上滑倚音改加在上行高潮主音上。"
+                            )
+                        elif cm > prev_mel_midi_for_grace and nt.grace_from > nt.fret:
+                            errors.append(
+                                f"M{meas.bar:02d} slot {e.slot}: 反向滑入倚音 — 同小节前一主旋律更低 ({midi_to_name(prev_mel_midi_for_grace)})、"
+                                f"当前上行至 {midi_to_name(cm)}，却从更高品 grace_from={nt.grace_from} 下滑"
+                                f" -> 修复建议: 上行主旋律应从低品上滑或删除该 grace_from。"
+                            )
+
+            if mel_notes and not any(nt.harmonic for nt in mel_notes):
+                prev_mel_bar = meas.bar
+                prev_mel_midi_for_grace = max(note_concert_midi(nt, capo) for nt in mel_notes)
 
             fretted_notes = [nt for nt in pitched_notes if nt.fret > 0 and not nt.harmonic]
             if fretted_notes:
@@ -956,6 +1028,8 @@ def validate_project_score(
                 mel_bars += 1
             if bar_has_bass:
                 bass_bars += 1
+            if bar_has_arp:
+                arp_bars += 1
             if dur_sum > 0:
                 bar_slot_sums.append(dur_sum)
             bar_sec = max(0.25, (dur_sum or 16) * sec_per_slot)
@@ -972,7 +1046,8 @@ def validate_project_score(
             prev_bar_fp = t_fp
 
     for req_t in required_techs:
-        if tech_counts.get(req_t, 0) < 1:
+        cnt_t = (tech_counts.get("S", 0) + tech_counts.get("grace", 0)) if req_t == "S" else tech_counts.get(req_t, 0)
+        if cnt_t < 1:
             errors.append(
                 f"技巧校验: 档位 '{tier.key}' 要求至少出现 1 次 '{req_t}'，当前为 0 "
                 f"-> 修复建议: 在合适乐句处添加真实指弹 '{req_t}' 技巧（禁止通过清空 REQUIRED_TECHS 绕过）。"
@@ -1067,7 +1142,49 @@ def validate_project_score(
         sample = "；".join(chord_bass_mismatches[:3])
         errors.append(
             f"和声失配拦截: 和弦与低音严重不符（匹配率 {chord_bass_hits}/{chord_bass_checks} < 65%：{sample}）"
-            f" -> 修复建议: 用 scripts/fret_helper.py chord 按标注和弦重查正确根音/低音，避免标 G 却乱弹外音。"
+            f" -> 修复建议: (1) 确认 chords= 写的是「Capo 下的指法和弦名」而非原调发声名；(2) 用 scripts/fret_helper.py chord 按和弦重查 [ROOT 根音]。"
+        )
+
+    root_ratio = (chord_root_hits / chord_root_checks) if chord_root_checks > 0 else 1.0
+    if chord_root_checks >= 6 and root_ratio < 0.78:
+        sample = "；".join(chord_root_mismatches[:3])
+        errors.append(
+            f"和弦根音拦截: 和弦切换拍低音根音命中率仅 {chord_root_hits}/{chord_root_checks} ({root_ratio * 100:.0f}% < 78%：{sample})"
+            f" -> 修复建议: 每个和弦换拍的 bass 必须优先弹该和弦真正的根音（如 Cmaj7 用 5弦3品 C 而非 6弦3品 G；D 用 4弦0品 D 而非 5弦0品 A），请用 fret_helper.py chord 取 [ROOT 根音]，并确认 chords= 填写的是 Capo 指法和弦名。"
+        )
+
+    if inner_on_s6_locs:
+        sample = ", ".join(f"M{b:02d} s{sl} n(6,{fr})" for b, sl, fr in inner_on_s6_locs[:4])
+        errors.append(
+            f"声部错位拦截: 有 {len(inner_on_s6_locs)} 处把 6 弦低音弦标成了 role='inner'（如 {sample}）"
+            f" -> 修复建议: 6 弦仅用于 bass 或 slap，绝不当作 inner；内声部请放在 2–5 弦（优先 3–4 弦），用 fret_helper.py chord 查看 [SAFE INNER]。"
+        )
+
+    non_strong_inner_ratio = (non_strong_mel_with_inner / non_strong_mel) if non_strong_mel > 0 else 0.0
+    if non_strong_mel >= 12 and non_strong_inner_ratio > 0.40:
+        errors.append(
+            f"织体臃肿拦截: 弱拍主旋律有 {non_strong_mel_with_inner}/{non_strong_mel} ({non_strong_inner_ratio * 100:.0f}% > 40%) 被强行叠加了内声部 inner"
+            f" -> 修复建议: 遵守「主旋律呼吸法则」——强拍(slot 0/8)可「低音+旋律+内声部」齐奏，弱拍流动主旋律请单独歌唱（删去冗余 inner），只在旋律延音/休止空隙中填充分解 inner。"
+        )
+
+    if mel_16th >= 4 and mel_16th_with_inner > max(1, int(mel_16th * 0.25)):
+        errors.append(
+            f"16分织体拦截: 快速 16 分主旋律 (dur=1) 上有 {mel_16th_with_inner}/{mel_16th} 处同时叠加了 inner 伴奏音"
+            f" -> 修复建议: 16 分流动旋律应保持干净单音或使用 H/P 连奏，不要在 dur=1 旋律上叠加伴奏音。"
+        )
+
+    arp_ratio = arp_bars / np_denom
+    if non_pickup_bars >= 16 and arp_ratio > 0.65:
+        errors.append(
+            f"琶音滥用拦截: 全曲 {arp_bars}/{non_pickup_bars} ({arp_ratio * 100:.0f}% > 65%) 小节都标注了 arpeggio=True"
+            f" -> 修复建议: 琶音应留给乐句起拍/情感重拍的 3 音及以上柱式和弦（建议占全曲 20%–45%），空旋律延音小节的 2 音低音+内声部不要加 arpeggio=True。"
+        )
+
+    if slap_offbeat_locs:
+        sample = ", ".join(f"M{b:02d} slot {sl}" for b, sl in slap_offbeat_locs[:4])
+        errors.append(
+            f"拍弦节拍拦截: 有 {len(slap_offbeat_locs)} 处 slap 落在非反拍细分格上（{sample}）"
+            f" -> 修复建议: 4/4 拍指弹拍弦 X 必须落在反拍第 2 拍 (slot=4) 与第 4 拍 (slot=12)（或半速第 3 拍 slot=8），且直接与该拍主旋律/内声部写在同一 ev(4, 2, n(6, 0, 'slap'), n(...)) 中，切勿拆成 16 分碎拍塞到 slot=3。"
         )
 
     # Anti-cheat: reject forged non-chord-tone slash chords (e.g., G/A, Em/A, C/A, D/E) & half-speed split bugs
@@ -1094,8 +1211,9 @@ def validate_project_score(
             f" -> 修复建议: 检查是否误把每小节拆成两倍小节数却未翻倍 BPM（导致 0.5x 慢放），应保持原拍格或同步翻倍 BPM。"
         )
 
+    legato_total = tech_counts["H"] + tech_counts["P"] + tech_counts["S"]
     expr_tech_total = (
-        tech_counts["H"] + tech_counts["P"] + tech_counts["S"]
+        legato_total
         + tech_counts["grace"] + tech_counts["harmonic"]
         + tech_counts["palm_mute"] + tech_counts["slap"]
     )
@@ -1103,6 +1221,11 @@ def validate_project_score(
         errors.append(
             "表现力拦截: 标准指弹档 (TIER='standard') 完整曲目缺少任何指弹表情技巧（H/P/S/倚音/泛音/闷音/拍弦全为 0）"
             " -> 修复建议: 保留原谱击勾滑/倚音/泛音或用 scripts/import_score.py 导入，避免剥离技巧变成呆板机械谱。"
+        )
+    elif tier.key == "standard" and non_pickup_bars >= 16 and required_override is None and legato_total < 2:
+        errors.append(
+            f"连奏表现力拦截: 标准指弹档 (TIER='standard') 完整曲目缺少击勾滑连奏技巧（当前 H={tech_counts['H']}, P={tech_counts['P']}, S={tech_counts['S']}，至少需 2 处）"
+            " -> 修复建议: 在同弦相邻品级进乐句处（如空弦↔2/3品，或下行 2弦1→0、3弦2→0）加入真实击弦 H、勾弦 P 或滑音 S，避免生硬机械拨弦。"
         )
 
     if allow_chromatic and pitched_total >= 16 and out_key_ratio > 0.20:
@@ -1119,11 +1242,11 @@ def validate_project_score(
             f" -> 修复建议: 用相邻把位换弦优化指法连贯性，避免反复瞬间大跳把位。"
         )
 
-    # Physical quality score (0..100) + difficulty (Lv. 1.0..10.0) — aligned with guitar-tab-library
+    # Physical quality score (0..100) + difficulty (Lv. 1.0..10.0) — aligned with musical craft (anti-reward-hacking)
     tech_variety = sum(
         1
         for flag in (
-            (tech_counts["H"] + tech_counts["P"] + tech_counts["S"]) > 0,
+            legato_total > 0,
             tech_counts["arpeggio"] > 0,
             tech_counts["harmonic"] > 0,
             tech_counts["palm_mute"] > 0,
@@ -1144,9 +1267,34 @@ def validate_project_score(
         playability_f -= 2.0
     playability_pts = max(0, min(40, int(round(playability_f))))
 
-    pts_bass = min(9.0, bass_ratio * 10.5) + min(2.0, len(distinct_bass) * 0.4)
-    pts_poly = min(6.0, max(0.0, (avg_poly - 1.0) * 8.0)) + min(4.0, poly_ratio * 10.0)
-    pts_tech = min(6.0, tech_variety * 1.6) + min(2.0, (tech_events / max(1, non_rest_events)) * 18.0)
+    # Bass support (max 11): coverage + pitch variety + root accuracy
+    pts_bass = (
+        min(6.0, bass_ratio * 7.0)
+        + min(2.0, len(distinct_bass) * 0.4)
+        + min(3.0, max(0.0, (root_ratio - 0.50) * 6.5))
+    )
+    # Polyphony & Melody Breathing sweet spot (max 10): reward clean 1.14..1.48 density, penalize double-stop clutter
+    if avg_poly <= 1.48:
+        pts_poly_density = min(6.0, max(0.0, (avg_poly - 1.04) * 50.0))
+    else:
+        pts_poly_density = max(1.5, 6.0 - (avg_poly - 1.48) * 14.0)
+    if poly_ratio <= 0.42:
+        pts_poly_spread = min(4.0, max(0.0, poly_ratio * 24.0))
+    else:
+        pts_poly_spread = max(1.0, 4.0 - (poly_ratio - 0.42) * 10.0)
+    clutter_pen = max(0.0, (non_strong_inner_ratio - 0.30) * 12.0) + min(3.0, len(inner_on_s6_locs) * 0.25)
+    pts_poly = max(0.0, min(10.0, pts_poly_density + pts_poly_spread - clutter_pen))
+
+    # Technique expression (max 8): reward real variety & restrained usage, penalize arpeggio spam / offbeat slap
+    arp_spam_pen = max(0.0, (arp_ratio - 0.60) * 8.0)
+    slap_pen = min(2.0, len(slap_offbeat_locs) * 0.8)
+    pts_tech = max(
+        0.0,
+        min(6.0, tech_variety * 1.35)
+        + min(2.0, (tech_events / max(1, non_rest_events)) * 14.0)
+        - arp_spam_pen
+        - slap_pen,
+    )
     pts_struct = (
         min(3.0, len(sections) * 1.0)
         + min(2.0, max(0, len(dynamics) - 1) * 0.8)

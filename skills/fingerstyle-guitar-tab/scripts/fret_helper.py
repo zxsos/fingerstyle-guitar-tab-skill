@@ -4,7 +4,9 @@
 Subcommands:
   recommend-capo  --key Bb [--tier beginner]
   jianpu          --key Bb --capo 3 [--tier beginner] 3 5 2 3 1 7, 1
-  chord           --chord G --capo 3 --max-midi 62 [--tier beginner]
+  chord           --chord G D/F# Cmaj7 --capo 3 --max-midi 62 [--tier standard] [--closing]
+  harmonic        --key Bb --capo 3
+  verify-melody   --score <proj>/src/score_data.py --key Bb --spec <jianpu_spec.txt>
 """
 
 from __future__ import annotations
@@ -27,7 +29,9 @@ from tab_common import (
     diatonic_chords_for_major_pc,
     get_tier_profile,
     key_name_from_major_pc,
+    load_score_module,
     midi_to_name,
+    note_concert_midi,
     parse_key_spec,
 )
 
@@ -141,29 +145,64 @@ def cmd_jianpu(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_chord(args: argparse.Namespace) -> int:
-    tier = get_tier_profile(args.tier)
-    capo = int(args.capo)
-    max_midi = int(args.max_midi)
-    chord_pcs = chord_pitch_classes(args.chord, capo)
-    root_pc = chord_root_concert_pc(args.chord, capo)
+def _default_base_tonic_midi(ks, octave_c=None, octave_shift=0) -> int:
+    if octave_c is not None:
+        base_tonic = 12 * (octave_c + 1) + ks.major_tonic_pc
+    else:
+        c_oct = 48 if ks.major_tonic_pc >= 7 else 60
+        base_tonic = c_oct + ks.major_tonic_pc
+    return base_tonic + int(octave_shift) * 12
+
+
+def _midi_to_jianpu(midi: int, base_tonic: int) -> str:
+    deg_map = {
+        0: "1", 1: "#1", 2: "2", 3: "b3", 4: "3", 5: "4",
+        6: "#4", 7: "5", 8: "#5", 9: "6", 10: "b7", 11: "7",
+    }
+    rel = midi - base_tonic
+    octv = rel // 12
+    semi = rel % 12
+    tok = deg_map[semi]
+    if octv > 0:
+        tok += "'" * octv
+    elif octv < 0:
+        tok += "," * (-octv)
+    return tok
+
+
+def _print_single_chord(chord_lbl: str, capo: int, max_midi: int, tier, show_closing: bool) -> None:
+    chord_pcs = chord_pitch_classes(chord_lbl, capo)
+    root_pc = chord_root_concert_pc(chord_lbl, capo)
     if not chord_pcs:
-        raise ValueError(f"无法识别和弦 '{args.chord}'，示例: G, Cmaj7, Am7, D/F#, Bb, Fmaj7")
+        raise ValueError(f"无法识别和弦 '{chord_lbl}'，示例: G, Cmaj7, Am7, D/F#, Bb, Fmaj7")
 
-    bass_cands: List[Tuple[int, int, int, int, int]] = []
-    inner_cands: List[Tuple[int, int, int, int]] = []
-
-    max_f_hint = min(tier.max_fret, 5 if tier.key == "beginner" else tier.max_fret)
+    root_bass: List[Tuple[int, int, int, int, int]] = []
+    high_root_bass: List[Tuple[int, int, int, int, int]] = []
+    alt_bass: List[Tuple[int, int, int, int, int]] = []
+    max_f_hint = min(tier.max_fret, 4 if tier.key == "beginner" else 5)
     for s in (6, 5, 4):
-        for f in range(0, max_f_hint + 1):
+        for f in range(0, tier.max_fret + 1):
             cm = OPEN_TUNING_NO_CAPO[s] + capo + f
             if cm > max_midi:
                 continue
             pc = cm % 12
             if pc in chord_pcs:
-                is_not_root = 0 if (root_pc is not None and pc == root_pc) else 1
-                bass_cands.append((is_not_root, f, -s, cm, s))
+                if root_pc is not None and pc == root_pc:
+                    if f <= max_f_hint:
+                        root_bass.append((0 if f == 0 else 1, f, -s, cm, s))
+                    else:
+                        high_root_bass.append((f, -s, 0, cm, s))
+                elif f <= max_f_hint:
+                    alt_bass.append((0 if f == 0 else 1, f, -s, cm, s))
+    root_bass.sort()
+    high_root_bass.sort()
+    alt_bass.sort()
 
+    primary_root_s = root_bass[0][4] if root_bass else 6
+    primary_root_m = root_bass[0][3] if root_bass else (OPEN_TUNING_NO_CAPO[6] + capo)
+
+    inner_cands: List[Tuple[int, int, int, int, int]] = []
+    # Strictly strings 2..5 (NEVER string 6 as inner!), prefer strings above primary root & low frets 0..4
     for s in (4, 3, 2, 5):
         for f in range(0, max_f_hint + 1):
             cm = OPEN_TUNING_NO_CAPO[s] + capo + f
@@ -171,28 +210,187 @@ def cmd_chord(args: argparse.Namespace) -> int:
                 continue
             pc = cm % 12
             if pc in chord_pcs:
-                inner_cands.append((0 if f == 0 else 1, f, s, cm))
-
-    bass_cands.sort()
+                below_root = 1 if (s > primary_root_s or cm <= primary_root_m) else 0
+                is_open = 0 if f == 0 else 1
+                inner_cands.append((below_root, is_open, f, s, cm))
     inner_cands.sort()
 
     print(
-        f"和弦安全伴奏候选: 和弦={args.chord} | Capo={capo} | 严格不高于旋律 max_midi={max_midi} ({midi_to_name(max_midi)}) | 档位={tier.key}"
+        f"和弦 [{chord_lbl}] (Capo={capo} 指法和弦名 | 旋律上限 max_midi={max_midi} {midi_to_name(max_midi)} | 档位={tier.key})"
     )
-    print("  [Bass 低音弦位]")
-    if bass_cands:
-        for is_not_root, f, _ns, cm, s in bass_cands[:4]:
-            tag = " [ROOT 根音]" if is_not_root == 0 else ""
-            print(f'    n({s}, {f}, "bass")   -> {midi_to_name(cm):4s} ({cm}){tag}')
+    print("  ★ [ROOT BASS 推荐根音低音 — 和弦换拍首选]")
+    if root_bass:
+        for _op, f, _ns, cm, s in root_bass[:2]:
+            print(f'    n({s}, {f}, "bass")   -> {midi_to_name(cm):4s} ({cm}) [ROOT 根音]')
+    elif alt_bass:
+        print("    (当前 max_midi 低于根音，备选低音如下)")
+        for _op, f, _ns, cm, s in alt_bass[:2]:
+            print(f'    n({s}, {f}, "bass")   -> {midi_to_name(cm):4s} ({cm}) [和弦内音]')
     else:
         print("    (无符合 max_midi 的低音弦位，请提高旋律八度或降低 Capo)")
+    if high_root_bass:
+        f_hi, _ns, _, cm_hi, s_hi = high_root_bass[0]
+        print(f'    n({s_hi}, {f_hi}, "bass")   -> {midi_to_name(cm_hi):4s} ({cm_hi}) [高把位根音，仅配合高把位旋律缩跨度]')
 
-    print("  [Inner 内声部弦位]")
+    print("  ★ [SAFE INNER 安全内声部 — 仅用于长音/休止空隙或强拍琶音，禁放 6 弦]")
     if inner_cands:
-        for _op, f, s, cm in inner_cands[:6]:
-            print(f'    n({s}, {f}, "inner")  -> {midi_to_name(cm):4s} ({cm})')
+        shown = 0
+        for below_root, _op, f, s, cm in inner_cands:
+            if shown >= 5:
+                break
+            tag = " [低于根音-慎用]" if below_root else ""
+            print(f'    n({s}, {f}, "inner")  -> {midi_to_name(cm):4s} ({cm}){tag}')
+            shown += 1
     else:
         print("    (当前旋律音高已贴近低音区，建议仅保留 bass，不加 inner 防声部交叉)")
+
+    if show_closing and root_bass:
+        # Build a clean idiomatic full-voicing closing chord (strings primary_root_s down to 1)
+        rs, rf = root_bass[0][4], root_bass[0][1]
+        closing_parts = [f'n({rs}, {rf}, "bass")']
+        used_frets = [rf] if rf > 0 else []
+        for s in range(rs - 1, 0, -1):
+            c_opts: List[Tuple[int, int, int]] = []
+            for f in range(0, 5):
+                cm = OPEN_TUNING_NO_CAPO[s] + capo + f
+                if (cm % 12) not in chord_pcs:
+                    continue
+                tf = used_frets + ([f] if f > 0 else [])
+                if tf and (max(tf) - min(tf)) > tier.max_span:
+                    continue
+                c_opts.append((0 if f == 0 else 1, f, cm))
+            c_opts.sort()
+            if c_opts:
+                _, cf, _cm = c_opts[0]
+                role = "melody" if s == 1 else "inner"
+                closing_parts.append(f'n({s}, {cf}, "{role}")')
+                if cf > 0:
+                    used_frets.append(cf)
+        print(f"  ★ [CLOSING CHORD 末小节收尾全音符和弦]")
+        print(f"    ev(0, 16, {', '.join(closing_parts)}, fermata=True, arpeggio=True)")
+
+
+def cmd_chord(args: argparse.Namespace) -> int:
+    tier = get_tier_profile(args.tier)
+    capo = int(args.capo)
+    max_midi = int(args.max_midi)
+    for idx, ch in enumerate(args.chord):
+        if idx > 0:
+            print("-" * 78)
+        _print_single_chord(ch, capo, max_midi, tier, show_closing=args.closing or len(args.chord) == 1)
+    return 0
+
+
+def cmd_harmonic(args: argparse.Namespace) -> int:
+    ks = parse_key_spec(args.key)
+    capo = int(args.capo)
+    base_tonic = _default_base_tonic_midi(ks, args.octave_c, args.octave_shift)
+    fing_name = key_name_from_major_pc((ks.major_tonic_pc - capo) % 12)
+    print(
+        f"自然 12 品泛音表: 1={ks.relative_major_name} (1基准={midi_to_name(base_tonic)} midi={base_tonic}) "
+        f"| Capo={capo} ({fing_name}调指法)"
+    )
+    print("-" * 78)
+    for s in (1, 2, 3, 4, 5, 6):
+        cm = OPEN_TUNING_NO_CAPO[s] + capo + 12
+        jp = _midi_to_jianpu(cm, base_tonic)
+        in_key = "调内 OK" if (cm % 12) in ks.diatonic_pcs else "调外(慎用)"
+        print(
+            f'  {s}弦12品 -> {midi_to_name(cm):4s} (midi={cm}) | 简谱={jp:4s} | {in_key:8s} | '
+            f'n({s}, 12, "melody", harmonic=True)'
+        )
+    return 0
+
+
+BAR_HEADER_RE = re.compile(r"^M(\d+)\b(.*)$")
+SLOT_TOKEN_RE = re.compile(r"s(\d+):([#b]?[1-7][',’+-]*)(?:\[d(\d+)\])?")
+
+
+def cmd_verify_melody(args: argparse.Namespace) -> int:
+    ks = parse_key_spec(args.key)
+    base_tonic = _default_base_tonic_midi(ks, args.octave_c, args.octave_shift)
+
+    score_path = Path(args.score).expanduser().resolve()
+    proj_dir = score_path.parent.parent if score_path.name == "score_data.py" else score_path
+    mod = load_score_module(proj_dir)
+    capo = int(getattr(mod, "CAPO", 0))
+    measures = mod.build_measures()
+    by_bar = {m.bar: m for m in measures}
+
+    spec_lines = Path(args.spec).expanduser().read_text(encoding="utf-8").splitlines()
+    checked_bars = 0
+    mismatches: List[str] = []
+
+    for raw_line in spec_lines:
+        line = raw_line.strip()
+        m = BAR_HEADER_RE.match(line)
+        if not m:
+            continue
+        bar_num = int(m.group(1))
+        rest = m.group(2)
+        if "|" in rest:
+            mel_part = rest.rsplit("|", 1)[-1].strip()
+        elif ":" in rest:
+            mel_part = rest.split(":", 1)[-1].strip()
+        else:
+            mel_part = rest.strip()
+
+        slot_matches = SLOT_TOKEN_RE.findall(mel_part)
+        if bar_num not in by_bar:
+            mismatches.append(f"M{bar_num:02d}: score_data.py 中缺少该小节")
+            continue
+        checked_bars += 1
+        meas = by_bar[bar_num]
+
+        if slot_matches:
+            expected_sm = [(int(sl), parse_jianpu_token(tok, base_tonic)[0]) for sl, tok, _d in slot_matches]
+            actual_sm = [
+                (e.slot, note_concert_midi(nt, capo))
+                for e in meas.events
+                for nt in e.notes
+                if nt.role == "melody"
+            ]
+            if actual_sm != expected_sm:
+                mismatches.append(
+                    f"M{bar_num:02d}: 期望(slot,midi)={expected_sm}，实际={actual_sm}"
+                )
+            else:
+                # Also verify explicit [dN] durations when specified in the jianpu spec
+                actual_dur_by_slot = {
+                    e.slot: e.dur
+                    for e in meas.events
+                    if any(nt.role == "melody" for nt in e.notes)
+                }
+                for sl, _tok, d_str in slot_matches:
+                    if d_str and actual_dur_by_slot.get(int(sl)) != int(d_str):
+                        mismatches.append(
+                            f"M{bar_num:02d} s{sl}: 期望显式时值 dur={d_str}，实际 dur={actual_dur_by_slot.get(int(sl))}"
+                        )
+        else:
+            # Bare jianpu tokens without slot prefix (or empty/comment bar)
+            bare_tokens = [tok for tok in mel_part.split() if JIANPU_RE.match(tok)]
+            if bare_tokens:
+                expected_p = [parse_jianpu_token(tok, base_tonic)[0] for tok in bare_tokens]
+                actual_p = [
+                    note_concert_midi(nt, capo)
+                    for e in meas.events
+                    for nt in e.notes
+                    if nt.role == "melody"
+                ]
+                if actual_p != expected_p:
+                    mismatches.append(
+                        f"M{bar_num:02d}: 期望 midi={expected_p}，实际={actual_p}"
+                    )
+
+    if checked_bars == 0:
+        print("[FAIL] 未在 --spec 文件中解析到任何 M01..MN 简谱行。")
+        return 1
+    if mismatches:
+        print(f"[FAIL] 主旋律逐小节核对发现 {len(mismatches)}/{checked_bars} 处不一致：")
+        for item in mismatches[:20]:
+            print(f"  - {item}")
+        return 1
+    print(f"[PASS] 主旋律逐小节核对 100% 匹配：{checked_bars} 个小节 0 漏音、0 错音、0 拍位漂移。")
     return 0
 
 
@@ -212,11 +410,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_jp.add_argument("--octave-shift", type=int, default=0, help="Shift all notes by N octaves (+1/-1)")
     p_jp.add_argument("tokens", nargs="+", help="Jianpu notes like: 3 5 2 3 1 7, 1'")
 
-    p_ch = sub.add_parser("chord", help="List safe bass & inner voicings strictly <= max_midi (zero voice crossing).")
-    p_ch.add_argument("--chord", required=True, help="Fingered chord label (e.g. G, Cmaj7, Am7, D/F#)")
+    p_ch = sub.add_parser("chord", help="List ROOT bass & safe inner voicings strictly <= max_midi (supports batch chords).")
+    p_ch.add_argument("--chord", nargs="+", required=True, help="One or more fingered chord labels (e.g. G D/F# Em7 Bm7 Cmaj7 D)")
     p_ch.add_argument("--capo", type=int, default=0, help="Capo fret (default 0)")
     p_ch.add_argument("--max-midi", type=int, required=True, help="Current active melody concert MIDI pitch ceiling")
     p_ch.add_argument("--tier", default="standard", choices=("beginner", "standard", "advanced"))
+    p_ch.add_argument("--closing", action="store_true", help="Also print a full-voicing closing chord (ev(0, 16, ...))")
+
+    p_hm = sub.add_parser("harmonic", help="List all natural 12th-fret harmonics with concert MIDI and jianpu degrees.")
+    p_hm.add_argument("--key", required=True, help="Concert key, e.g. Bb, C, A, F#m")
+    p_hm.add_argument("--capo", type=int, default=0, help="Capo fret (default 0)")
+    p_hm.add_argument("--octave-c", type=int, default=None, help="Explicit C-octave base for tonic")
+    p_hm.add_argument("--octave-shift", type=int, default=0, help="Shift jianpu reference by N octaves")
+
+    p_vm = sub.add_parser("verify-melody", help="Diff every bar's melody (slot & concert MIDI) against a jianpu spec file.")
+    p_vm.add_argument("--score", required=True, help="Path to <proj> or <proj>/src/score_data.py")
+    p_vm.add_argument("--key", required=True, help="Concert key, e.g. Bb, C, A, F#m")
+    p_vm.add_argument("--spec", required=True, help="Path to jianpu spec file with M01..MN lines")
+    p_vm.add_argument("--octave-c", type=int, default=None, help="Explicit C-octave base for tonic")
+    p_vm.add_argument("--octave-shift", type=int, default=0, help="Shift jianpu reference by N octaves")
     return p
 
 
@@ -228,6 +440,10 @@ def main() -> int:
         return cmd_jianpu(args)
     if args.cmd == "chord":
         return cmd_chord(args)
+    if args.cmd == "harmonic":
+        return cmd_harmonic(args)
+    if args.cmd == "verify-melody":
+        return cmd_verify_melody(args)
     return 1
 
 
