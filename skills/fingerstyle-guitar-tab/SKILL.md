@@ -62,44 +62,35 @@ See [references/intake-and-tiers.md](references/intake-and-tiers.md) for dialogu
 
 ---
 
-## Step 1: Author ONLY `<proj>/src/score_data.py`
+## Step 1: Dual-Track Authoring (V3 架构：原谱零损耗直通 + 确定性指弹编配引擎)
 
 Never touch or rewrite engine scripts. Complete reference example: [../../examples/call-of-silence/src/score_data.py](../../examples/call-of-silence/src/score_data.py).
 
-**CRITICAL CAPO CHORD RULE:** `chords=[(slot, label)]` MUST ALWAYS use **Capo-relative fingered chord names** (e.g., for `1 = Bb` with `CAPO = 3`, write `G`, `D/F#`, `Em7`, `Bm7`, `Cmaj7`, `D` — NEVER concert `Bb`, `F/A`, `Gm7`). The engine adds `+ CAPO` automatically when validating harmony.
+- **Track 1 — Lossless Direct Playback (现成指弹谱零损耗还原 — 100% 与原谱一模一样):**
+  - If the user already has a solo fingerstyle `.gp` / `.gp3`–`.gp5` / `.gpx` / `.mxl` / `.musicxml` / `.atex` file and wants lossless viewing & practice: **DO NOT flatten it into `score_data.py` unless they explicitly ask for LilyPond PDF / `*_bundle.zip`!** It can be dropped **directly** into `guitar-tab-player` (powered by `CoderLine/alphaTab`), preserving 100% of multi-voice notation, non-4/4 meters, triplets, alternate tunings, and techniques with 0 loss.
+  - When converting S-tier MIDI/MusicXML/AlphaTab JSON/GP5 into a `score_data.py` bundle is specifically requested, ALWAYS run:
+    ```bash
+    python3 scripts/import_score.py <input.mid|.musicxml|.mxl|.json|.gp5> --out <proj>/src/score_data.py --tier <tier> --artist "<Artist>"
+    ```
+    Never hand-write a custom AlphaTab/GP JSON converter.
 
-- **Path S (MIDI / MusicXML / AlphaTab JSON / Guitar Pro -> Code):**
-  ```bash
-  python3 scripts/import_score.py <input.mid|.musicxml|.mxl|.json|.gp5> --out <proj>/src/score_data.py --tier <tier> --artist "<Artist>"
-  ```
-  Polish `ARTIST`, `TITLE`, `section=` (first bar of each section ONLY), `chords=`, and phrasing dynamics as needed. Never hand-write a custom AlphaTab/GP JSON converter.
-- **Path A (Jianpu / Sheet -> Code — zero mental math):**
-  1. Recommend Capo & fingered chord set:
+- **Track 2 (RECOMMENDED DEFAULT FOR PATH A) — Declarative `lead_sheet.json` -> Deterministic Viterbi Arranger Engine (零心算、零幻觉、一步导出 `.atex` + `.musicxml` + `score_data.py`):**
+  Instead of manually hand-coding 800+ lines of raw `(slot, dur, string, fret)` tuples (error-prone for fast/small models), **author ONLY a compact `<proj>/lead_sheet.json`** containing pure musical intent (key, BPM, section styles, bar-by-bar chords & jianpu melody — see [references/lead-sheet-schema.md](references/lead-sheet-schema.md)):
+  1. Write `<proj>/lead_sheet.json` (supports `capo: "auto"` and BOTH `chords_mode: "concert"` or `"fingered"` — the engine transposes concert chords automatically!).
+  2. Run the deterministic Viterbi Voicer + Style Arpeggiator:
      ```bash
-     python3 scripts/fret_helper.py recommend-capo --key <Key> --tier <tier>
+     python3 scripts/arrange_engine.py arrange <proj>/lead_sheet.json --out-dir <proj> --tier <tier>
      ```
-  2. Convert EVERY melody phrase with `fret_helper.py jianpu` (pick the lowest-fret open/1–3 string candidate consistently — e.g. prefer open `n(2, 0)` over `n(3, 4)` — and record exact concert MIDI in `LANDMARKS`):
-     ```bash
-     python3 scripts/fret_helper.py jianpu --key <Key> --capo <N> --tier <tier> <tokens...>
-     ```
-  3. Batch-lookup ALL song chords' `[ROOT BASS]`, `[SAFE INNER]` (strings 2–5, NEVER string 6), and closing chord voicing in ONE command:
-     ```bash
-     python3 scripts/fret_helper.py chord --chord G D/F# Em7 Bm7 Cmaj7 D Am7 --capo <N> --max-midi <M> --tier <tier> --closing
-     ```
-  4. Look up `<12>` natural harmonics (if used for cadence/Outro — zero mental math):
-     ```bash
-     python3 scripts/fret_helper.py harmonic --key <Key> --capo <N>
-     ```
-  5. Scaffold `<proj>/src/score_data.py`:
-     ```bash
-     python3 scripts/init_project.py --dir <proj> --title "<Title>" --artist "<Artist>" --key <Key> --capo <N> --bpm <BPM> --tier <tier>
-     ```
-  6. **Write musical, DRY `build_measures()` and delete `IS_STARTER_TEMPLATE = True`**:
-     - Extract repeated Verse/Chorus/Intro bar patterns into small Python helper functions (e.g. `_verse_line1(bar, dynamic, lyrics, section=None)`, `_chorus_hook(bar, dynamic, slap=False)`) to eliminate copy-paste typos and cleanly switch `slap=False` → `slap=True`.
-     - Put `section=` **ONLY on the first bar** of each section (`Intro`/`Verse`/`Chorus`/`Interlude`/`Outro`); preserve `lyric=` on vocal melody notes.
-     - Keep a steady 8th-note groove: **strong beats (`0`/`8`)** carry chord `[ROOT BASS]` + melody (+ `inner` + `arpeggio=True` on phrase openings); **weak-beat / 16th running melody** sings alone (plus `H`/`P`/`S` on same-string stepwise pairs); **sustain/rest gaps** flow with single `[SAFE INNER]` notes; cross-bar syncopated ties never re-pluck the held melody on bar `N+1` slot 0.
+     In `< 100ms`, this solves global optimal left-hand fret positions via Viterbi DP, generates 100% root-accurate bass, breathing 8th-note inner flow, idiomatic `H/P/S`, direction-safe `grace_from`, Interlude `P.M.`, Chorus II backbeat `X` slap, closing chord, and exports **ALL THREE**:
+     - `<proj>/<Title>.atex` (native lossless **AlphaTex** for `alphaTab` / `guitar-tab-player`)
+     - `<proj>/<Title>.musicxml` (open **MusicXML 4.0 TAB** for `alphaTab` / Guitar Pro / MuseScore / TuxGuitar)
+     - `<proj>/src/score_data.py` (pre-validated for `tab_engine.py build`)
+  3. *(Optional)* Hand-polish specific bars in `<proj>/src/score_data.py` if custom nuances are wanted, then re-export `.atex`/`.musicxml` via `python3 scripts/arrange_engine.py export <proj>`.
 
-**READ BEFORE WRITING `score_data.py`:** [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) has the exact Good-vs-Bad templates (including anti-double-stop-clutter), 6-technique placement rules, helper-function pattern, and 20-error repair table.
+- **Manual Path A (Only if hand-authoring `src/score_data.py` directly):**
+  - **CRITICAL CAPO CHORD RULE:** `chords=[(slot, label)]` MUST ALWAYS use **Capo-relative fingered chord names** (e.g., for `1 = Bb` with `CAPO = 3`, write `G`, `D/F#`, `Em7`, `Bm7`, `Cmaj7`, `D` — NEVER concert `Bb`, `F/A`, `Gm7`).
+  - Use `fret_helper.py recommend-capo`, `jianpu`, `chord --chord ... --closing`, `harmonic`, and `init_project.py` (delete `IS_STARTER_TEMPLATE = True`).
+  - **READ BEFORE HAND-WRITING `score_data.py`:** [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md).
 
 ---
 
@@ -147,8 +138,9 @@ Confirm stdout ends with `ALL VERIFICATION CHECKS PASSED.` and outputs:
 
 ## Reference Library (Load On Demand)
 
+- [references/lead-sheet-schema.md](references/lead-sheet-schema.md) — **Start here for Track 2 (`arrange_engine.py`):** Declarative `lead_sheet.json` schema, section styles, concert vs fingered chords, and `.atex` / `.musicxml` / `score_data.py` one-command export.
 - [references/score-sources.md](references/score-sources.md) — **Read before searching any song:** Curated 17-site S/A source directory (`jitashe`, `songsterr`, `musescore`, `guitarprotabs`, `bitmidi`, `yopu`, `ccguitar`, `qupu123`, etc.), exact `site:` query templates, and accept/reject red lines.
-- [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) — **Read first if unsure:** Good vs Bad ("四不像反例 vs 合格正例"), 4/4 fingerstyle bar formula, worked `fret_helper.py` tutorial, and 15-error 1-second repair table.
+- [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) — Good vs Bad ("四不像反例 vs 合格正例"), 4/4 fingerstyle bar formula, worked `fret_helper.py` tutorial, and 21-error 1-second repair table.
 - [references/intake-and-tiers.md](references/intake-and-tiers.md) — S/A/B/C purity triage, user prompt scripts, and tier profiles.
 - [references/score-schema.md](references/score-schema.md) — `score_data.py` fields, universal chord labels, voice-leading & syncopated tie rules.
 - [references/lilypond-tab-patterns.md](references/lilypond-tab-patterns.md) — LilyPond 2.24 engraving rules, `\slashedGrace`, consecutive `H`/`P`, `\glissando`, CJK fonts.
