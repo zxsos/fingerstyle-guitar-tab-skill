@@ -6,10 +6,10 @@ Always evaluate the input's signal-to-noise ratio before writing `score_data.py`
 
 | Purity | Input Examples | Recommended Workflow | Ask User Before Starting? |
 | :--- | :--- | :--- | :--- |
-| **S (Purest)** | `.mid`, `.midi`, `.musicxml`, `.xml`, `.mxl`, Guitar Pro export | `import_score.py` -> polish `score_data.py` -> `tab_engine.py build` | Confirm difficulty tier (`beginner` / `standard` / `advanced`) if unspecified |
-| **A (High)** | Original numbered notation (简谱 image/PDF), vocal/piano lead sheet | `fret_helper.py` + `init_project.py` -> visual bar-by-bar entry -> `tab_engine.py build` | Confirm difficulty tier (and vocal octave if ambiguous) |
-| **B (Medium)** | Clean solo vocal acapella or solo piano recording | Prefer searching S/A sheet first; use audio only for BPM & Gate 4 chroma check | **Yes** — ask whether they have a sheet/MIDI file or want you to find a cleaner score first |
-| **C (Low)** | **Song title only**, full-band pop mix, or complex polyphonic guitar solo MP3 | Never transcribe melody solely from polyphonic audio FFT | **Yes (Mandatory Stop)** — run the confirmation prompt below |
+| **S (Purest)** | `.mid`, `.midi`, `.musicxml`, `.xml`, `.mxl`, AlphaTab/Jitashe `.json`, `.gp3`/`.gp4`/`.gp5` | `import_score.py` -> polish `score_data.py` -> `tab_engine.py build` | Confirm difficulty tier (`beginner` / `standard` / `advanced`) if unspecified |
+| **A (High)** | Original numbered notation (简谱 image/PDF), vocal/piano lead sheet, high-res solo TAB | `fret_helper.py` + `init_project.py` -> visual bar-by-bar entry -> `tab_engine.py build` | Confirm difficulty tier (and vocal octave if ambiguous) |
+| **B (Medium)** | Clean solo vocal acapella or solo piano recording | Search curated S/A sites ([score-sources.md](score-sources.md)) first; use audio only for BPM & Gate 4 chroma check | **Yes** — ask whether they have a sheet/MIDI file or want you to search curated S/A sites first |
+| **C (Low)** | **Song title only**, full-band pop mix, or complex polyphonic guitar solo MP3 | Never transcribe melody solely from polyphonic audio FFT; search curated S/A sites ([score-sources.md](score-sources.md)) only after user confirms | **Yes (Mandatory Stop)** — run the confirmation prompt below |
 
 ### Standard Confirmation Prompt (Use When Input is B/C or Tier Unspecified)
 

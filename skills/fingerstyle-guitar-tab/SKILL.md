@@ -39,7 +39,12 @@ Classify user input BEFORE creating any project directory or writing any code:
 | **S (Purest)** | `.mid` / `.midi` / `.musicxml` / `.xml` / `.mxl` / AlphaTab & Jitashe `.json` / Guitar Pro export | Confirm difficulty tier (`beginner`/`standard`/`advanced`) if unspecified, then run `python3 scripts/import_score.py` |
 | **A (High)** | Original numbered notation (简谱 image/PDF), vocal/piano lead sheet | Confirm difficulty tier, extract exact bar-by-bar jianpu + chords, then use `python3 scripts/fret_helper.py` |
 | **B (Medium)** | Clean solo vocal / solo piano audio | **PAUSE & ASK:** explain audio pitch drift vs sheet scores; ask for S/A sheet or permission to search a clean score first |
-| **C (Low / Blurry)** | **Only a song name**, or full-band / polyphonic guitar MP3 | **HARD STOP — DO NOT WRITE ANY CODE.** Ask: (1) Do they have `.mid`/MusicXML/简谱图? (2) Should you search public S/A notation/MIDI first? (3) Which difficulty tier? |
+| **C (Low / Blurry)** | **Only a song name**, or full-band / polyphonic guitar MP3 | **HARD STOP — DO NOT WRITE ANY CODE.** Ask: (1) Do they have `.mid`/MusicXML/GP/简谱图? (2) Should you search the curated S/A source sites ([references/score-sources.md](references/score-sources.md)) first? (3) Which difficulty tier? |
+
+**Curated Search Priority (禁止盲搜，严格按顺序定向检索，详见 [references/score-sources.md](references/score-sources.md)):**
+- **S 级结构化（直导 `import_score.py`）**：华语指弹 `jitashe.org`（AlphaTab `.json`/`.gp5`）→ 欧美/日系/ACG `songsterr.com` · `guitarprotabs.org` · `gprotab.net` · `musescore.com`（`.mxl`/`.mid`）→ 游戏/古典/免登录 `bitmidi.com` · `vgmusic.com` · `mutopiaproject.org` · `free-scores.com` · `github.com`。
+- **A 级高清图文（走 `fret_helper.py`）**：指弹六线 `yopu.co` · `ccguitar.cn` · `17jita.com` · `ultimate-guitar.com`（仅限 Tab/GP，禁 Chords）→ 原版简谱 `qupu123.com` · `jianpu.cn` · `tan8.com`。
+- **硬红线**：最多 3 轮定向搜索；遇登录墙/付费墙/验证码直接换下一源站；严禁采信纯歌词和弦弹唱谱或残缺模糊图；3 轮无公开 S/A 源立刻停手向用户要谱。
 
 ### Difficulty Tiers (`TIER` in `src/score_data.py`)
 
@@ -57,9 +62,9 @@ See [references/intake-and-tiers.md](references/intake-and-tiers.md) for dialogu
 
 Never touch or rewrite engine scripts. Complete reference example: [../../examples/call-of-silence/src/score_data.py](../../examples/call-of-silence/src/score_data.py).
 
-- **Path S (MIDI / MusicXML / AlphaTab JSON -> Code):**
+- **Path S (MIDI / MusicXML / AlphaTab JSON / Guitar Pro -> Code):**
   ```bash
-  python3 scripts/import_score.py <input.mid|.musicxml|.mxl|.json> --out <proj>/src/score_data.py --tier <tier> --artist "<Artist>"
+  python3 scripts/import_score.py <input.mid|.musicxml|.mxl|.json|.gp5> --out <proj>/src/score_data.py --tier <tier> --artist "<Artist>"
   ```
   Polish `ARTIST`, `TITLE`, `section=`, `chords=`, and phrasing dynamics as needed. Never hand-write a custom AlphaTab/GP JSON converter.
 - **Path A (Jianpu / Sheet -> Code — zero mental math):**
@@ -121,6 +126,7 @@ Pass `--ref <audio_path_or_url>` for optional Gate 4 chroma alignment (`>= 0.80`
 
 ## Reference Library (Load On Demand)
 
+- [references/score-sources.md](references/score-sources.md) — **Read before searching any song:** Curated 17-site S/A source directory (`jitashe`, `songsterr`, `musescore`, `guitarprotabs`, `bitmidi`, `yopu`, `ccguitar`, `qupu123`, etc.), exact `site:` query templates, and accept/reject red lines.
 - [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) — **Read first if unsure:** Good vs Bad ("四不像反例 vs 合格正例"), 4/4 fingerstyle bar formula, worked `fret_helper.py` tutorial, and 15-error 1-second repair table.
 - [references/intake-and-tiers.md](references/intake-and-tiers.md) — S/A/B/C purity triage, user prompt scripts, and tier profiles.
 - [references/score-schema.md](references/score-schema.md) — `score_data.py` fields, universal chord labels, voice-leading & syncopated tie rules.

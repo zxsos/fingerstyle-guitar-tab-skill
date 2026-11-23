@@ -1378,6 +1378,128 @@ def build_measures() -> List[Measure]:
     return src, meta
 
 
+def build_score_source_from_guitarpro(
+    gp_path: Path,
+    *,
+    title_override: Optional[str],
+    composer_override: Optional[str],
+    artist_override: Optional[str],
+    tier_key: str,
+    key_arg: str,
+    capo_arg: str,
+    bpm_arg: str,
+    track_idx: Optional[int] = None,
+    max_bars: Optional[int] = None,
+) -> Tuple[str, Dict[str, Any]]:
+    """Direct importer for Guitar Pro .gp3/.gp4/.gp5 via optional pyguitarpro (`pip install pyguitarpro`)."""
+    try:
+        import guitarpro  # type: ignore
+    except ImportError as exc:
+        raise RuntimeError(
+            f"Importing {gp_path.suffix} requires pyguitarpro. Install once via `python3 -m pip install pyguitarpro`, "
+            "or pass the AlphaTab .json / .musicxml / .mid export instead."
+        ) from exc
+
+    song = guitarpro.parse(str(gp_path))
+    tracks = [t for t in song.tracks if not getattr(t, "isPercussionTrack", False)]
+    if not tracks:
+        raise ValueError(f"No pitched guitar track found in {gp_path}")
+    t_idx = 0 if track_idx is None else max(0, min(len(tracks) - 1, track_idx))
+    track = tracks[t_idx]
+    tunings = [int(s.value) for s in track.strings] if getattr(track, "strings", None) else [64, 59, 55, 50, 45, 40]
+    n_strings = len(tunings)
+
+    # Convert pyguitarpro Song object into the exact AlphaTab-compatible dict schema and reuse the verified pipeline
+    # Note: pyguitarpro note.string is 1 = high E (standard), so encode as (n_strings + 1 - string) for the shared builder
+    bars_out = []
+    masterbars_out = []
+    tick_cursor = 0
+    for m_idx, meas in enumerate(track.measures):
+        hdr = getattr(meas, "header", None)
+        ts = getattr(hdr, "timeSignature", None)
+        num = int(getattr(ts, "numerator", 4) or 4)
+        den_val = int(getattr(getattr(ts, "denominator", None), "value", 4) or 4)
+        bar_ticks = int(round(num * (3840.0 / den_val)))
+        mb_obj: Dict[str, Any] = {"start": tick_cursor}
+        if m_idx == 0:
+            mb_obj["tempoautomations"] = [{"value": int(getattr(song, "tempo", 72) or 72)}]
+        marker = getattr(hdr, "marker", None)
+        if marker and getattr(marker, "title", ""):
+            mb_obj["section"] = {"text": str(marker.title)}
+        masterbars_out.append(mb_obj)
+        tick_cursor += bar_ticks
+
+        beats_out = []
+        v_cursor = 0.0
+        voices = getattr(meas, "voices", []) or []
+        v0 = voices[0] if voices else None
+        for bt in (getattr(v0, "beats", []) if v0 else []):
+            dur_obj = getattr(bt, "duration", None)
+            d_val = int(getattr(dur_obj, "value", 4) or 4)
+            du_ticks = 3840.0 / max(1, d_val)
+            if getattr(dur_obj, "isDotted", False):
+                du_ticks *= 1.5
+            notes_out = []
+            for nt in getattr(bt, "notes", []) or []:
+                s_std = int(getattr(nt, "string", 1) or 1)
+                if not (1 <= s_std <= n_strings):
+                    continue
+                fx = getattr(nt, "effect", None)
+                nt_type = getattr(getattr(nt, "type", None), "name", "")
+                notes_out.append({
+                    "string": n_strings + 1 - s_std,
+                    "fret": int(getattr(nt, "value", 0) or 0),
+                    "istiedestination": (nt_type == "tie"),
+                    "ishammerpullorigin": bool(getattr(fx, "hammer", False)),
+                    "slideouttype": 1 if bool(getattr(fx, "slides", None)) else 0,
+                    "harmonictype": 1 if bool(getattr(fx, "harmonic", None)) else 0,
+                })
+            bt_fx = getattr(bt, "effect", None)
+            beats_out.append({
+                "isempty": False,
+                "displaystart": v_cursor,
+                "displayduration": du_ticks,
+                "brushtype": 1 if getattr(bt_fx, "stroke", None) else 0,
+                "notes": notes_out,
+            })
+            v_cursor += du_ticks
+        bars_out.append({"voices": [{"beats": beats_out}]})
+
+    synth_data = {
+        "title": str(getattr(song, "title", "") or "").strip(),
+        "artist": str(getattr(song, "artist", "") or "").strip(),
+        "music": str(getattr(song, "music", "") or "").strip(),
+        "tempo": int(getattr(song, "tempo", 72) or 72),
+        "masterbars": masterbars_out,
+        "tracks": [{
+            "staves": [{
+                "capo": int(getattr(track, "offset", 0) or 0),
+                "stringtuning": {"tunings": tunings},
+                "bars": bars_out,
+            }]
+        }],
+    }
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+        json.dump(synth_data, tf, ensure_ascii=False)
+        tmp_json = Path(tf.name)
+    try:
+        return build_score_source_from_alphatab_json(
+            tmp_json,
+            title_override=title_override,
+            composer_override=composer_override,
+            artist_override=artist_override,
+            tier_key=tier_key,
+            key_arg=key_arg,
+            capo_arg=capo_arg,
+            bpm_arg=bpm_arg,
+            track_idx=0,
+            max_bars=max_bars,
+        )
+    finally:
+        tmp_json.unlink(missing_ok=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Import MIDI (.mid), MusicXML (.xml/.musicxml/.mxl), or AlphaTab JSON (.json) into src/score_data.py.")
     parser.add_argument("input_file", help="Path to .mid, .musicxml, .xml, .mxl, or AlphaTab .json file")
@@ -1410,6 +1532,19 @@ def main() -> int:
     ext = in_path.suffix.lower()
     if ext == ".json":
         src, meta = build_score_source_from_alphatab_json(
+            in_path,
+            title_override=args.title,
+            composer_override=args.composer,
+            artist_override=args.artist,
+            tier_key=args.tier,
+            key_arg=args.key,
+            capo_arg=args.capo,
+            bpm_arg=args.bpm,
+            track_idx=args.melody_track,
+            max_bars=args.max_bars,
+        )
+    elif ext in (".gp3", ".gp4", ".gp5"):
+        src, meta = build_score_source_from_guitarpro(
             in_path,
             title_override=args.title,
             composer_override=args.composer,
