@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Tier S Importer: convert MIDI (.mid) or MusicXML (.musicxml / .xml / .mxl) into src/score_data.py."""
+"""Tier S Importer: convert MIDI (.mid), MusicXML (.musicxml/.xml/.mxl), or AlphaTab/Jitashe JSON (.json) into src/score_data.py."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import struct
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
@@ -21,6 +22,7 @@ from tab_common import (
     MAJOR_KEYS,
     OPEN_TUNING_NO_CAPO,
     PC_BY_TOKEN,
+    VALID_DURS,
     chord_pitch_classes,
     chord_root_concert_pc,
     diatonic_chords_for_major_pc,
@@ -796,9 +798,589 @@ def build_measures() -> List[Measure]:
     return src, meta
 
 
+def build_score_source_from_alphatab_json(
+    json_path: Path,
+    *,
+    title_override: Optional[str],
+    composer_override: Optional[str],
+    artist_override: Optional[str],
+    tier_key: str,
+    key_arg: str,
+    capo_arg: str,
+    bpm_arg: str,
+    track_idx: Optional[int] = None,
+    max_bars: Optional[int] = None,
+) -> Tuple[str, Dict[str, Any]]:
+    """Direct guitar-tab importer for AlphaTab / Jitashe JSON preserving real string/fret & techniques.
+
+    CRITICAL: AlphaTab indexes `note.string` from LOWEST pitch string (1 = 6th string E2) to HIGHEST
+    (6 = 1st string E4), which is INVERTED relative to standard TAB (1 = high E4, 6 = low E2).
+    """
+    data = json.loads(json_path.read_text(encoding="utf-8"))
+    tracks = data.get("tracks") or []
+    if not tracks:
+        raise ValueError(f"AlphaTab JSON has no tracks: {json_path}")
+
+    t_idx = 0 if track_idx is None else max(0, min(len(tracks) - 1, track_idx))
+    track = tracks[t_idx]
+    staves = track.get("staves") or []
+    if not staves:
+        raise ValueError(f"Track {t_idx} has no staves: {json_path}")
+    staff = staves[0]
+    raw_bars = staff.get("bars") or []
+    if max_bars is not None and max_bars > 0:
+        raw_bars = raw_bars[:max_bars]
+    if not raw_bars:
+        raise ValueError(f"AlphaTab JSON has no bars: {json_path}")
+
+    st_tuning = (staff.get("stringtuning") or {}).get("tunings") or [64, 59, 55, 50, 45, 40]
+    n_strings = len(st_tuning)
+    if n_strings < 6:
+        st_tuning = [64, 59, 55, 50, 45, 40]
+        n_strings = 6
+    # Map real_string (1..6, high E -> low E) to open MIDI pitch in AlphaTab's tuning
+    # AlphaTab tunings array is ordered high->low (index 0 = string 1 high E = 64, index 5 = string 6 low E = 40)
+    # while AlphaTab note.string is 1..n_strings from LOW to HIGH (1 = 6th string, 6 = 1st string)!
+    tuning_by_real_s: Dict[int, int] = {s: int(st_tuning[s - 1]) for s in range(1, 7)}
+    is_std_tuning = all(tuning_by_real_s[s] == OPEN_TUNING_NO_CAPO[s] for s in range(1, 7))
+
+    capo_raw = staff.get("capo") or track.get("capo") or 0
+    capo = int(capo_arg) if capo_arg != "auto" else int(capo_raw)
+
+    masterbars = data.get("masterbars") or []
+    detected_bpm = 72
+    for mb in masterbars:
+        t_autos = mb.get("tempoautomations") or []
+        if t_autos and t_autos[0].get("value"):
+            detected_bpm = int(round(float(t_autos[0]["value"])))
+            break
+    if data.get("tempo") and detected_bpm == 72:
+        detected_bpm = int(round(float(data["tempo"])))
+    bpm = int(bpm_arg) if bpm_arg != "auto" else max(40, min(200, detected_bpm))
+
+    tier = get_tier_profile(tier_key)
+
+    # First pass: collect all sounded concert MIDI pitches (excluding ties) for key detection
+    all_midis: List[int] = []
+    for b in raw_bars:
+        for v in b.get("voices") or []:
+            for bt in v.get("beats") or []:
+                if bt.get("isempty"):
+                    continue
+                for nt in bt.get("notes") or []:
+                    if nt.get("istiedestination"):
+                        continue
+                    at_s = int(nt.get("string") or 1)
+                    real_s = n_strings + 1 - at_s
+                    if 1 <= real_s <= 6:
+                        all_midis.append(tuning_by_real_s[real_s] + capo + int(nt.get("fret") or 0))
+
+    if key_arg == "auto":
+        maj_name = estimate_major_key([(0, 0, m, 0.0, 1.0, 90) for m in all_midis], None)
+        ks = parse_key_spec(maj_name)
+    else:
+        ks = parse_key_spec(key_arg)
+
+    fing_pc = (ks.major_tonic_pc - capo) % 12
+    fing_name = key_name_from_major_pc(fing_pc)
+    scale_chords = diatonic_chords_for_major_pc(fing_pc)
+
+    title = (
+        title_override
+        or str(data.get("title") or "").strip()
+        or json_path.stem.replace("_", " ").strip()
+        or "Untitled"
+    )
+    raw_composer = (
+        composer_override
+        or str(data.get("music") or data.get("artist") or "").strip()
+        or "Unknown"
+    )
+    artist = artist_override or str(data.get("artist") or "").strip() or raw_composer
+    file_prefix = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]+", "_", title).strip("_") or "Fingerstyle_Score"
+
+    # Second pass: build exact 16-slot measures with real fingerings, ties, grace, H/P/S, harmonics
+    n_bars = len(raw_bars)
+    bars_code: List[str] = []
+    landmarks: Dict[int, List[int]] = {}
+    has_chromatic = False
+    active_melody: Optional[int] = None
+    arpeggio_emitted = False
+
+    def _section_for_bar(b_num: int, total: int) -> Tuple[Optional[str], float]:
+        mb = masterbars[b_num - 1] if b_num - 1 < len(masterbars) else {}
+        sec_obj = mb.get("section") if isinstance(mb, dict) else None
+        if isinstance(sec_obj, dict) and (sec_obj.get("text") or sec_obj.get("marker")):
+            lbl = str(sec_obj.get("text") or sec_obj.get("marker")).strip()
+            return lbl, 0.94
+        if total < 12:
+            return ("Intro" if b_num == 1 else ("Chorus" if b_num == max(2, total // 2 + 1) else None)), 0.92
+        b_verse = max(5, round(total * 0.14) + 1)
+        b_chorus = max(b_verse + 4, round(total * 0.48) + 1)
+        b_outro = max(b_chorus + 4, round(total * 0.80) + 1)
+        if b_num == 1:
+            return "Intro", 0.84
+        if b_num < b_verse:
+            return None, 0.84
+        if b_num == b_verse:
+            return "Verse", 0.90
+        if b_num < b_chorus:
+            return None, 0.90
+        if b_num == b_chorus:
+            return "Chorus", 1.04
+        if b_num < b_outro:
+            return None, 1.04
+        if b_num == b_outro:
+            return "Outro", 0.82
+        return None, (0.78 if b_num == total else 0.82)
+
+    for b_idx, b in enumerate(raw_bars, start=1):
+        # Determine bar tick length (default 3840 = 4/4 -> 240 ticks/slot)
+        bar_ticks = 3840
+        if b_idx < len(masterbars):
+            s_cur = int(masterbars[b_idx - 1].get("start") or 0)
+            s_nxt = int(masterbars[b_idx].get("start") or (s_cur + 3840))
+            if s_nxt > s_cur:
+                bar_ticks = s_nxt - s_cur
+        tick_per_slot = max(60.0, bar_ticks / 16.0)
+
+        # Collect non-empty beats from primary voice (or merge secondary voice by slot)
+        raw_beats: List[Dict[str, Any]] = []
+        voices = b.get("voices") or []
+        primary_beats = [bt for bt in (voices[0].get("beats") or []) if not bt.get("isempty")] if voices else []
+        pending_grace: Dict[int, int] = {}
+
+        for bt in primary_beats:
+            if bt.get("gracetype"):
+                for nt in bt.get("notes") or []:
+                    at_s = int(nt.get("string") or 1)
+                    real_s = n_strings + 1 - at_s
+                    if 1 <= real_s <= 6:
+                        gf = int(nt.get("fret") or 0)
+                        if 1 <= gf <= 15:
+                            pending_grace[real_s] = gf
+                continue
+
+            st_ticks = float(bt.get("displaystart") or 0)
+            du_ticks = float(bt.get("displayduration") or bt.get("playbackduration") or 0)
+            if du_ticks <= 0:
+                continue
+            slot = max(0, min(15, int(round(st_ticks / tick_per_slot))))
+            dur = max(1, min(16 - slot, int(round(du_ticks / tick_per_slot))))
+
+            ev_notes: List[Dict[str, Any]] = []
+            seen_strings: Set[int] = set()
+            for nt in bt.get("notes") or []:
+                if nt.get("istiedestination"):
+                    continue
+                at_s = int(nt.get("string") or 1)
+                real_s = n_strings + 1 - at_s
+                if not (1 <= real_s <= 6) or real_s in seen_strings:
+                    continue
+                fret = int(nt.get("fret") or 0)
+                if not is_std_tuning:
+                    cm = tuning_by_real_s[real_s] + capo + fret
+                    fret = cm - OPEN_TUNING_NO_CAPO[real_s] - capo
+                if fret < 0:
+                    fret = 0
+                is_harm = bool(nt.get("harmonictype")) and fret == 12 and ("harmonic" in tier.allowed_techs)
+                if not is_harm and fret > tier.max_fret:
+                    # Relocate to another free string within tier.max_fret preserving concert pitch
+                    cm_orig = OPEN_TUNING_NO_CAPO[real_s] + capo + fret
+                    placed = False
+                    for cand_s in range(1, 7):
+                        if cand_s in seen_strings:
+                            continue
+                        cf = cm_orig - OPEN_TUNING_NO_CAPO[cand_s] - capo
+                        if 0 <= cf <= tier.max_fret:
+                            real_s, fret = cand_s, cf
+                            placed = True
+                            break
+                    if not placed:
+                        fret = min(fret, tier.max_fret)
+                seen_strings.add(real_s)
+                cm = OPEN_TUNING_NO_CAPO[real_s] + capo + fret
+                if (cm % 12) not in ks.diatonic_pcs:
+                    has_chromatic = True
+                gf = pending_grace.pop(real_s, None)
+                if gf is not None and (
+                    "grace" not in tier.allowed_techs
+                    or not (1 <= gf <= 15)
+                    or not (1 <= abs(fret - gf) <= 3)
+                ):
+                    gf = None
+                ev_notes.append({
+                    "string": real_s,
+                    "fret": fret,
+                    "midi": cm,
+                    "harmonic": is_harm,
+                    "grace_from": gf,
+                    "hp_origin": bool(nt.get("ishammerpullorigin")),
+                    "slide_out": bool(nt.get("slideouttype")),
+                })
+            pending_grace.clear()
+
+            # If beat only had tied destination notes, extend previous beat seamlessly
+            if not ev_notes and bt.get("notes"):
+                if raw_beats and not raw_beats[-1]["rest"] and (raw_beats[-1]["dur"] + dur) in VALID_DURS:
+                    raw_beats[-1]["dur"] += dur
+                    continue
+                raw_beats.append({"slot": slot, "dur": dur, "rest": True, "notes": [], "brush": False})
+                continue
+
+            raw_beats.append({
+                "slot": slot,
+                "dur": dur,
+                "rest": len(ev_notes) == 0,
+                "notes": ev_notes,
+                "brush": bool(bt.get("brushtype")),
+            })
+
+        # Normalize timeline to exact contiguous [0..16) with VALID_DURS
+        raw_beats.sort(key=lambda x: x["slot"])
+        norm_events: List[Dict[str, Any]] = []
+        cur = 0
+        for e in raw_beats:
+            sl = e["slot"]
+            du = e["dur"]
+            if sl > cur:
+                gap = sl - cur
+                for chunk in decompose_span(gap, tier.allow_16th):
+                    norm_events.append({"slot": cur, "dur": chunk, "rest": True, "notes": [], "brush": False})
+                    cur += chunk
+            elif sl < cur:
+                trim = cur - sl
+                du -= trim
+                sl = cur
+                if du <= 0:
+                    continue
+            if sl + du > 16:
+                du = 16 - sl
+            if du <= 0:
+                continue
+            chunks = decompose_span(du, tier.allow_16th)
+            for ci, chunk in enumerate(chunks):
+                if ci == 0:
+                    norm_events.append({
+                        "slot": cur,
+                        "dur": chunk,
+                        "rest": e["rest"],
+                        "notes": e["notes"],
+                        "brush": e["brush"],
+                    })
+                else:
+                    norm_events.append({"slot": cur, "dur": chunk, "rest": True, "notes": [], "brush": False})
+                cur += chunk
+        if cur < 16:
+            for chunk in decompose_span(16 - cur, tier.allow_16th):
+                norm_events.append({"slot": cur, "dur": chunk, "rest": True, "notes": [], "brush": False})
+                cur += chunk
+
+        # Enforce tier span & max_simultaneous constraints cleanly
+        for e in norm_events:
+            if e["rest"] or not e["notes"]:
+                continue
+            e["notes"].sort(key=lambda x: x["midi"])
+            if len(e["notes"]) > tier.max_simultaneous:
+                # Keep lowest bass + highest melody + closest inner
+                keep = [e["notes"][0], e["notes"][-1]] + e["notes"][1:-1][: max(0, tier.max_simultaneous - 2)]
+                e["notes"] = sorted(keep, key=lambda x: x["midi"])
+            # Trim extreme outlier inner notes if fretted span exceeds tier.max_span
+            while True:
+                fr = [x for x in e["notes"] if x["fret"] > 0 and not x["harmonic"]]
+                if len(fr) < 2:
+                    break
+                fvals = [x["fret"] for x in fr]
+                if max(fvals) - min(fvals) <= tier.max_span:
+                    break
+                # Drop middle/inner outlier furthest from melody fret
+                mel_f = e["notes"][-1]["fret"]
+                inner_cands = [x for x in fr if x is not e["notes"][-1]]
+                if not inner_cands:
+                    break
+                worst = max(inner_cands, key=lambda x: abs(x["fret"] - mel_f))
+                e["notes"].remove(worst)
+
+        # Assign voice roles (melody / bass / inner) with guaranteed 0 voice crossings
+        for idx_e, e in enumerate(norm_events):
+            if e["rest"] or not e["notes"]:
+                active_melody = None
+                continue
+            ns = sorted(e["notes"], key=lambda x: x["midi"])
+            e["notes"] = ns
+            if len(ns) == 1:
+                nt = ns[0]
+                is_link_src = nt["hp_origin"] or nt["slide_out"]
+                is_low_bass = (
+                    (not is_link_src)
+                    and (
+                        nt["string"] in (5, 6)
+                        or (nt["string"] == 4 and active_melody is not None and nt["midi"] <= active_melody - 4)
+                    )
+                    and (active_melody is None or nt["midi"] <= active_melody)
+                )
+                if is_low_bass:
+                    nt["role"] = "bass" if (nt["string"] in (5, 6) or e["slot"] in (0, 8)) else "inner"
+                else:
+                    nt["role"] = "melody"
+                    active_melody = None if nt["harmonic"] else nt["midi"]
+            else:
+                top = ns[-1]
+                top["role"] = "melody"
+                active_melody = None if top["harmonic"] else top["midi"]
+                low = ns[0]
+                if low["string"] in (4, 5, 6):
+                    low["role"] = "bass"
+                else:
+                    low["role"] = "inner"
+                for mid in ns[1:-1]:
+                    mid["role"] = "inner"
+
+            # Attach link_tech (H/P/S) only when next event in same bar has valid same-string target
+            e["link_tech"] = None
+            if idx_e + 1 < len(norm_events):
+                nxt = norm_events[idx_e + 1]
+                if not nxt["rest"] and nxt["notes"]:
+                    mel_cur = [x for x in e["notes"] if x.get("role") == "melody"]
+                    if mel_cur:
+                        mc = mel_cur[0]
+                        nxt_same = [x for x in nxt["notes"] if x["string"] == mc["string"]]
+                        if nxt_same:
+                            df = nxt_same[0]["fret"] - mc["fret"]
+                            if mc["hp_origin"] and 1 <= df <= 3 and "H" in tier.allowed_techs:
+                                e["link_tech"] = "H"
+                            elif mc["hp_origin"] and -3 <= df <= -1 and "P" in tier.allowed_techs:
+                                e["link_tech"] = "P"
+                            elif mc["slide_out"] and df != 0 and "S" in tier.allowed_techs:
+                                e["link_tech"] = "S"
+
+            # Set arpeggio on brushes or rich downbeat chords
+            e["arpeggio"] = False
+            if "arpeggio" in tier.allowed_techs and len(e["notes"]) >= 2:
+                if e["brush"] or (len(e["notes"]) >= 3 and e["slot"] in (0, 8)):
+                    e["arpeggio"] = True
+                    arpeggio_emitted = True
+
+        # Infer real diatonic chords for first half (0..7) and second half (8..15)
+        def _half_chord(ev_slice: List[Dict[str, Any]]) -> str:
+            pcs_hist: Dict[int, float] = {}
+            for e in ev_slice:
+                if e["rest"]:
+                    continue
+                for nt in e["notes"]:
+                    pc = nt["midi"] % 12
+                    w = 2.5 if nt.get("role") == "bass" else 1.0
+                    pcs_hist[pc] = pcs_hist.get(pc, 0.0) + w * e["dur"]
+            if not pcs_hist:
+                return scale_chords[0]
+            return infer_chord_for_notes(pcs_hist, capo, scale_chords)
+
+        h1 = [e for e in norm_events if e["slot"] < 8]
+        h2 = [e for e in norm_events if e["slot"] >= 8]
+        c1 = _half_chord(h1)
+        c2 = _half_chord(h2)
+        bar_chords = [(0, c1)] if (not h2 or c2 == c1) else [(0, c1), (8, c2)]
+
+        sec_lbl, dyn = _section_for_bar(b_idx, n_bars)
+        mel_mids_bar = [
+            nt["midi"] for e in norm_events if not e["rest"] for nt in e["notes"]
+            if nt.get("role") == "melody" and not nt.get("harmonic")
+        ]
+        if mel_mids_bar and (b_idx in (1, n_bars) or b_idx % max(4, n_bars // 6) == 1):
+            landmarks[b_idx] = mel_mids_bar
+
+        chords_repr = ", ".join(f'({sl}, "{lbl}")' for sl, lbl in bar_chords)
+        bars_code.append(f"    # M{b_idx:02d}: " + " -> ".join(lbl for _, lbl in bar_chords))
+        bars_code.append("    m.append(Measure(")
+        bars_code.append(f"        bar={b_idx},")
+        if sec_lbl:
+            bars_code.append(f'        section="{sec_lbl}",')
+        bars_code.append(f"        dynamic={dyn:.2f},")
+        bars_code.append(f"        chords=[{chords_repr}],")
+        bars_code.append("        events=[")
+        for idx_e, e in enumerate(norm_events):
+            if e["rest"] or not e["notes"]:
+                bars_code.append(f'            ev({e["slot"]}, {e["dur"]}, rest=True),')
+                continue
+            ncalls = []
+            for nt in e["notes"]:
+                kw_parts = []
+                if nt["harmonic"]:
+                    kw_parts.append("harmonic=True")
+                if nt["grace_from"] is not None:
+                    kw_parts.append(f"grace_from={nt['grace_from']}")
+                kw = (", " + ", ".join(kw_parts)) if kw_parts else ""
+                ncalls.append(f'n({nt["string"]}, {nt["fret"]}, "{nt["role"]}"{kw})')
+            extras = []
+            if e["arpeggio"]:
+                extras.append("arpeggio=True")
+            if e["link_tech"]:
+                extras.append(f'link_tech="{e["link_tech"]}"')
+            if b_idx == n_bars and idx_e == len(norm_events) - 1:
+                extras.append("fermata=True")
+            ex_str = (", " + ", ".join(extras)) if extras else ""
+            bars_code.append(f'            ev({e["slot"]}, {e["dur"]}, {", ".join(ncalls)}{ex_str}),')
+        bars_code.append("        ],")
+        bars_code.append("    ))")
+        bars_code.append("")
+
+    diatonic_sorted = sorted(ks.diatonic_pcs)
+    req_line = "REQUIRED_TECHS = ()" if (tier.key == "advanced" or not arpeggio_emitted) else ""
+    src = f'''"""Single source of truth for 《{title}》 fingerstyle guitar TAB & audio.
+
+Imported directly from AlphaTab/Guitar-Pro JSON (real string/fret & techniques preserved).
+Concert Key: {ks.name} (1 = {ks.relative_major_name})
+Capo: {capo} ({fing_name}调指法)
+Time Signature: 4/4 (16 sixteenth-note slots per measure)
+Tempo: {bpm} BPM
+Difficulty Tier: {tier.key} ({tier.label_zh})
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
+
+TIER = "{tier.key}"
+ALLOW_CHROMATIC = {has_chromatic}
+{req_line}
+TITLE = "{title}"
+FILE_PREFIX = "{file_prefix}"
+SUBTITLE = "指弹吉他独奏六线谱"
+ARTIST = "{artist}"
+COMPOSER = "{raw_composer}"
+ARRANGER_INFO = "原调：{ks.name} (1={ks.relative_major_name})  |  选调：{fing_name}调指法 (Capo = {capo}品)  |  标准调弦：6E 5A 4D 3G 2B 1E"
+CHORD_LEGEND = "和弦对照 (Capo {capo})：指法={fing_name}调  常用={'  '.join(scale_chords)}"
+TECHNIQUE_LEGEND_1 = "技巧图例：H = 击弦   P = 勾弦   S = 滑音   波浪线 = 琶音"
+TECHNIQUE_LEGEND_2 = "<12> = 自然泛音   P.M. = 右手闷音   X = 拍弦"
+
+TEMPO_BPM = {bpm}
+CAPO = {capo}
+KEY_SIGNATURE_FIFTHS = {ks.fifths}
+IS_MINOR_KEY = {ks.is_minor}
+
+OPEN_TUNING_NO_CAPO: Dict[int, int] = {{
+    6: 40,
+    5: 45,
+    4: 50,
+    3: 55,
+    2: 59,
+    1: 64,
+}}
+
+DIATONIC_PCS = {set(diatonic_sorted)}
+NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+LANDMARKS: Dict[int, List[int]] = {landmarks}
+PHRASE_CUES: Dict[Tuple[int, int], str] = {{}}
+
+
+@dataclass(frozen=True)
+class NoteEvent:
+    string: int
+    fret: int
+    role: str = "melody"
+    harmonic: bool = False
+    grace_from: Optional[int] = None
+    palm_mute: bool = False
+
+    @property
+    def concert_midi(self) -> int:
+        return OPEN_TUNING_NO_CAPO[self.string] + CAPO + self.fret
+
+    @property
+    def written_midi(self) -> int:
+        return OPEN_TUNING_NO_CAPO[self.string] + self.fret
+
+    @property
+    def pitch_name(self) -> str:
+        m = self.concert_midi
+        return f"{{NOTE_NAMES[m % 12]}}{{m // 12 - 1}}"
+
+
+@dataclass
+class BeatEvent:
+    slot: int
+    dur: int
+    notes: Tuple[NoteEvent, ...] = ()
+    rest: bool = False
+    lyric: Optional[str] = None
+    fermata: bool = False
+    arpeggio: bool = False
+    link_tech: Optional[str] = None
+
+
+@dataclass
+class Measure:
+    bar: int
+    events: List[BeatEvent]
+    chords: List[Tuple[int, str]] = field(default_factory=list)
+    section: Optional[str] = None
+    is_pickup: bool = False
+    dynamic: float = 1.0
+
+
+def n(
+    string: int,
+    fret: int,
+    role: str = "melody",
+    *,
+    harmonic: bool = False,
+    grace_from: Optional[int] = None,
+    palm_mute: bool = False,
+) -> NoteEvent:
+    return NoteEvent(
+        string=string,
+        fret=fret,
+        role=role,
+        harmonic=harmonic,
+        grace_from=grace_from,
+        palm_mute=palm_mute,
+    )
+
+
+def ev(
+    slot: int,
+    dur: int,
+    *notes: NoteEvent,
+    rest: bool = False,
+    lyric: Optional[str] = None,
+    fermata: bool = False,
+    arpeggio: bool = False,
+    link_tech: Optional[str] = None,
+) -> BeatEvent:
+    return BeatEvent(
+        slot=slot,
+        dur=dur,
+        notes=notes,
+        rest=rest,
+        lyric=lyric,
+        fermata=fermata,
+        arpeggio=arpeggio,
+        link_tech=link_tech,
+    )
+
+
+def build_measures() -> List[Measure]:
+    """Return AlphaTab-imported fingerstyle measures (M01..M{n_bars:02d})."""
+    m: List[Measure] = []
+{chr(10).join(bars_code)}
+    return m
+'''
+    meta = {
+        "key": ks.name,
+        "capo": capo,
+        "fing_key": fing_name,
+        "bpm": bpm,
+        "bars": n_bars,
+        "has_chromatic": has_chromatic,
+    }
+    return src, meta
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Import MIDI (.mid) or MusicXML (.xml/.musicxml/.mxl) into src/score_data.py.")
-    parser.add_argument("input_file", help="Path to .mid, .musicxml, .xml, or .mxl file")
+    parser = argparse.ArgumentParser(description="Import MIDI (.mid), MusicXML (.xml/.musicxml/.mxl), or AlphaTab JSON (.json) into src/score_data.py.")
+    parser.add_argument("input_file", help="Path to .mid, .musicxml, .xml, .mxl, or AlphaTab .json file")
     parser.add_argument("--out", required=True, help="Output path for src/score_data.py (or project dir)")
     parser.add_argument("--tier", default="standard", choices=("beginner", "standard", "advanced"))
     parser.add_argument("--title", default=None, help="Override song title")
@@ -816,18 +1398,6 @@ def main() -> int:
     if not in_path.is_file():
         raise FileNotFoundError(f"Input score not found: {in_path}")
 
-    ext = in_path.suffix.lower()
-    if ext in (".mid", ".midi"):
-        parsed = parse_midi_file(in_path)
-    elif ext in (".xml", ".musicxml", ".mxl"):
-        parsed = parse_musicxml_file(in_path)
-    else:
-        raise ValueError(f"Unsupported file type '{ext}'. Expected .mid, .midi, .musicxml, .xml, or .mxl.")
-
-    title = args.title or parsed.get("title_hint") or in_path.stem.replace("_", " ").strip()
-    composer = args.composer or parsed.get("composer_hint") or "Unknown"
-    artist = args.artist or composer
-
     out_arg = Path(args.out).expanduser().resolve()
     if out_arg.suffix == ".py":
         out_py = out_arg
@@ -835,26 +1405,48 @@ def main() -> int:
     else:
         proj_dir = out_arg
         out_py = proj_dir / "src" / "score_data.py"
-
     out_py.parent.mkdir(parents=True, exist_ok=True)
-    src, meta = build_score_source_from_import(
-        parsed,
-        title=str(title),
-        composer=str(composer),
-        artist=str(artist),
-        tier_key=args.tier,
-        key_arg=args.key,
-        capo_arg=args.capo,
-        bpm_arg=args.bpm,
-        melody_track=args.melody_track,
-        bass_track=args.bass_track,
-        max_bars=args.max_bars,
-    )
+
+    ext = in_path.suffix.lower()
+    if ext == ".json":
+        src, meta = build_score_source_from_alphatab_json(
+            in_path,
+            title_override=args.title,
+            composer_override=args.composer,
+            artist_override=args.artist,
+            tier_key=args.tier,
+            key_arg=args.key,
+            capo_arg=args.capo,
+            bpm_arg=args.bpm,
+            track_idx=args.melody_track,
+            max_bars=args.max_bars,
+        )
+    elif ext in (".mid", ".midi", ".xml", ".musicxml", ".mxl"):
+        parsed = parse_midi_file(in_path) if ext in (".mid", ".midi") else parse_musicxml_file(in_path)
+        title = args.title or parsed.get("title_hint") or in_path.stem.replace("_", " ").strip()
+        composer = args.composer or parsed.get("composer_hint") or "Unknown"
+        artist = args.artist or composer
+        src, meta = build_score_source_from_import(
+            parsed,
+            title=str(title),
+            composer=str(composer),
+            artist=str(artist),
+            tier_key=args.tier,
+            key_arg=args.key,
+            capo_arg=args.capo,
+            bpm_arg=args.bpm,
+            melody_track=args.melody_track,
+            bass_track=args.bass_track,
+            max_bars=args.max_bars,
+        )
+    else:
+        raise ValueError(f"Unsupported file type '{ext}'. Expected .mid, .midi, .musicxml, .xml, .mxl, or AlphaTab .json.")
+
     out_py.write_text(src, encoding="utf-8")
 
     # Immediately verify with validate_project_score
     mod = load_score_module(proj_dir)
-    errors, tech_counts, _summary = validate_project_score(mod)
+    errors, tech_counts, summary = validate_project_score(mod)
     if errors:
         print(f"[WARN] Imported draft has {len(errors)} validation issue(s):")
         for e in errors[:10]:
@@ -864,6 +1456,7 @@ def main() -> int:
     print(
         f"[IMPORT OK] {out_py.name} <- {in_path.name} | tier={args.tier}, key={meta['key']}, "
         f"capo={meta['capo']} ({meta['fing_key']}调指法), bpm={meta['bpm']}, bars={meta['bars']}, "
+        f"score={summary.get('quality_score', '-')}分, Lv.{summary.get('difficulty', '-')}, "
         f"chromatic={meta['has_chromatic']}, techniques={tech_counts}"
     )
     print(f"Next: run `python3 {SCRIPT_DIR / 'tab_engine.py'} build {proj_dir}`")

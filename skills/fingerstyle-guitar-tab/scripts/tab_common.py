@@ -1070,6 +1070,41 @@ def validate_project_score(
             f" -> 修复建议: 用 scripts/fret_helper.py chord 按标注和弦重查正确根音/低音，避免标 G 却乱弹外音。"
         )
 
+    # Anti-cheat: reject forged non-chord-tone slash chords (e.g., G/A, Em/A, C/A, D/E) & half-speed split bugs
+    total_chord_labels = 0
+    non_tone_slash_chords = 0
+    for meas in measures:
+        for _sl, lbl in getattr(meas, "chords", []) or []:
+            total_chord_labels += 1
+            if "/" in lbl:
+                base_lbl, bass_tok = lbl.rsplit("/", 1)
+                base_pcs = chord_pitch_classes(base_lbl, 0)
+                b_pc = PC_BY_TOKEN.get(bass_tok.strip().upper())
+                if base_pcs and b_pc is not None and b_pc not in base_pcs:
+                    non_tone_slash_chords += 1
+    if total_chord_labels >= 8 and (non_tone_slash_chords / total_chord_labels) > 0.30:
+        errors.append(
+            f"防造假拦截: 非和弦音斜杠和弦过多（{non_tone_slash_chords}/{total_chord_labels} > 30%，如 G/A、Em/A、C/A）"
+            f" -> 修复建议: 检查是否把 AlphaTab 弦号上下颠倒（AlphaTab string=1 是 6 弦低音 E，必须做 7-string 翻转！）或直接改用 scripts/import_score.py 导入，严禁伪造斜杠和弦凑低音。"
+        )
+
+    if non_pickup_bars >= 16 and bpm < 55 and sixteenth_events == 0:
+        errors.append(
+            f"半速异常拦截: TEMPO_BPM={bpm} 过慢且全曲 0 个 16 分音符"
+            f" -> 修复建议: 检查是否误把每小节拆成两倍小节数却未翻倍 BPM（导致 0.5x 慢放），应保持原拍格或同步翻倍 BPM。"
+        )
+
+    expr_tech_total = (
+        tech_counts["H"] + tech_counts["P"] + tech_counts["S"]
+        + tech_counts["grace"] + tech_counts["harmonic"]
+        + tech_counts["palm_mute"] + tech_counts["slap"]
+    )
+    if tier.key == "standard" and non_pickup_bars >= 16 and required_override is None and expr_tech_total == 0:
+        errors.append(
+            "表现力拦截: 标准指弹档 (TIER='standard') 完整曲目缺少任何指弹表情技巧（H/P/S/倚音/泛音/闷音/拍弦全为 0）"
+            " -> 修复建议: 保留原谱击勾滑/倚音/泛音或用 scripts/import_score.py 导入，避免剥离技巧变成呆板机械谱。"
+        )
+
     if allow_chromatic and pitched_total >= 16 and out_key_ratio > 0.20:
         errors.append(
             f"防作弊拦截: ALLOW_CHROMATIC=True 但调外音高达 {out_key_ratio * 100:.0f}% (> 20%)"
