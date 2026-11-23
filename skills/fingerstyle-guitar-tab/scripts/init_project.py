@@ -250,6 +250,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+# 占位模板拦截标记：替换完整真实曲谱前 tab_engine.py check 会强制拦截；写完后删除本行或改为 False
+IS_STARTER_TEMPLATE = True
 TIER = "{tier.key}"  # "beginner" | "standard" | "advanced"
 ALLOW_CHROMATIC = False
 {required_techs_line}

@@ -24,6 +24,16 @@ LY_PITCH_NAMES = ["c", "cis", "des", "d", "ees", "e", "f", "fis", "ges", "g", "a
 LY_PC_SHARP = ["c", "cis", "d", "dis", "e", "f", "fis", "g", "gis", "a", "ais", "b"]
 
 VALID_DURS: Set[int] = {1, 2, 3, 4, 6, 8, 12, 16}
+GUITAR_SCALE_CM = 65.0
+
+
+def finger_pos_cm(abs_fret: int) -> float:
+    """Physical distance (cm) from guitar nut to finger placement center at absolute fret."""
+    if abs_fret <= 0:
+        return 0.0
+    p0 = GUITAR_SCALE_CM * (1.0 - 2.0 ** (-(abs_fret - 1) / 12.0))
+    p1 = GUITAR_SCALE_CM * (1.0 - 2.0 ** (-abs_fret / 12.0))
+    return 0.5 * (p0 + p1)
 
 PC_BY_TOKEN: Dict[str, int] = {
     "C": 0, "B#": 0,
@@ -488,8 +498,11 @@ def validate_project_score(
         measures = mod.build_measures()
 
     capo = int(getattr(mod, "CAPO", 0))
+    bpm = int(getattr(mod, "TEMPO_BPM", 72) or 72)
     diatonic_pcs: Set[int] = set(getattr(mod, "DIATONIC_PCS", {0, 2, 4, 5, 7, 9, 11}))
     allow_chromatic = bool(getattr(mod, "ALLOW_CHROMATIC", False))
+    allow_short_demo = bool(getattr(mod, "ALLOW_SHORT_DEMO", False))
+    is_starter = bool(getattr(mod, "IS_STARTER_TEMPLATE", False))
     tier = get_tier_profile(getattr(mod, "TIER", "standard"))
     required_override = getattr(mod, "REQUIRED_TECHS", None)
     required_techs: Tuple[str, ...] = (
@@ -509,8 +522,14 @@ def validate_project_score(
         "slap": 0,
     }
 
+    if is_starter:
+        errors.append(
+            "模板拦截: 仍带有 IS_STARTER_TEMPLATE = True（未替换 init_project.py 生成的占位小节）"
+            " -> 修复建议: 写入真实完整曲谱后删除 IS_STARTER_TEMPLATE（或设为 False）。"
+        )
+
     if not measures:
-        return (["build_measures() returned empty list -> 至少添加 1 个 Measure (bar=1)。"], tech_counts, {})
+        return (["build_measures() returned empty list -> 至少添加 16 个完整小节 Measure (bar=1..N)。"], tech_counts, {})
 
     has_pickup = bool(getattr(measures[0], "is_pickup", False) or measures[0].bar == 0)
     expected_bar_start = 0 if has_pickup else 1
@@ -521,6 +540,51 @@ def validate_project_score(
     total_notes = 0
     bar_by_idx: Dict[int, Any] = {}
 
+    # Anti-slop, harmony, physical ergonomics & difficulty accumulators
+    non_pickup_bars = 0
+    mel_bars = 0
+    bass_bars = 0
+    chord_bars = 0
+    empty_bars = 0
+    mel_total = 0
+    mel_on_bass_strings = 0
+    pitched_total = 0
+    out_of_key_pitched = 0
+    non_rest_events = 0
+    poly_events = 0
+    max_simul = 0
+    sixteenth_events = 0
+    tech_events = 0
+    crossings_count = 0
+    chord_bass_checks = 0
+    chord_bass_hits = 0
+    chord_bass_mismatches: List[str] = []
+    distinct_bass: Set[int] = set()
+    sections: Set[str] = set()
+    dynamics: Set[float] = set()
+    bar_slot_sums: List[int] = []
+    bar_nps_list: List[float] = []
+    mel_bar_fps: List[Tuple[Any, ...]] = []
+    max_consec_same = 1
+    cur_consec_same = 1
+    prev_bar_fp: Optional[Tuple[Any, ...]] = None
+    consec_repeat_bar: Optional[int] = None
+
+    spans_cm: List[float] = []
+    impossible_chords: List[Tuple[int, int, int]] = []
+    extreme_stretches: List[Tuple[int, int, float, int, int]] = []
+    hard_stretches = 0
+    barre_events = 0
+    awkward_shifts: List[Tuple[int, int, int, float]] = []
+    large_shifts = 0
+    shift_transitions = 0
+    shift_velocities: List[float] = []
+    prev_anchor_cm: Optional[float] = None
+    prev_mean_fret: Optional[float] = None
+    elapsed_since_fretted_slots = 0
+    total_slots = 0
+    sec_per_slot = (60.0 / max(30, bpm)) / 4.0
+
     for i, meas in enumerate(measures):
         expected_bar = expected_bar_start + i
         if meas.bar != expected_bar:
@@ -529,6 +593,18 @@ def validate_project_score(
                 f"-> 修复建议: 按顺序从 bar={expected_bar_start} 连续递增。"
             )
         bar_by_idx[meas.bar] = meas
+
+        is_pickup_bar = bool(i == 0 and getattr(meas, "is_pickup", False))
+        sec_lbl = getattr(meas, "section", None)
+        if sec_lbl:
+            sections.add(str(sec_lbl).strip())
+        dynamics.add(round(float(getattr(meas, "dynamic", 1.0) or 1.0), 2))
+        if not is_pickup_bar:
+            non_pickup_bars += 1
+            if getattr(meas, "chords", None):
+                chord_bars += 1
+            if not meas.events:
+                empty_bars += 1
 
         if not meas.events:
             errors.append(f"M{meas.bar:02d}: events 为空 -> 修复建议: 至少添加填满小节的 BeatEvent (可用 rest=True)。")
@@ -540,7 +616,7 @@ def validate_project_score(
             except ValueError as exc:
                 errors.append(f"M{meas.bar:02d} slot {sl}: {exc}")
 
-        if i == 0 and getattr(meas, "is_pickup", False):
+        if is_pickup_bar:
             expected_start = meas.events[0].slot
             if expected_start not in (4, 8, 12):
                 errors.append(
@@ -554,6 +630,11 @@ def validate_project_score(
         cursor = expected_start
         dur_sum = 0
         sorted_chords = sorted(getattr(meas, "chords", []), key=lambda x: x[0])
+        chords_by_slot = {sl: lbl for sl, lbl in sorted_chords}
+        bar_has_mel = False
+        bar_has_bass = False
+        bar_pitched = 0
+        bar_fp_items: List[Any] = []
 
         for ev_idx, e in enumerate(meas.events):
             if e.slot != cursor:
@@ -574,9 +655,14 @@ def validate_project_score(
 
             cursor += e.dur
             dur_sum += e.dur
+            total_slots += max(1, e.dur)
+            if e.dur == 1:
+                sixteenth_events += 1
+            ev_has_tech = False
 
             if e.rest:
                 active_melody_midi = None
+                elapsed_since_fretted_slots += max(1, e.dur)
                 if e.notes:
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: 休止符事件 (rest=True) 不能带 notes -> 删除 notes。")
                 if e.arpeggio or e.link_tech:
@@ -584,9 +670,11 @@ def validate_project_score(
                 continue
 
             if not e.notes:
+                elapsed_since_fretted_slots += max(1, e.dur)
                 errors.append(f"M{meas.bar:02d} slot {e.slot}: 非休止事件缺少音符 -> 添加 n(...) 或改 rest=True。")
                 continue
 
+            non_rest_events += 1
             total_notes += len(e.notes)
             if len(e.notes) > tier.max_simultaneous:
                 errors.append(
@@ -596,6 +684,7 @@ def validate_project_score(
 
             if e.arpeggio:
                 tech_counts["arpeggio"] += 1
+                ev_has_tech = True
                 if "arpeggio" not in tier.allowed_techs:
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用 arpeggio -> 删掉 arpeggio=True。")
                 if len(e.notes) < 2:
@@ -608,12 +697,43 @@ def validate_project_score(
                 )
 
             pitched_notes = [nt for nt in e.notes if nt.role != "slap"]
+            pitched_total += len(pitched_notes)
+            bar_pitched += len(pitched_notes)
+            if len(pitched_notes) >= 2:
+                poly_events += 1
+            if len(pitched_notes) > max_simul:
+                max_simul = len(pitched_notes)
+
             mel_notes = [nt for nt in pitched_notes if nt.role == "melody"]
+            bass_notes = [nt for nt in pitched_notes if nt.role == "bass"]
             if mel_notes:
+                bar_has_mel = True
+                for nt in mel_notes:
+                    mel_total += 1
+                    if nt.string in (5, 6):
+                        mel_on_bass_strings += 1
+                bar_fp_items.append((e.slot, e.dur, tuple(sorted(note_concert_midi(nt, capo) for nt in mel_notes))))
                 if any(nt.harmonic for nt in mel_notes):
                     active_melody_midi = None
                 else:
                     active_melody_midi = max(note_concert_midi(nt, capo) for nt in mel_notes)
+            if bass_notes:
+                bar_has_bass = True
+                for nt in bass_notes:
+                    distinct_bass.add(note_concert_midi(nt, capo))
+                if e.slot in chords_by_slot:
+                    slot_lbl = chords_by_slot[e.slot]
+                    slot_pcs = chord_pitch_classes(slot_lbl, capo)
+                    if slot_pcs:
+                        chord_bass_checks += 1
+                        if any((note_concert_midi(nt, capo) % 12) in slot_pcs for nt in bass_notes):
+                            chord_bass_hits += 1
+                        else:
+                            b0 = bass_notes[0]
+                            bm = note_concert_midi(b0, capo)
+                            chord_bass_mismatches.append(
+                                f"M{meas.bar:02d} slot {e.slot} 和弦 '{slot_lbl}' 却配了低音 n({b0.string},{b0.fret})={midi_to_name(bm)}"
+                            )
 
             # Active chord for self-healing voice-crossing tips
             cur_chord = ""
@@ -628,6 +748,7 @@ def validate_project_score(
                 for nt in pitched_notes:
                     cm = note_concert_midi(nt, capo)
                     if nt.role in ("bass", "inner") and not nt.harmonic and cm > active_melody_midi:
+                        crossings_count += 1
                         tip = _suggest_accompaniment_candidates(
                             active_melody_midi, capo, diatonic_pcs, cur_chord_pcs, cur_root_pc, tier, nt.role
                         )
@@ -643,6 +764,7 @@ def validate_project_score(
                     continue
                 if nt.role == "slap":
                     tech_counts["slap"] += 1
+                    ev_has_tech = True
                     if "slap" not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 TIER='{tier.key}' ({tier.label_zh}) 禁用拍弦 slap "
@@ -665,20 +787,23 @@ def validate_project_score(
                             f"-> 修复建议: 换弦保持同音高 [{tip}]。"
                         )
 
-                if not allow_chromatic and (cm % 12) not in diatonic_pcs:
-                    fixes = []
-                    for df in (-1, 1):
-                        nf = nt.fret + df
-                        if 0 <= nf <= tier.max_fret and ((cm + df) % 12) in diatonic_pcs:
-                            fixes.append(f"n({nt.string}, {nf}, \"{nt.role}\") [{midi_to_name(cm + df)}]")
-                    tip = " 或 ".join(fixes) if fixes else "确认简谱/调性是否错音，若为刻意调外经过音请设 ALLOW_CHROMATIC = True"
-                    errors.append(
-                        f"M{meas.bar:02d} slot {e.slot}: 调外音 n({nt.string},{nt.fret}) = {midi_to_name(cm)} "
-                        f"-> 修复建议: 邻近调内音 {tip}。"
-                    )
+                if (cm % 12) not in diatonic_pcs:
+                    out_of_key_pitched += 1
+                    if not allow_chromatic:
+                        fixes = []
+                        for df in (-1, 1):
+                            nf = nt.fret + df
+                            if 0 <= nf <= tier.max_fret and ((cm + df) % 12) in diatonic_pcs:
+                                fixes.append(f"n({nt.string}, {nf}, \"{nt.role}\") [{midi_to_name(cm + df)}]")
+                        tip = " 或 ".join(fixes) if fixes else "用 scripts/fret_helper.py jianpu 重查调内品格（禁止盲改 ALLOW_CHROMATIC 绕过错音）"
+                        errors.append(
+                            f"M{meas.bar:02d} slot {e.slot}: 调外音 n({nt.string},{nt.fret}) = {midi_to_name(cm)} "
+                            f"-> 修复建议: 邻近调内音 {tip}。"
+                        )
 
                 if nt.harmonic:
                     tech_counts["harmonic"] += 1
+                    ev_has_tech = True
                     if "harmonic" not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用泛音 harmonic -> 改为 harmonic=False 或升级 TIER='standard'。"
@@ -688,6 +813,7 @@ def validate_project_score(
 
                 if nt.palm_mute:
                     tech_counts["palm_mute"] += 1
+                    ev_has_tech = True
                     if "palm_mute" not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用闷音 palm_mute -> 改为 palm_mute=False 或升级 TIER='standard'。"
@@ -696,6 +822,7 @@ def validate_project_score(
                 if nt.grace_from is not None:
                     tech_counts["grace"] += 1
                     tech_counts["S"] += 1
+                    ev_has_tech = True
                     if "grace" not in tier.allowed_techs and "S" not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用倚音滑音 grace_from -> 删除 grace_from 或升级 TIER='standard'。"
@@ -714,7 +841,6 @@ def validate_project_score(
                 span = max(f_vals) - min(f_vals)
                 if span > tier.max_span:
                     min_f, max_f = min(f_vals), max(f_vals)
-                    # Try relocating extreme fretted note to another string inside the comfortable window
                     outliers = [nt for nt in fretted_notes if nt.fret in (min_f, max_f)]
                     used_s = {nt.string for nt in pitched_notes}
                     alts: List[str] = []
@@ -733,11 +859,58 @@ def validate_project_score(
                         f"-> 修复建议: {tip}。"
                     )
 
+                # Physical left-hand ergonomics (65cm scale model)
+                uniq_fretted = sorted({(nt.string, nt.fret) for nt in fretted_notes})
+                frets_only = [f for _, f in uniq_fretted]
+                min_f_u, max_f_u = min(frets_only), max(frets_only)
+                at_min = [s for s, f in uniq_fretted if f == min_f_u]
+                k_f = len(uniq_fretted)
+                fingers_needed = (k_f - len(at_min) + 1) if len(at_min) >= 2 else k_f
+                if fingers_needed > 4:
+                    impossible_chords.append((meas.bar, e.slot, fingers_needed))
+                    errors.append(
+                        f"M{meas.bar:02d} slot {e.slot}: 不可弹指法 — 同时按弦需 {fingers_needed} 根手指（无法用横按覆盖）"
+                        f" -> 修复建议: 删减多余内声部或改用空弦。"
+                    )
+                if (k_f >= 4 and len(at_min) >= 2) or (
+                    k_f >= 3 and len(at_min) >= 2 and (max(at_min) - min(at_min)) >= 2
+                ):
+                    barre_events += 1
+                if max_f_u > min_f_u:
+                    span_cm = finger_pos_cm(capo + max_f_u) - finger_pos_cm(capo + min_f_u)
+                    spans_cm.append(span_cm)
+                    if span_cm > 14.5:
+                        extreme_stretches.append((meas.bar, e.slot, round(span_cm, 1), min_f_u, max_f_u))
+                        errors.append(
+                            f"M{meas.bar:02d} slot {e.slot}: 物理跨度超限 ({span_cm:.1f}cm > 14.5cm，{min_f_u}–{max_f_u}品)"
+                            f" -> 修复建议: 换弦缩短左手跨度或省略外延伴奏音。"
+                        )
+                    elif span_cm > 12.5:
+                        hard_stretches += 1
+                anchor = sum(finger_pos_cm(capo + f) for f in frets_only) / len(frets_only)
+                mean_f = sum(frets_only) / len(frets_only)
+                if prev_anchor_cm is not None and prev_mean_fret is not None:
+                    dt = max(0.06, elapsed_since_fretted_slots * sec_per_slot)
+                    shift_cm = abs(anchor - prev_anchor_cm)
+                    fjump = abs(mean_f - prev_mean_fret)
+                    shift_transitions += 1
+                    shift_velocities.append(shift_cm / dt)
+                    if fjump >= 4:
+                        large_shifts += 1
+                    if fjump >= 5 and shift_cm >= 12.0 and dt <= 0.28:
+                        awkward_shifts.append((meas.bar, int(round(prev_mean_fret)), int(round(mean_f)), round(dt, 2)))
+                prev_anchor_cm = anchor
+                prev_mean_fret = mean_f
+                elapsed_since_fretted_slots = max(1, e.dur)
+            else:
+                elapsed_since_fretted_slots += max(1, e.dur)
+
             if e.link_tech is not None:
                 if e.link_tech not in ("H", "P", "S"):
                     errors.append(f"M{meas.bar:02d} slot {e.slot}: 非法 link_tech='{e.link_tech}'，仅允许 'H'/'P'/'S'。")
                 else:
                     tech_counts[e.link_tech] += 1
+                    ev_has_tech = True
                     if e.link_tech not in tier.allowed_techs:
                         errors.append(
                             f"M{meas.bar:02d} slot {e.slot}: 档位 '{tier.key}' 禁用连奏技巧 '{e.link_tech}' "
@@ -767,6 +940,9 @@ def validate_project_score(
                                 elif e.link_tech == "S" and df == 0:
                                     errors.append(f"M{meas.bar:02d} slot {e.slot}: 滑音 S 目标品格不能与起始相同 (df=0)。")
 
+            if ev_has_tech:
+                tech_events += 1
+
         if cursor != expected_end or dur_sum != expected_sum:
             diff = expected_sum - dur_sum
             hint = f"少了 {diff} 个 16 分时值" if diff > 0 else f"多了 {-diff} 个 16 分时值"
@@ -775,11 +951,31 @@ def validate_project_score(
                 f"-> 修复建议: 补齐或缩短本小节最后几个事件的 dur。"
             )
 
+        if not is_pickup_bar:
+            if bar_has_mel:
+                mel_bars += 1
+            if bar_has_bass:
+                bass_bars += 1
+            if dur_sum > 0:
+                bar_slot_sums.append(dur_sum)
+            bar_sec = max(0.25, (dur_sum or 16) * sec_per_slot)
+            bar_nps_list.append(bar_pitched / bar_sec)
+            t_fp = tuple(bar_fp_items)
+            mel_bar_fps.append(t_fp)
+            if t_fp and t_fp == prev_bar_fp:
+                cur_consec_same += 1
+                if cur_consec_same > max_consec_same:
+                    max_consec_same = cur_consec_same
+                    consec_repeat_bar = meas.bar
+            else:
+                cur_consec_same = 1
+            prev_bar_fp = t_fp
+
     for req_t in required_techs:
         if tech_counts.get(req_t, 0) < 1:
             errors.append(
                 f"技巧校验: 档位 '{tier.key}' 要求至少出现 1 次 '{req_t}'，当前为 0 "
-                f"-> 修复建议: 添加 1 处 '{req_t}' 或在 score_data.py 中调整 TIER/REQUIRED_TECHS。"
+                f"-> 修复建议: 在合适乐句处添加真实指弹 '{req_t}' 技巧（禁止通过清空 REQUIRED_TECHS 绕过）。"
             )
 
     for bar_idx, expected_pitches in landmarks.items():
@@ -800,6 +996,183 @@ def validate_project_score(
                 f"-> 修复建议: 用 scripts/fret_helper.py jianpu 重查 M{bar_idx:02d} 主旋律弦位。"
             )
 
+    # =========================================================================
+    # Anti-Slop, Harmony & Physical Quality Gates (Block Half-Baked "四不像")
+    # =========================================================================
+    np_denom = max(1, non_pickup_bars)
+    mel_ratio = mel_bars / np_denom
+    bass_ratio = bass_bars / np_denom
+    chord_ratio = chord_bars / np_denom
+    avg_poly = pitched_total / max(1, non_rest_events)
+    poly_ratio = poly_events / max(1, non_rest_events)
+    mel_56_ratio = mel_on_bass_strings / max(1, mel_total)
+    out_key_ratio = out_of_key_pitched / max(1, pitched_total)
+    uniq_mel_ratio = len({fp for fp in mel_bar_fps if fp}) / np_denom
+
+    if not allow_short_demo and non_pickup_bars < 16:
+        errors.append(
+            f"完整性拦截: 曲目过短（仅 {non_pickup_bars} 个完整小节，至少需 16 小节）"
+            f" -> 修复建议: 完整编配主歌/副歌/尾奏段落，严禁交付 4-8 小节敷衍半成品（仅当用户明确要求短片段时设 ALLOW_SHORT_DEMO = True）。"
+        )
+
+    if max_consec_same >= 4:
+        errors.append(
+            f"反敷衍拦截: 截至 M{consec_repeat_bar or 0:02d} 连续 {max_consec_same} 个小节主旋律完全一模一样"
+            f" -> 修复建议: 按原曲真实旋律展开乐句，禁止复制粘贴同一小节循环凑长度。"
+        )
+    if non_pickup_bars >= 16 and uniq_mel_ratio < 0.25:
+        errors.append(
+            f"反敷衍拦截: 小节旋律重复率过高（唯一旋律小节仅占 {uniq_mel_ratio * 100:.0f}% < 25%）"
+            f" -> 修复建议: 补全真实主歌/副歌变化，严禁拿 2-3 个小节循环凑整首歌。"
+        )
+
+    if mel_ratio < 0.75:
+        errors.append(
+            f"指弹结构拦截: 主旋律小节覆盖率仅 {mel_ratio * 100:.0f}% (< 75%)"
+            f" -> 修复建议: 独奏指弹必须保持清晰主旋律 (role='melody')，不能只写纯和弦伴奏。"
+        )
+
+    if bass_ratio < 0.65 or (non_pickup_bars >= 8 and len(distinct_bass) < 3):
+        errors.append(
+            f"指弹结构拦截: 低音声部严重不足（覆盖 {bass_ratio * 100:.0f}%，仅 {len(distinct_bass)} 种低音音高）"
+            f" -> 修复建议: 用 scripts/fret_helper.py chord 为每小节和弦重拍配好 role='bass' 根音，禁止交单音干瘪旋律谱。"
+        )
+
+    min_avg_poly = 1.06 if tier.key == "beginner" else 1.08
+    if avg_poly < min_avg_poly or poly_ratio < 0.08:
+        errors.append(
+            f"指弹质感拦截: 复调饱满度过低（平均同时发声 {avg_poly:.2f} 音，多音拍占比 {poly_ratio * 100:.0f}%）"
+            f" -> 修复建议: 在每小节强拍同时拨响主旋律 + 低音，并在长音间隙填充低于主旋律的内声部 (role='inner')。"
+        )
+
+    if mel_total >= 8 and mel_56_ratio > 0.25:
+        errors.append(
+            f"声部倒置拦截: 有 {mel_56_ratio * 100:.0f}% 主旋律落在 5/6 低音弦上"
+            f" -> 修复建议: 用 scripts/fret_helper.py jianpu 把主旋律放到 1-3 弦高声部，低音留给 4-6 弦。"
+        )
+
+    if chord_ratio < 0.75:
+        errors.append(
+            f"谱面规范拦截: 和弦标记覆盖率仅 {chord_ratio * 100:.0f}% (< 75%)"
+            f" -> 修复建议: 为每个完整小节填写准确的 chords=[(0, '...')] 和弦标记。"
+        )
+
+    if non_pickup_bars >= 16 and len(sections) < 2:
+        errors.append(
+            f"段落结构拦截: 缺少段落划分（仅 {len(sections)} 个 section 标记，至少需 2 个）"
+            f" -> 修复建议: 标注清晰的 section='Intro'/'Verse'/'Chorus'/'Outro' 并配合 dynamic 强弱层次。"
+        )
+
+    if chord_bass_checks >= 4 and (chord_bass_hits / chord_bass_checks) < 0.65:
+        sample = "；".join(chord_bass_mismatches[:3])
+        errors.append(
+            f"和声失配拦截: 和弦与低音严重不符（匹配率 {chord_bass_hits}/{chord_bass_checks} < 65%：{sample}）"
+            f" -> 修复建议: 用 scripts/fret_helper.py chord 按标注和弦重查正确根音/低音，避免标 G 却乱弹外音。"
+        )
+
+    if allow_chromatic and pitched_total >= 16 and out_key_ratio > 0.20:
+        errors.append(
+            f"防作弊拦截: ALLOW_CHROMATIC=True 但调外音高达 {out_key_ratio * 100:.0f}% (> 20%)"
+            f" -> 修复建议: 检查 KEY / CAPO / DIATONIC_PCS 是否设错，严禁靠开 ALLOW_CHROMATIC 掩盖大量错音。"
+        )
+
+    max_awkward = max(6, len(measures) // 6)
+    if len(awkward_shifts) > max_awkward:
+        b0, pf0, nf0, dt0 = awkward_shifts[0]
+        errors.append(
+            f"把位跳动拦截: 存在 {len(awkward_shifts)} 处高速大跳把位（如 M{b0:02d} {pf0}品→{nf0}品仅 {dt0:.2f}s，上限 {max_awkward}）"
+            f" -> 修复建议: 用相邻把位换弦优化指法连贯性，避免反复瞬间大跳把位。"
+        )
+
+    # Physical quality score (0..100) + difficulty (Lv. 1.0..10.0) — aligned with guitar-tab-library
+    tech_variety = sum(
+        1
+        for flag in (
+            (tech_counts["H"] + tech_counts["P"] + tech_counts["S"]) > 0,
+            tech_counts["arpeggio"] > 0,
+            tech_counts["harmonic"] > 0,
+            tech_counts["palm_mute"] > 0,
+            tech_counts["slap"] > 0,
+            tech_counts["grace"] > 0,
+        )
+        if flag
+    )
+    fretted_events_est = max(1, shift_transitions + 1)
+    excess_hard = max(0, hard_stretches - int(fretted_events_est * 0.05))
+    playability_f = 40.0
+    playability_f -= min(18.0, len(impossible_chords) * 6.0)
+    playability_f -= min(14.0, len(extreme_stretches) * 3.5)
+    playability_f -= min(6.0, excess_hard * 0.8)
+    playability_f -= min(8.0, len(awkward_shifts) * 1.5)
+    playability_f -= min(10.0, crossings_count * 1.2)
+    if max_fret_seen > 17:
+        playability_f -= 2.0
+    playability_pts = max(0, min(40, int(round(playability_f))))
+
+    pts_bass = min(9.0, bass_ratio * 10.5) + min(2.0, len(distinct_bass) * 0.4)
+    pts_poly = min(6.0, max(0.0, (avg_poly - 1.0) * 8.0)) + min(4.0, poly_ratio * 10.0)
+    pts_tech = min(6.0, tech_variety * 1.6) + min(2.0, (tech_events / max(1, non_rest_events)) * 18.0)
+    pts_struct = (
+        min(3.0, len(sections) * 1.0)
+        + min(2.0, max(0, len(dynamics) - 1) * 0.8)
+        + (1.0 if non_pickup_bars >= 16 else (0.5 if non_pickup_bars >= 8 else 0.0))
+    )
+    arrangement_pts = max(0, min(35, int(round(pts_bass + pts_poly + pts_tech + pts_struct))))
+
+    if bar_slot_sums:
+        dom_slots = max(set(bar_slot_sums), key=bar_slot_sums.count)
+        aligned_ratio = sum(1 for s in bar_slot_sums if s == dom_slots) / np_denom
+    else:
+        aligned_ratio = 0.0
+    title_str = str(getattr(mod, "TITLE", "") or "").strip()
+    artist_str = str(getattr(mod, "ARTIST", "") or getattr(mod, "COMPOSER", "") or "").strip()
+    has_title = bool(title_str and title_str.lower() not in ("untitled", "my song", "test"))
+    has_artist = bool(artist_str and artist_str.lower() != "unknown")
+    has_setup = hasattr(mod, "CAPO") or bool(getattr(mod, "ARRANGER_INFO", ""))
+    pts_meta = (
+        (1.5 if has_title else 0.0)
+        + (1.5 if has_artist else 0.0)
+        + (1.0 if bpm > 0 else 0.0)
+        + (1.0 if has_setup else 0.0)
+    )
+    pts_clean = max(0.0, 3.0 - empty_bars * 1.0 - (1.5 if non_pickup_bars < 4 else 0.0))
+    notation_pts = max(0, min(25, int(round(aligned_ratio * 10.0 + min(7.0, chord_ratio * 7.8) + pts_meta + pts_clean))))
+    quality_score = max(0, min(100, playability_pts + arrangement_pts + notation_pts))
+
+    min_quality = 60 if allow_short_demo else (68 if tier.key == "beginner" else 75)
+    if quality_score < min_quality:
+        errors.append(
+            f"综合质量门禁未达标: 当前 {quality_score}分 (手型{playability_pts}/40 · 编配{arrangement_pts}/35 · 规范{notation_pts}/25)，"
+            f"档位 '{tier.key}' 最低要求 {min_quality}分"
+            f" -> 修复建议: 补强低音/复调织体、和弦与段落层次或优化左手把位跨度。"
+        )
+
+    dur_sec = max(1.0, total_slots * sec_per_slot)
+    nps = pitched_total / dur_sec
+    sorted_bnps = sorted(bar_nps_list) if bar_nps_list else [nps]
+    p90_nps = sorted_bnps[min(len(sorted_bnps) - 1, int(len(sorted_bnps) * 0.9))]
+    eff_nps = 0.55 * nps + 0.45 * p90_nps
+    ratio_16th = sixteenth_events / max(1, non_rest_events)
+    d_speed = min(
+        3.0,
+        max(0.0, (eff_nps - 1.0) * 0.42)
+        + (0.35 if ratio_16th >= 0.08 else (0.15 if sixteenth_events > 0 else 0.0)),
+    )
+    sorted_spans = sorted(spans_cm) if spans_cm else [0.0]
+    p95_span = sorted_spans[min(len(sorted_spans) - 1, int(len(sorted_spans) * 0.95))]
+    barre_ratio = barre_events / max(1, non_rest_events)
+    d_hand = min(2.2, min(1.3, max(0.0, (p95_span - 6.0) * 0.16)) + min(0.9, barre_ratio * 4.5))
+    avg_shift_vel = sum(shift_velocities) / max(1, len(shift_velocities))
+    large_shift_ratio = large_shifts / max(1, shift_transitions)
+    d_neck = min(
+        1.8,
+        min(0.9, max(0.0, (max_fret_seen - 3) * 0.075))
+        + min(0.9, large_shift_ratio * 3.0 + min(0.45, avg_shift_vel / 25.0)),
+    )
+    d_poly = min(1.4, max(0.0, (avg_poly - 1.0) * 1.1) + (0.3 if max_simul >= 4 else 0.0))
+    d_tech = min(1.2, tech_variety * 0.18 + min(0.5, (tech_events / max(1, non_rest_events)) * 2.5))
+    difficulty = round(min(10.0, max(1.0, 1.0 + d_speed + d_hand + d_neck + d_poly + d_tech)), 1)
+
     summary = {
         "tier": tier.key,
         "tier_label": tier.label_zh,
@@ -809,5 +1182,12 @@ def validate_project_score(
         "total_notes": total_notes,
         "max_fret": max_fret_seen,
         "landmarks": len(landmarks),
+        "quality_score": quality_score,
+        "score_breakdown": {
+            "playability": playability_pts,
+            "arrangement": arrangement_pts,
+            "notation": notation_pts,
+        },
+        "difficulty": difficulty,
     }
     return errors, tech_counts, summary

@@ -1168,8 +1168,11 @@ def cmd_check(proj: Path) -> int:
         for idx, err in enumerate(errors, 1):
             print(f"  {idx}. {err}")
         return 1
+    bd = summary.get("score_breakdown") or {}
     print(
         f"[PASS] Score check OK | TIER={summary['tier']} ({summary['tier_label']}) | "
+        f"{summary.get('quality_score', '-')}分 (手型{bd.get('playability', '-')}/编配{bd.get('arrangement', '-')}/规范{bd.get('notation', '-')}) | "
+        f"Lv.{summary.get('difficulty', '-')} | "
         f"{summary['measures']} bars (M{summary['first_bar']:02d}..M{summary['last_bar']:02d}) | "
         f"{summary['total_notes']} notes/slaps | max_fret={summary['max_fret']} | "
         f"0 voice crossings | landmarks={summary['landmarks']} | techniques={tech_counts}"
@@ -1339,8 +1342,11 @@ def cmd_verify(proj: Path, ref: Optional[str] = None) -> int:
     # Gate 1: Score integrity & tier compliance
     errors, tech_counts, summary = validate_project_score(mod, measures)
     assert not errors, "Gate 1 Score integrity failed:\n  " + "\n  ".join(errors)
+    bd = summary.get("score_breakdown") or {}
     print(
-        f"[PASS] Gate 1 Score integrity: TIER={summary['tier']}, {summary['measures']} measures, "
+        f"[PASS] Gate 1 Score integrity: TIER={summary['tier']}, "
+        f"{summary.get('quality_score', '-')}分 (手型{bd.get('playability', '-')}/编配{bd.get('arrangement', '-')}/规范{bd.get('notation', '-')}), "
+        f"Lv.{summary.get('difficulty', '-')}, {summary['measures']} measures, "
         f"{summary['total_notes']} notes/slaps, max_fret={summary['max_fret']}, "
         f"0 voice crossings, landmarks={summary['landmarks']}, techniques={tech_counts}."
     )

@@ -1,92 +1,127 @@
 ---
 name: fingerstyle-guitar-tab
-description: Use when creating fingerstyle guitar tablature (6-line TAB) PDFs with synchronized acoustic audio previews and web practice bundles, converting MusicXML/MIDI/numbered-notation (jianpu) or songs into solo guitar arrangements across beginner/standard/advanced difficulty tiers, or fixing pitch/rhythm/voice-crossing drift.
+description: Use when creating fingerstyle guitar tablature (6-line TAB) PDFs with synchronized acoustic audio previews and web practice bundles, converting MusicXML/MIDI/numbered-notation (jianpu) or songs into solo guitar arrangements across beginner/standard/advanced difficulty tiers, or fixing pitch/rhythm/voice-crossing/ergonomic drift.
 ---
 
 # Fingerstyle Guitar TAB Engine
 
-## Rule #0: Engine First — Never Hand-Write Boilerplate
+## The 4 Iron Laws (铁律 — 任何一条违反即视为不合格“四不像”)
 
-**Core principle:** **Single Source of Truth + Shared Deterministic Engine.**
-You ONLY create or edit **one file per song**: `<project_dir>/src/score_data.py`.
-**NEVER** rewrite `build_pdf.py`, `build_audio.py`, `build_sync_manifest.py`, `build_bundle.py`, or `verify_all.py` from scratch. Always use the shared pure-stdlib CLI tools in `scripts/`:
+1. **NO MEMORY HALLUCINATION (严禁凭记忆编造已知歌曲)** — If the user only gives a song name or a mixed/polyphonic MP3 (Tier C), **STOP IMMEDIATELY and ask** for MIDI / MusicXML / jianpu / staff sheet (or offer to search for a verified sheet/MIDI first). LLMs cannot recall exact bar-by-bar pitches and rhythms from weights; guessing notes produces a "四不像" fake cover.
+2. **ZERO MENTAL FRET MATH (禁止心算品格与和弦)** — Never compute open-string + Capo + fret pitches or chord voicings in your head. Always run `python3 scripts/fret_helper.py` (`recommend-capo`, `jianpu`, `chord`).
+3. **ZERO STUBS, ZERO SINGLE-NOTE SLOP, ZERO LOOP PADDING (拒绝半成品与凑数谱)** — A real fingerstyle arrangement MUST have:
+   - Complete song structure (`>= 16` full bars, `>= 2` distinct `section=` markers such as `Intro`/`Verse`/`Chorus`/`Outro`, dynamic contrast);
+   - Clear high-register melody (`role="melody"` on strings 1–3, `>= 75%` bars) + continuous chord-matched bass (`role="bass"`, `>= 65%` bars, `>= 65%` chord-root/tone match) + polyphonic pinch/arpeggio texture (`avg_poly >= 1.08`, multi-note beats `>= 8%`);
+   - Playable left-hand physics (`0` chords needing `> 4` fingers, `0` stretches `> 14.5 cm`, `0` voice crossings);
+   - Zero copy-paste padding (never repeat the exact same bar `>= 4` times in a row, never loop 2–3 bars across the whole song).
+4. **NO BYPASSING THE ENGINE OR VALIDATOR (禁止作弊与跳过编译)** — You ONLY author `<project_dir>/src/score_data.py`. Never hand-write LilyPond/MIDI/audio scripts, never leave `IS_STARTER_TEMPLATE = True`, never silence errors by flipping `ALLOW_CHROMATIC = True` / `REQUIRED_TECHS = ()` / `ALLOW_SHORT_DEMO = True`, and **NEVER deliver to the user** until `python3 scripts/tab_engine.py build <proj>` finishes with `ALL VERIFICATION CHECKS PASSED.` and a real `*_bundle.zip`.
 
-- `scripts/setup_tools.sh <project_dir>` — one-time rootless LilyPond + FluidSynth bootstrap (or verify system tools).
-- `scripts/fret_helper.py` — zero-mental-math Capo recommender, Jianpu -> string/fret lookup, and safe `bass`/`inner` voicing finder.
-- `scripts/import_score.py` — automatic **Tier S** converter (`MIDI` / `MusicXML` / `.mxl` -> `src/score_data.py`).
-- `scripts/init_project.py` — scaffold starter `src/score_data.py` for any key, capo, BPM, and difficulty tier.
-- `scripts/tab_engine.py` — unified runner (`check` | `pdf` | `audio` | `verify` | `manifest` | `bundle` | `build`).
+### Anti-Rationalization Table (常见偷懒借口 → 强制纠偏)
 
-A complete reference project lives in [../../examples/call-of-silence/](../../examples/call-of-silence/).
+| Tempting Excuse ("傻子模型常见借口") | Hard Reality & Mandatory Action |
+| :--- | :--- |
+| "这首歌很有名，我大概记得旋律，直接编一段给用户" | **STOP.** Weight-memory melodies drift in key, bar length, and hook intervals. Pause at Step 0 and ask for S/A sheet/MIDI or search a real score first. |
+| "先用 `init_project.py` 生成 4–8 小节改改就交付" | **BLOCKED.** `IS_STARTER_TEMPLATE = True` and `< 16` bars both hard-fail `tab_engine.py check`. Write the full arrangement unless the user explicitly requested a short snippet. |
+| "为了凑够 16 小节，我把 2 个小节循环粘贴 8 遍" | **BLOCKED.** Consecutive repeats (`>= 4`) and low unique-bar ratio (`< 25%`) hard-fail `tab_engine.py check`. Arrange real Verse/Chorus progression. |
+| "只写单音主旋律不容易声部交叉，也不容易报错" | **BLOCKED.** Single-note lines are NOT fingerstyle. Low bass coverage (`< 65%`), low polyphony, or score `< 75分` hard-fails `tab_engine.py check`. |
+| "校验报调外音/技巧缺失，我设 `ALLOW_CHROMATIC=True` 或 `REQUIRED_TECHS=()` 过关" | **CHEATING.** `> 20%` out-of-key notes still hard-fails; fix wrong frets with `fret_helper.py jianpu` and add real techniques instead. |
+| "用户只是要谱子，我自己写个脚本拼个 PDF/文本谱更快" | **FORBIDDEN.** Always use `python3 scripts/tab_engine.py build <proj>` so PDF, 320k MP3, 4-Gate DSP verify, `sync_manifest.json`, and `*_bundle.zip` stay 100% synced. |
 
 ---
 
 ## Step 0: Mandatory Source-Purity Triage & Tier Selection (先问再做)
 
-Before writing any code, classify what the user provided and confirm their preference:
+Classify user input BEFORE creating any project directory or writing any code:
 
-| Purity Tier | User Input | Conversion Path | Required Action |
-| :--- | :--- | :--- | :--- |
-| **S (Purest)** | `.mid` / `.midi` / `.musicxml` / `.xml` / `.mxl` / Guitar Pro export | Score File -> `score_data.py` -> PDF + MP3 + Bundle | Confirm difficulty tier, then run `scripts/import_score.py` |
-| **A (High)** | Original numbered notation (简谱 image/PDF), vocal/piano lead sheet | Sheet Visual -> `fret_helper.py` -> `score_data.py` -> Artifacts | Confirm difficulty tier (and octave if needed), then transcribe melody first |
-| **B (Medium)** | Clean solo vocal / solo piano audio | Audio -> *(ask to find S/A sheet first)* | **PAUSE & ASK:** explain audio pitch errors vs sheets; ask if they have S/A sheets or want you to search cleaner scores first |
-| **C (Low / Blurry)** | **Only a song name**, or full-band / polyphonic acoustic guitar MP3 | **DO NOT blind-guess from guitar audio FFT/F0** | **PAUSE & ASK FIRST:** (1) Do they have `.mid`/MusicXML/简谱图? (2) Want you to search public S/A notation/MIDI first? (3) Pick difficulty tier |
+| Purity Tier | User Input | Required Action |
+| :--- | :--- | :--- |
+| **S (Purest)** | `.mid` / `.midi` / `.musicxml` / `.xml` / `.mxl` / Guitar Pro export | Confirm difficulty tier (`beginner`/`standard`/`advanced`) if unspecified, then run `python3 scripts/import_score.py` |
+| **A (High)** | Original numbered notation (简谱 image/PDF), vocal/piano lead sheet | Confirm difficulty tier, extract exact bar-by-bar jianpu + chords, then use `python3 scripts/fret_helper.py` |
+| **B (Medium)** | Clean solo vocal / solo piano audio | **PAUSE & ASK:** explain audio pitch drift vs sheet scores; ask for S/A sheet or permission to search a clean score first |
+| **C (Low / Blurry)** | **Only a song name**, or full-band / polyphonic guitar MP3 | **HARD STOP — DO NOT WRITE ANY CODE.** Ask: (1) Do they have `.mid`/MusicXML/简谱图? (2) Should you search public S/A notation/MIDI first? (3) Which difficulty tier? |
 
-### Choose One Difficulty Tier (`TIER` in `src/score_data.py`)
+### Difficulty Tiers (`TIER` in `src/score_data.py`)
 
-| `TIER` | Target Player | Max Fret | Fret Span | Rhythm & Voices | Allowed Techniques |
+| `TIER` | Target Player | Max Fret | Fret Span | Min Quality | Rhythm & Allowed Techniques |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`beginner`** | 新手入门 | `<= 7` (open/0-3 preferred) | **`<= 2`** | No 16th notes (`dur != 1`), max 3 simultaneous notes (`melody + bass`) | Basic plucks + optional `arpeggio` (no `H/P/S/harmonic/palm_mute/slap`) |
-| **`standard`** *(default)* | 标准指弹进阶 | `<= 12` | **`<= 3`** | Full 16th grid (`dur >= 1`), cross-bar syncopated ties, 3+ voices | `arpeggio` (`>= 1`) + optional `H`, `P`, `S`, `<12>`, `P.M.`, `X` |
-| **`advanced`** | 进阶演出独奏 | `<= 15` | **`<= 4`** | Dense walking bass + 16th subdivisions | Full showcase (`H`, `P`, `S`, `arpeggio`, `<12>` required; `P.M.`, `X` supported) |
+| **`beginner`** | 新手入门 | `<= 7` (0–3 preferred) | `<= 2` | `>= 68分` | No 16ths (`dur != 1`), max 3 notes/beat (`melody + bass`), optional `arpeggio` only |
+| **`standard`** *(default)* | 标准指弹 | `<= 12` | `<= 3` | `>= 75分` | Full 16th grid (`dur >= 1`), 3+ voices, `arpeggio` (`>= 1`) + `H/P/S/<12>/P.M./X` |
+| **`advanced`** | 进阶独奏 | `<= 15` | `<= 4` | `>= 75分` | Dense walking bass + 16ths, `H/P/S/arpeggio/<12>` required + `P.M./X` |
 
-See [references/intake-and-tiers.md](references/intake-and-tiers.md) for exact dialogue templates and conversion workflows.
+See [references/intake-and-tiers.md](references/intake-and-tiers.md) for dialogue templates.
 
 ---
 
-## Step 1: Author `src/score_data.py` (Pick Path by Input)
+## Step 1: Author ONLY `<proj>/src/score_data.py`
 
-- **Path S (MIDI / MusicXML -> Code -> Music):**
+Never touch or rewrite engine scripts. Complete reference example: [../../examples/call-of-silence/src/score_data.py](../../examples/call-of-silence/src/score_data.py).
+
+- **Path S (MIDI / MusicXML -> Code):**
   ```bash
-  python3 scripts/import_score.py <input.mid|.musicxml|.mxl> --out <proj>/src/score_data.py --tier <tier>
+  python3 scripts/import_score.py <input.mid|.musicxml|.mxl> --out <proj>/src/score_data.py --tier <tier> --artist "<Artist>"
   ```
-  Review/polish chord labels, fingerings, or techniques as needed, then proceed to Step 2.
-- **Path A (Jianpu / Sheet -> Code -> Music — zero mental math):**
-  1. Recommend Capo & open chord key: `python3 scripts/fret_helper.py recommend-capo --key <Key> --tier <tier>`
-  2. Look up exact melody frets from jianpu: `python3 scripts/fret_helper.py jianpu --key <Key> --capo <N> --tier <tier> <tokens...>`
-  3. Look up safe `bass`/`inner` voicings strictly `<= melody_midi`: `python3 scripts/fret_helper.py chord --chord <Chord> --capo <N> --max-midi <M> --tier <tier>`
-  4. Scaffold starter file: `python3 scripts/init_project.py --dir <proj> --title "<Title>" --key <Key> --capo <N> --bpm <BPM> --tier <tier>`
-  5. Fill measures into `<proj>/src/score_data.py` (locking melody first, keeping bass/inner `<= active_melody_midi`, preserving cross-bar syncopated ties without re-plucking beat 1, and recording key bar melody pitches in `LANDMARKS`).
+  Polish `ARTIST`, `TITLE`, `section=`, `chords=`, and phrasing dynamics as needed.
+- **Path A (Jianpu / Sheet -> Code — zero mental math):**
+  1. Recommend Capo & chord shapes:
+     ```bash
+     python3 scripts/fret_helper.py recommend-capo --key <Key> --tier <tier>
+     ```
+  2. Convert EVERY melody phrase with `fret_helper.py jianpu` (record exact concert MIDI in `LANDMARKS` for key bars):
+     ```bash
+     python3 scripts/fret_helper.py jianpu --key <Key> --capo <N> --tier <tier> <tokens...>
+     ```
+  3. Look up chord-matched `bass` & `inner` strictly `<= active_melody_midi`:
+     ```bash
+     python3 scripts/fret_helper.py chord --chord <Chord> --capo <N> --max-midi <M> --tier <tier>
+     ```
+  4. Scaffold `<proj>/src/score_data.py`:
+     ```bash
+     python3 scripts/init_project.py --dir <proj> --title "<Title>" --artist "<Artist>" --key <Key> --capo <N> --bpm <BPM> --tier <tier>
+     ```
+  5. **Replace all starter placeholder bars** with the full arrangement (`>= 16` bars, `Intro`/`Verse`/`Chorus`/`Outro` sections, real dynamics, chord-matched bass on beat 1, inner harmony on sustain gaps, cross-bar syncopated ties without re-plucking beat 1) and **delete `IS_STARTER_TEMPLATE = True`**.
 
-**Weak / smaller model or first time?** Read the step-by-step worked tutorial & 1-second error lookup table in [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md).
+**Need concrete good-vs-bad bar patterns or error fixes?** Read [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) BEFORE writing `score_data.py`.
 
 ---
 
-## Step 2: Self-Healing Check Loop
+## Step 2: Self-Healing Hard Gate Loop (不通过禁止进入构建)
 
-Run:
 ```bash
 python3 scripts/tab_engine.py check <proj>
 ```
-If any rule fails (bar sum != 16, voice crossing, span exceeded, non-diatonic pitch, beginner-forbidden technique, landmark mismatch), the validator prints concrete copy-paste fix suggestions (`-> 修复建议: ...`). Apply fixes in `src/score_data.py` and re-run until `check` reports `[PASS] ... 0 voice crossings`.
+
+`check` enforces ALL mechanical gates:
+- No `IS_STARTER_TEMPLATE`, `>= 16` bars, no `>= 4` consecutive identical bars, unique melody ratio `>= 25%`;
+- Bar slot sum `== 16`, legal `dur` in `{1,2,3,4,6,8,12,16}`, `0` voice crossings, `0` impossible `>4`-finger chords, `0` physical stretches `> 14.5 cm`;
+- Melody coverage `>= 75%` (high strings 1–3), bass coverage `>= 65%` (`>= 3` pitches), chord-bass harmony match `>= 65%`, chord labels `>= 75%`, `>= 2` sections, polyphony `>= 1.08` (`1.06` beginner, multi-note beats `>= 8%`);
+- Physical quality score `>= 75分` (`>= 68分` beginner) + difficulty `Lv. 1.0–10.0`.
+
+Every failure prints an exact `-> 修复建议: ...`. Fix `src/score_data.py` and re-run until `[PASS] Score check OK | ... | XX分 | Lv.X.X`.
 
 ---
 
-## Step 3: Build, Verify & Package in One Command
+## Step 3: Build, Verify & Package in One Command (未通过禁止交付)
+
+Ensure tools exist once via `bash scripts/setup_tools.sh <proj>` if LilyPond/FluidSynth is missing, then run:
 
 ```bash
 python3 scripts/tab_engine.py build <proj>
 ```
-This runs: `check` -> LilyPond sanitized PDF (`\pointAndClickOff`, `-dno-point-and-click`) -> `pdftoppm -png -r 150` previews -> FluidSynth `-C 0` + FFmpeg 320 kbps MP3 (`98/74/48` velocity balance, `2880t` melody sustain, `<= 1` semitone clash damping) -> 4-Gate `verify` -> MIDI-exact `sync_manifest.json` -> verified `*_bundle.zip` (which also bundles `src/score_data.py` so the single source of truth travels with the deliverables for future re-editing or tier conversion) -> cleans temporary `build/` & `__pycache__/`.
 
-Pass `--ref <audio_path_or_url>` (or set `TAB_REF_AUDIO`) if you also want optional Gate 4 reference chroma alignment (`>= 0.80`). Never commit third-party URLs into code. Import the resulting `*_bundle.zip` into `https://zxsos.github.io/guitar-tab-player/`.
+Confirm stdout ends with `ALL VERIFICATION CHECKS PASSED.` and outputs:
+- `<Title>_指弹吉他六线谱.pdf` (sanitized, 0 path leaks)
+- `<Title>_指弹吉他试听.mp3` (320 kbps, stereo balanced, diatonic verified)
+- `sync_manifest.json` + `previews/page-*.png`
+- `<Title>_bundle.zip` (contains `score_data.py`, ready to drag into `https://zxsos.github.io/guitar-tab-player/`)
+
+Pass `--ref <audio_path_or_url>` for optional Gate 4 chroma alignment (`>= 0.80`). Never commit third-party URLs into code.
 
 ---
 
 ## Reference Library (Load On Demand)
 
-- [references/intake-and-tiers.md](references/intake-and-tiers.md) — S/A/B/C purity triage, user prompt scripts, bidirectional conversion map, and 3-tier validator rules.
-- [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) — Worked jianpu-to-code tutorial using `fret_helper.py` + 8-error 1-second repair table.
-- [references/score-schema.md](references/score-schema.md) — `score_data.py` fields, universal chord labels, voice-leading & syncopated tie rules, `validate_project_score()` invariants.
-- [references/lilypond-tab-patterns.md](references/lilypond-tab-patterns.md) — LilyPond 2.24 engraving rules, `\slashedGrace` sync, consecutive `H`/`P` slurs, `\glissando` ordering, CJK fonts.
-- [references/audio-and-verification.md](references/audio-and-verification.md) — Role velocity SNR (`98/74/48`), MIDI sustain caps (`2880/1920/3000/280`), WAV thumb slaps, 4-Gate verification thresholds, MIDI-exact `sync_manifest.json` timeline.
+- [references/weak-model-walkthrough.md](references/weak-model-walkthrough.md) — **Read first if unsure:** Good vs Bad ("四不像反例 vs 合格正例"), 4/4 fingerstyle bar formula, worked `fret_helper.py` tutorial, and 15-error 1-second repair table.
+- [references/intake-and-tiers.md](references/intake-and-tiers.md) — S/A/B/C purity triage, user prompt scripts, and tier profiles.
+- [references/score-schema.md](references/score-schema.md) — `score_data.py` fields, universal chord labels, voice-leading & syncopated tie rules.
+- [references/lilypond-tab-patterns.md](references/lilypond-tab-patterns.md) — LilyPond 2.24 engraving rules, `\slashedGrace`, consecutive `H`/`P`, `\glissando`, CJK fonts.
+- [references/audio-and-verification.md](references/audio-and-verification.md) — Velocity SNR (`98/74/48`), MIDI sustain caps, WAV thumb slaps, 4-Gate verification thresholds.
